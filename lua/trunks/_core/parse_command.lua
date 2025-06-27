@@ -71,6 +71,52 @@ local function parse_subcommand(cmd)
     return parser(cmd)
 end
 
+---@param filepath string
+---@return boolean
+local function is_in_cwd(filepath)
+    local cwd = vim.loop.cwd()
+    if not cwd then
+        return false
+    end
+    return vim.startswith(filepath, cwd)
+end
+
+---@param path string
+---@return string | nil
+function M._find_git_root(path)
+    local uv = vim.loop
+    local function exists(p)
+        local stat = uv.fs_stat(p)
+        return stat and stat.type == "directory"
+    end
+    path = vim.fn.fnamemodify(path, ":p")
+    while path and path ~= "/" do
+        local git_dir = path .. "/.git"
+        if exists(git_dir) then
+            return path
+        end
+        path = vim.fn.fnamemodify(path, ":h")
+    end
+    return nil
+end
+
+---@return string | nil
+function M.get_git_c_flag()
+    local buf_path = vim.api.nvim_buf_get_name(0)
+    if buf_path == "" then
+        return nil
+    end
+    if is_in_cwd(buf_path) then
+        return nil
+    else
+        local git_root = M._find_git_root(buf_path)
+        if git_root then
+            return "-C " .. vim.fn.shellescape(git_root)
+        end
+    end
+    return nil
+end
+
 --- Expand `%` to current file.
 --- Also modify command in some special cases.
 ---@param input_args vim.api.keyset.create_user_command.command_args
@@ -84,6 +130,18 @@ M.parse = function(input_args)
         parsed_cmd = parse_visual_command(parsed_cmd, input_args)
     end
     return parsed_cmd
+end
+
+--- When the current buffer is outside the cwd, use the current
+--- buffer's .git as the git dir for the command (if it exists).
+---@param cmd string
+---@return string
+function M.add_git_dir_flag(cmd)
+    local git_dir_c_flag = M.get_git_c_flag()
+    if git_dir_c_flag then
+        return git_dir_c_flag .. " " .. cmd
+    end
+    return cmd
 end
 
 return M
