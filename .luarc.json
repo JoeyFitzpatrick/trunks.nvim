@@ -11,7 +11,7 @@
     "$PWD/.dependencies/luvit-meta/library",
     "$VIMRUNTIME/lua",
     "$PWD/lua",
-    "$PWD/ever",
-    "lua/ever"
+    "$PWD/trunks",
+    "lua/trunks"
   ]
 }
