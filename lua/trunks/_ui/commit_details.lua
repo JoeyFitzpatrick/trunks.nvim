@@ -4,6 +4,9 @@
 ---@field filename string
 ---@field safe_filename string
 
+---@class trunks.CommitDetailsRenderOpts
+---@field is_stash? boolean
+
 local M = {}
 
 ---@param bufnr integer
@@ -35,11 +38,14 @@ function M.set_lines(bufnr, commit)
     if not vim.api.nvim_buf_is_valid(bufnr) then
         return
     end
+
     vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    local commit_data =
-        require("trunks._core.run_cmd").run_cmd("git show --stat=10000 --stat-graph-width=40 " .. commit)
+    local command_builder =
+        require("trunks._core.command").base_command("show --stat=10000 --stat-graph-width=40 " .. commit)
+    local commit_data = require("trunks._core.run_cmd").run_cmd(command_builder:build())
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, commit_data)
     vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+
     for i, line in ipairs(commit_data) do
         highlight_line(bufnr, i, line)
     end
@@ -115,8 +121,8 @@ local function set_keymaps(bufnr, commit)
 end
 
 ---@param commit string
----@param is_stash? boolean
-function M.render(commit, is_stash)
+---@param opts trunks.CommitDetailsRenderOpts
+function M.render(commit, opts)
     local bufnr = require("trunks._ui.elements").new_buffer({ filetype = "git" })
     M.set_lines(bufnr, commit)
     require("trunks._ui.auto_display").create_auto_display(bufnr, "commit_details", {
@@ -125,13 +131,21 @@ function M.render(commit, is_stash)
             if not ok or not line_data then
                 return
             end
-            -- The -m flag diffs both merge commits and normal commits.
-            -- Empty pretty format omits commit message, and everything aside from the diff itself.
-            local cmd = "git show -m --pretty=format:'' " .. commit .. " -- " .. line_data.safe_filename
-            if is_stash then
-                cmd = string.format("git diff %s^1 %s -- %s", commit, commit, line_data.safe_filename)
+
+            local Command = require("trunks._core.command")
+            local command_builder
+
+            if opts.is_stash then
+                command_builder =
+                    Command.base_command(string.format("diff %s^1 %s -- %s", commit, commit, line_data.safe_filename))
+            else
+                -- The -m flag diffs both merge commits and normal commits.
+                -- Empty pretty format omits commit message, and everything aside from the diff itself.
+                command_builder =
+                    Command.base_command("show -m --pretty=format:'' " .. commit .. " -- " .. line_data.safe_filename)
             end
-            return cmd
+
+            return command_builder:build()
         end,
         get_current_diff = function()
             local ok, line_data = pcall(M.get_line, bufnr)

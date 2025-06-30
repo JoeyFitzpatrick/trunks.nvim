@@ -36,7 +36,7 @@ local function set_keymaps(bufnr)
             return
         end
         vim.api.nvim_buf_delete(bufnr, { force = true })
-        require("trunks._ui.commit_details").render(line_data.hash)
+        require("trunks._ui.commit_details").render(line_data.hash, {})
     end, keymap_opts)
 
     set("n", keymaps.commit_info, function()

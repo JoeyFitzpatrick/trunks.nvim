@@ -161,7 +161,7 @@ function M.set_keymaps(bufnr)
         end
         local item_type = line_data.item_type
         if item_type == "commit" then
-            require("trunks._ui.commit_details").render(line_data.commit, false)
+            require("trunks._ui.commit_details").render(line_data.commit, {})
         elseif item_type == "filepath" then
             require("trunks._core.open_file").open_file_in_split(line_data.filepath, line_data.commit, "right")
         elseif item_type == "previous_filepath" then

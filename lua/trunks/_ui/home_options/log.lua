@@ -200,7 +200,7 @@ local function set_keymaps(bufnr, get_line, opts)
         if not ok or not line_data then
             return
         end
-        require("trunks._ui.commit_details").render(line_data.hash, false)
+        require("trunks._ui.commit_details").render(line_data.hash, {})
     end, keymap_opts)
 
     set("n", keymaps.commit_info, function()

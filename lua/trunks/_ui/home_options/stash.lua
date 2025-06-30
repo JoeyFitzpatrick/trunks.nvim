@@ -94,7 +94,7 @@ local function set_keymaps(bufnr)
         if not ok or not line_data then
             return
         end
-        require("trunks._ui.commit_details").render(line_data.stash_index, true)
+        require("trunks._ui.commit_details").render(line_data.stash_index, { is_stash = true })
     end, keymap_opts)
 end
 
