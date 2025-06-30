@@ -19,7 +19,7 @@ Here's an example of the Home UI in Trunks, which is opened by invoking `:G`:
 ![Home UI](./gifs/trunks_home_ui.gif)
 
 Here's an example of running some git commands with Trunks:
-![Trunks commands](./gifs/trunks_some_commands.gif)
+![trunks_some_commands](https://github.com/user-attachments/assets/a93743fa-056e-4d4d-917d-95e0dc0f2a86)
 
 🚧 NOTE: this plugin is in an alpha state. API changes and bugs are expected. 🚧
 
