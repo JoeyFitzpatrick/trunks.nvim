@@ -210,22 +210,22 @@ local function set_autocmds(blame_bufnr, file_win, blame_buffer_name)
     })
 end
 
----@param cmd string
+---@param command_builder trunks.Command
 ---@param filename string
 ---@return string
-local function get_blame_command(cmd, filename)
-    cmd = "git blame "
-        .. table.concat(require("trunks._core.configuration").DATA.blame.default_cmd_args, " ")
-        .. cmd:sub(6) -- remove "blame" from command
-    -- add current filename if file isn't provided
-    if not cmd:match("%-%- %S+") then
-        cmd = cmd .. " -- " .. filename
+local function get_blame_command(command_builder, filename)
+    -- Add default blame args from config
+    command_builder:add_args(table.concat(require("trunks._core.configuration").DATA.blame.default_cmd_args, " "))
+
+    -- Add filename if not already given
+    if not command_builder.base:match("%-%- %S+") then
+        command_builder:add_postfix_args(" -- " .. filename)
     end
-    return cmd
+    return command_builder:build()
 end
 
----@param cmd string
-M.render = function(cmd)
+---@param command_builder trunks.Command
+M.render = function(command_builder)
     local trunks_BLAME_PREFIX = "TrunksBlame://"
     local current_filename = vim.api.nvim_buf_get_name(0)
     if current_filename:sub(1, #trunks_BLAME_PREFIX) == trunks_BLAME_PREFIX then
@@ -242,7 +242,7 @@ M.render = function(cmd)
         end
     end
 
-    cmd = get_blame_command(cmd, current_filename)
+    local cmd = get_blame_command(command_builder, current_filename)
 
     local original_win = vim.api.nvim_get_current_win()
     local original_cursor_pos = vim.api.nvim_win_get_cursor(original_win)

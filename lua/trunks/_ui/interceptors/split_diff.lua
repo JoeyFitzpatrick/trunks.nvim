@@ -18,9 +18,10 @@ function M._parse_split_diff_args(cmd)
     return { filepath = vim.fn.expand("%"), commit = commit }
 end
 
----@param args string
+---@param command_builder trunks.Command
 ---@param split_type "below" | "right"
-function M.split_diff(args, split_type)
+function M.split_diff(command_builder, split_type)
+    local args = command_builder:build()
     local params = M._parse_split_diff_args(args)
 
     vim.cmd("diffthis")

@@ -74,24 +74,31 @@ local function contains_option(command, option)
     return command:match("%s+" .. option:gsub("%-", "%-"))
 end
 
----@param args? string
+---@param command_builder? trunks.Command
 ---@return { cmd: string, use_native_output: boolean, use_graph_output?: boolean, show_head: boolean }
-function M._parse_log_cmd(args)
-    -- if cmd is nil, or just "log" and whitespace, the default command is "git log" with special format
-    if not args or args:match("log%s-$") then
+function M._parse_log_cmd(command_builder)
+    -- if command has no args, the default command is "git log" with special format
+    if not command_builder then
         return { cmd = string.format("git log %s", DEFAULT_LOG_FORMAT), use_native_output = false, show_head = true }
     end
 
+    local args = command_builder.base
+    if not args or args:match("log%s-$") then
+        command_builder:add_args(DEFAULT_LOG_FORMAT)
+        return { cmd = command_builder:build(), use_native_output = false, show_head = true }
+    end
+
     if contains_option(args, "--graph") then
+        command_builder:add_args(DEFAULT_LOG_FORMAT)
         return {
-            cmd = string.format("git %s %s", args, DEFAULT_LOG_FORMAT),
+            cmd = command_builder:build(),
             use_graph_output = true,
             show_head = false,
             use_native_output = false,
         }
     end
 
-    local native_output = { cmd = "git " .. args, use_native_output = true, show_head = false }
+    local native_output = { cmd = command_builder:build(), use_native_output = true, show_head = false }
     for _, option in ipairs(M.NATIVE_OUTPUT_OPTIONS) do
         if contains_option(args, option) then
             return native_output
@@ -137,7 +144,7 @@ end
 ---@return { use_native_keymaps: boolean, use_graph_output?: boolean }
 local function set_lines(bufnr, opts)
     local start_line = opts.start_line or 0
-    local cmd_tbl = M._parse_log_cmd(opts.cmd)
+    local cmd_tbl = M._parse_log_cmd(opts.command_builder)
     vim.bo[bufnr].modifiable = true
 
     if cmd_tbl.show_head then

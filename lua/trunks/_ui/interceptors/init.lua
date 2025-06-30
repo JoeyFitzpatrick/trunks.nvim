@@ -1,22 +1,23 @@
 local M = {}
 
----@type table<string, fun(cmd?: string)>
+---@type table<string, fun(command_builder?: trunks.Command)>
 local cmd_ui_map = {
-    Hdiff = function(cmd)
-        require("trunks._ui.interceptors.split_diff").split_diff(cmd, "below")
+    Hdiff = function(command_builder)
+        require("trunks._ui.interceptors.split_diff").split_diff(command_builder, "below")
     end,
-    Vdiff = function(args)
-        require("trunks._ui.interceptors.split_diff").split_diff(args, "right")
+    Vdiff = function(command_builder)
+        require("trunks._ui.interceptors.split_diff").split_diff(command_builder, "right")
     end,
-    blame = function(cmd)
-        require("trunks._ui.interceptors.blame").render(cmd)
+    blame = function(command_builder)
+        require("trunks._ui.interceptors.blame").render(command_builder)
     end,
-    difftool = function(cmd)
-        require("trunks._ui.interceptors.difftool").render(cmd)
+    difftool = function(command_builder)
+        require("trunks._ui.interceptors.difftool").render(command_builder)
     end,
-    help = function(cmd)
+    help = function(command_builder)
         -- col -b is needed to remove bad characters from --help output
-        require("trunks._ui.interceptors.standard_interceptor").render(cmd .. " | col -b")
+        command_builder:add_args("| col -b")
+        require("trunks._ui.interceptors.standard_interceptor").render(command_builder)
         -- Setting the filetype to man add nice highlighting.
         -- It also makes the "q" keymap exit neovim if this is the last buffer, so we need to set it again
         vim.bo["filetype"] = "man"
@@ -24,15 +25,15 @@ local cmd_ui_map = {
             require("trunks._core.register").deregister_buffer(0)
         end, { buffer = 0 })
     end,
-    log = function(cmd)
+    log = function(command_builder)
         local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = "TrunksLog-" .. os.tmpname() })
-        require("trunks._ui.home_options.log").render(bufnr, { start_line = 0, cmd = cmd })
+        require("trunks._ui.home_options.log").render(bufnr, { start_line = 0, command_builder = command_builder })
     end,
     mergetool = function()
         require("trunks._ui.interceptors.mergetool").render()
     end,
-    reflog = function(cmd)
-        require("trunks._ui.interceptors.reflog").render(cmd)
+    reflog = function(command_builder)
+        require("trunks._ui.interceptors.reflog").render(command_builder)
     end,
     staging_area = function()
         local bufnr = require("trunks._ui.interceptors.staging_area").render()
@@ -50,8 +51,8 @@ local standard_output_commands = {
 }
 
 for _, command in ipairs(standard_output_commands) do
-    cmd_ui_map[command] = function(cmd)
-        require("trunks._ui.interceptors.standard_interceptor").render(cmd)
+    cmd_ui_map[command] = function(command_builder)
+        require("trunks._ui.interceptors.standard_interceptor").render(command_builder)
     end
 end
 
@@ -99,15 +100,23 @@ local function branch_interceptor(cmd)
     return nil
 end
 
----@param cmd string
----@return function | nil
-function M.get_ui(cmd)
+---@param command_builder trunks.Command
+---@return fun(command_builder: trunks.Command) | nil
+function M.get_ui(command_builder)
+    local cmd = command_builder.base
+    if not cmd then
+        return function()
+            require("trunks._ui.home").open()
+        end
+    end
+
     local subcommand = cmd:match("%S+")
     if not subcommand then
         return function()
             require("trunks._ui.home").open()
         end
     end
+
     if cmd:match("^difftool%s*$") then
         return cmd_ui_map.staging_area
     end

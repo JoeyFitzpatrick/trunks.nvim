@@ -87,13 +87,13 @@ local function set_keymaps(bufnr)
     end, keymap_opts)
 end
 
----@param cmd string
-function M.render(cmd)
+---@param command_builder trunks.Command
+function M.render(command_builder)
     local bufnr = require("trunks._ui.elements").new_buffer({
         buffer_name = os.tmpname() .. "TrunksReflog",
         filetype = "git",
         lines = function()
-            local output = require("trunks._core.run_cmd").run_cmd("git " .. cmd)
+            local output = require("trunks._core.run_cmd").run_cmd(command_builder:build())
             return output
         end,
     })

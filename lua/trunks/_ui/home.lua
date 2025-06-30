@@ -6,7 +6,7 @@
 
 ---@class trunks.UiRenderOpts
 ---@field start_line? integer
----@field cmd? string -- The command used for this UI
+---@field command_builder? trunks.Command -- The command used for this UI
 ---@field keymap_opts? trunks.GetKeymapsOpts
 ---@field win? integer
 
