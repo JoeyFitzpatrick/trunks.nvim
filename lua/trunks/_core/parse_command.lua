@@ -102,11 +102,17 @@ end
 
 ---@return string | nil
 function M.get_git_c_flag()
-    local buffer_to_check =
-        require("trunks._core.register").last_non_trunks_buffer_for_win[vim.api.nvim_get_current_win()]
+    local buffer_to_check
+    if not vim.b.is_trunks_buffer then
+        buffer_to_check = vim.api.nvim_get_current_buf()
+    else
+        buffer_to_check =
+            require("trunks._core.register").last_non_trunks_buffer_for_win[vim.api.nvim_get_current_win()]
+    end
     if not buffer_to_check or not vim.api.nvim_buf_is_valid(buffer_to_check) then
         return nil
     end
+
     local buf_path = vim.api.nvim_buf_get_name(buffer_to_check or 0)
     if buf_path == "" then
         return nil
