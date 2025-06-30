@@ -31,7 +31,7 @@ end
 local function set_lines(bufnr, opts)
     local start_line = opts.start_line or 0
     local output =
-        require("trunks._core.run_cmd").run_cmd("git stash list --pretty=format:'%<(12)%gd %<(18)%cr   %<(25)%s'")
+        require("trunks._core.run_cmd").run_cmd("stash list --pretty=format:'%<(12)%gd %<(18)%cr   %<(25)%s'")
     vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     vim.api.nvim_buf_set_lines(bufnr, start_line, -1, false, output)
     vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })

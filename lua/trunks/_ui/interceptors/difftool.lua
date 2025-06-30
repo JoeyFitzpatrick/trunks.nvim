@@ -23,7 +23,7 @@ end
 ---@param commits_to_diff string
 ---@return string[]
 local function get_diff_files(commits_to_diff)
-    local diff_cmd = string.format("git diff --name-status %s", commits_to_diff)
+    local diff_cmd = string.format("diff --name-status %s", commits_to_diff)
     local diff_stat_cmd = diff_cmd:gsub("%-%-name%-status", "--numstat", 1)
     local diff_files = require("trunks._core.run_cmd").run_cmd(diff_cmd)
     local diff_stats = require("trunks._core.run_cmd").run_cmd(diff_stat_cmd)

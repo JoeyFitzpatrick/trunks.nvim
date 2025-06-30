@@ -81,7 +81,7 @@ local function set_keymaps(bufnr)
             filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 }),
             lines = function()
                 local output =
-                    require("trunks._core.run_cmd").run_cmd(string.format("git show %s:%s", line_data.hash, filepath))
+                    require("trunks._core.run_cmd").run_cmd(string.format("show %s:%s", line_data.hash, filepath))
                 return output
             end,
             buffer_name = os.tmpname() .. "/" .. FILENAME_PREFIX .. filepath,
@@ -143,10 +143,10 @@ local function set_blame_win_width(bufnr)
 end
 
 ---@param bufnr integer
----@param cmd string
+---@param command_builder trunks.Command
 ---@return "success" | "error"
-function M.set_lines(bufnr, cmd)
-    local output, error_code = require("trunks._core.run_cmd").run_cmd(cmd, {})
+function M.set_lines(bufnr, command_builder)
+    local output, error_code = require("trunks._core.run_cmd").run_cmd(command_builder, {})
     if error_code ~= 0 then
         vim.notify(output[1], vim.log.levels.ERROR)
         vim.api.nvim_win_close(0, true)
@@ -212,7 +212,7 @@ end
 
 ---@param command_builder trunks.Command
 ---@param filename string
----@return string
+---@return trunks.Command
 local function get_blame_command(command_builder, filename)
     -- Add default blame args from config
     command_builder:add_args(table.concat(require("trunks._core.configuration").DATA.blame.default_cmd_args, " "))
@@ -221,7 +221,7 @@ local function get_blame_command(command_builder, filename)
     if not command_builder.base:match("%-%- %S+") then
         command_builder:add_postfix_args(" -- " .. filename)
     end
-    return command_builder:build()
+    return command_builder
 end
 
 ---@param command_builder trunks.Command
@@ -242,7 +242,7 @@ M.render = function(command_builder)
         end
     end
 
-    local cmd = get_blame_command(command_builder, current_filename)
+    command_builder = get_blame_command(command_builder, current_filename)
 
     local original_win = vim.api.nvim_get_current_win()
     local original_cursor_pos = vim.api.nvim_win_get_cursor(original_win)
@@ -253,7 +253,7 @@ M.render = function(command_builder)
     })
 
     BLAME_WINDOWS[blame_buffer_name] = vim.api.nvim_get_current_win()
-    local result = M.set_lines(bufnr, cmd)
+    local result = M.set_lines(bufnr, command_builder)
 
     if result ~= "success" then
         BLAME_WINDOWS[blame_buffer_name] = nil

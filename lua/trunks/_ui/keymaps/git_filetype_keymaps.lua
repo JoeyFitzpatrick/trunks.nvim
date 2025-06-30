@@ -46,8 +46,7 @@ end
 ---@param commit string
 ---@return string
 local function get_previous_commit(commit)
-    local previous_commit_hash_output =
-        require("trunks._core.run_cmd").run_cmd("git rev-list --parents -n 1 " .. commit)[1]
+    local previous_commit_hash_output = require("trunks._core.run_cmd").run_cmd("rev-list --parents -n 1 " .. commit)[1]
     local previous_commit = previous_commit_hash_output:match("%s(%x+)")
     if not previous_commit then
         -- if we can't parse the hash, just use commit + ^

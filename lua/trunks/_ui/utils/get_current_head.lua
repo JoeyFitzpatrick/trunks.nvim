@@ -15,12 +15,12 @@ function M.get_current_head(cmd)
     local ERROR_MSG = "HEAD: Unable to find current HEAD"
     local Command = require("trunks._core.command")
     local current_head, status_code =
-        require("trunks._core.run_cmd").run_cmd(Command.base_command("symbolic-ref --short HEAD"):build())
+        require("trunks._core.run_cmd").run_cmd(Command.base_command("symbolic-ref --short HEAD"))
 
     local detached_head_message = "fatal: ref HEAD is not a symbolic ref"
     if current_head[1] == detached_head_message then
         local current_head_hash, hash_status_code =
-            require("trunks._core.run_cmd").run_cmd(Command.base_command("rev-parse --short HEAD"):build())
+            require("trunks._core.run_cmd").run_cmd(Command.base_command("rev-parse --short HEAD"))
         if hash_status_code ~= 0 then
             return ERROR_MSG
         end

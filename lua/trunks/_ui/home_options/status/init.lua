@@ -60,7 +60,7 @@ function M.set_lines(bufnr, opts)
 
     ---@param cmd string
     local parse_and_run_cmd = function(cmd)
-        return require("trunks._core.run_cmd").run_cmd(Command.base_command(cmd):build())
+        return require("trunks._core.run_cmd").run_cmd(Command.base_command(cmd))
     end
     local start_line = opts.start_line or 1
 

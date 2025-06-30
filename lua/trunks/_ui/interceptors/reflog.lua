@@ -93,7 +93,7 @@ function M.render(command_builder)
         buffer_name = os.tmpname() .. "TrunksReflog",
         filetype = "git",
         lines = function()
-            local output = require("trunks._core.run_cmd").run_cmd(command_builder:build())
+            local output = require("trunks._core.run_cmd").run_cmd(command_builder)
             return output
         end,
     })

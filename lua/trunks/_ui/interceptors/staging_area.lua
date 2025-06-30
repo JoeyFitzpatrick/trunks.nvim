@@ -70,9 +70,9 @@ local function set_diff_keymaps(bufnr, is_staged)
         end
         local cmd
         if is_staged then
-            cmd = "git apply --reverse --cached --whitespace=fix -"
+            cmd = "apply --reverse --cached --whitespace=fix -"
         else
-            cmd = "git apply --cached --whitespace=fix -"
+            cmd = "apply --cached --whitespace=fix -"
         end
         require("trunks._core.run_cmd").run_cmd(
             cmd,
@@ -107,7 +107,7 @@ local function setup_diff_buffer(args)
             then
                 return
             end
-            local status_output = require("trunks._core.run_cmd").run_cmd("git status --porcelain -- " .. filename)
+            local status_output = require("trunks._core.run_cmd").run_cmd("status --porcelain -- " .. filename)
             if not status_output[1] then
                 return
             end

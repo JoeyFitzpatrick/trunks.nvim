@@ -42,7 +42,7 @@ function M.set_lines(bufnr, commit)
     vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     local command_builder =
         require("trunks._core.command").base_command("show --stat=10000 --stat-graph-width=40 " .. commit)
-    local commit_data = require("trunks._core.run_cmd").run_cmd(command_builder:build())
+    local commit_data = require("trunks._core.run_cmd").run_cmd(command_builder)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, commit_data)
     vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 

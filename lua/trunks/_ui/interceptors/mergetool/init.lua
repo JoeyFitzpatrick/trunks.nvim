@@ -3,12 +3,10 @@ local M = {}
 local KEYMAPS_ARE_SET = false
 
 local function get_all_conflict_lines()
-    local run_cmd = require("trunks._core.run_cmd").run_cmd
-
     -- Get the initial list of potential conflict lines
-    local potential_conflicts = run_cmd(
+    local potential_conflicts = require("trunks._core.run_cmd").run_cmd(
         -- luacheck: ignore 631
-        "git -c core.whitespace=-trailing-space,-space-before-tab,-indent-with-non-tab,-tab-in-indent,-cr-at-eol diff --check"
+        "-c core.whitespace=-trailing-space,-space-before-tab,-indent-with-non-tab,-tab-in-indent,-cr-at-eol diff --check"
     )
 
     local filtered_conflicts = {}

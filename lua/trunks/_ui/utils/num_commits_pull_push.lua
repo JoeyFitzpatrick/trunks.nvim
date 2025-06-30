@@ -9,8 +9,8 @@ local M = {}
 ---@param branch string
 local function get_num_commits_to_pull_and_push(branch)
     local run_cmd = require("trunks._core.run_cmd").run_cmd
-    local pull_lines, pull_error_code = run_cmd(string.format("git rev-list --count %s..origin/%s", branch, branch))
-    local push_lines, push_error_code = run_cmd(string.format("git rev-list --count origin/%s..%s", branch, branch))
+    local pull_lines, pull_error_code = run_cmd(string.format("rev-list --count %s..origin/%s", branch, branch))
+    local push_lines, push_error_code = run_cmd(string.format("rev-list --count origin/%s..%s", branch, branch))
     if pull_error_code ~= 0 or push_error_code ~= 0 then
         return ""
     end

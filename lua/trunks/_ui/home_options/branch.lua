@@ -2,7 +2,7 @@ local Command = require("trunks._core.command")
 
 local M = {}
 
-local run_cmd = require("trunks._vendors.lazy_require").require_on_index("trunks._core.run_cmd")
+local run_cmd = require("trunks._core.run_cmd")
 
 --- Highlight branch lines
 ---@param bufnr integer
@@ -44,7 +44,7 @@ local function set_lines(bufnr, opts)
         -- This sorts branches such that the current branch appears first
         opts.command_builder = Command.base_command("branch --sort=-HEAD")
     end
-    local output = run_cmd.run_cmd(opts.command_builder:build())
+    local output = run_cmd.run_cmd(opts.command_builder)
     vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     vim.api.nvim_buf_set_lines(bufnr, start_line, -1, false, output)
     vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
@@ -82,19 +82,19 @@ local function set_keymaps(bufnr, opts)
     local function delete_branch(branch_name, delete_type)
         local delete_actions = {
             local_only = function()
-                return run_cmd.run_hidden_cmd("git branch --delete " .. branch_name)
+                return run_cmd.run_hidden_cmd("branch --delete " .. branch_name)
             end,
             remote_only = function()
-                return run_cmd.run_hidden_cmd("git push origin --delete " .. branch_name)
+                return run_cmd.run_hidden_cmd("push origin --delete " .. branch_name)
             end,
             both = function()
                 -- Try local deletion first
-                local status, code = run_cmd.run_hidden_cmd("git branch --delete " .. branch_name)
+                local status, code = run_cmd.run_hidden_cmd("branch --delete " .. branch_name)
                 if status == "error" then
                     return status, code
                 end
                 -- Then try remote deletion
-                local output, _ = run_cmd.run_hidden_cmd("git push origin --delete " .. branch_name)
+                local output, _ = run_cmd.run_hidden_cmd("push origin --delete " .. branch_name)
                 return output
             end,
         }
@@ -116,7 +116,7 @@ local function set_keymaps(bufnr, opts)
                         keys = "y",
                         description = "Yes",
                         action = function()
-                            run_cmd.run_hidden_cmd("git branch -D " .. branch_name)
+                            run_cmd.run_hidden_cmd("branch -D " .. branch_name)
                             set_lines(bufnr, opts)
                         end,
                     },
@@ -199,7 +199,7 @@ local function set_keymaps(bufnr, opts)
             if not input then
                 return
             end
-            local result = run_cmd.run_hidden_cmd("git switch --create " .. input)
+            local result = run_cmd.run_hidden_cmd("switch --create " .. input)
             if result == "error" then
                 return
             end
@@ -216,10 +216,7 @@ local function set_keymaps(bufnr, opts)
             if not input then
                 return
             end
-            run_cmd.run_hidden_cmd(
-                string.format("git branch -m %s %s", line_data.branch_name, input),
-                { rerender = true }
-            )
+            run_cmd.run_hidden_cmd(string.format("branch -m %s %s", line_data.branch_name, input), { rerender = true })
         end)
     end, keymap_opts)
 
@@ -228,7 +225,7 @@ local function set_keymaps(bufnr, opts)
         if not ok or not line_data then
             return
         end
-        local result = run_cmd.run_hidden_cmd("git switch " .. line_data.branch_name)
+        local result = run_cmd.run_hidden_cmd("switch " .. line_data.branch_name)
         if result == "error" then
             return
         end

@@ -28,7 +28,7 @@ end
 ---@param commit string
 local function setup_git_file(bufnr, filename, commit)
     local lines, error_code = require("trunks._core.run_cmd").run_cmd(
-        string.format("git show %s:%s", commit, require("trunks._core.texter").surround_with_quotes(filename))
+        string.format("show %s:%s", commit, require("trunks._core.texter").surround_with_quotes(filename))
     )
     if error_code ~= 0 then
         lines = { "" }
