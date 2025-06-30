@@ -44,7 +44,7 @@ local function set_lines(bufnr, opts)
         -- This sorts branches such that the current branch appears first
         opts.command_builder = Command.base_command("branch --sort=-HEAD")
     end
-    local output = run_cmd.run_cmd(opts.command_builder:build())
+    local output = run_cmd.run_cmd(opts.command_builder)
     vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     vim.api.nvim_buf_set_lines(bufnr, start_line, -1, false, output)
     vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })

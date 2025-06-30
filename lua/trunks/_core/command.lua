@@ -56,7 +56,8 @@ function Command:add_postfix_args(args)
 end
 
 function Command:build()
-    local cmd_parts = self._prefix
+    local unpack = unpack or table.unpack
+    local cmd_parts = { unpack(self._prefix) }
     table_insert_if_exists(cmd_parts, self._prefix_args)
     if self.base then
         table.insert(cmd_parts, self.base)
