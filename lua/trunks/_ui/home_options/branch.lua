@@ -1,3 +1,5 @@
+local Command = require("trunks._core.command")
+
 local M = {}
 
 local run_cmd = require("trunks._vendors.lazy_require").require_on_index("trunks._core.run_cmd")
@@ -38,11 +40,11 @@ end
 local function set_lines(bufnr, opts)
     local start_line = opts.start_line or 0
     -- if cmd is nil, the default command is "git branch"
-    if not opts.cmd then
+    if not opts.command_builder then
         -- This sorts branches such that the current branch appears first
-        opts.cmd = "branch --sort=-HEAD"
+        opts.command_builder = Command.base_command("branch --sort=-HEAD")
     end
-    local output = run_cmd.run_cmd(string.format("git %s", opts.cmd))
+    local output = run_cmd.run_cmd(opts.command_builder:build())
     vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     vim.api.nvim_buf_set_lines(bufnr, start_line, -1, false, output)
     vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })

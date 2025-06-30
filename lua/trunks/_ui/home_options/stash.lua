@@ -108,7 +108,10 @@ function M.render(bufnr, opts)
             if not ok or not line_data then
                 return
             end
-            return "git stash show -p --include-untracked " .. line_data.stash_index
+            local command_builder = require("trunks._core.command").base_command(
+                "stash show -p --include-untracked " .. line_data.stash_index
+            )
+            return command_builder:build()
         end,
         get_current_diff = function()
             local ok, line_data = pcall(get_line, bufnr)

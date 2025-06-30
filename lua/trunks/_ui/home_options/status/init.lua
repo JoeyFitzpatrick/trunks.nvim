@@ -56,17 +56,24 @@ function M.set_lines(bufnr, opts)
     if not vim.api.nvim_buf_is_valid(bufnr) then
         return
     end
-    local run_cmd = require("trunks._core.run_cmd").run_cmd
+    local Command = require("trunks._core.command")
+
+    ---@param cmd string
+    local parse_and_run_cmd = function(cmd)
+        return require("trunks._core.run_cmd").run_cmd(Command.base_command(cmd):build())
+    end
     local start_line = opts.start_line or 1
+
     vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     local current_head = require("trunks._ui.utils.get_current_head").get_current_head()
-    local stat_line = run_cmd(
-        "git diff --staged --shortstat | grep -q '^' && git diff --staged --shortstat || echo 'No files staged'"
+    local stat_line = parse_and_run_cmd(
+        "diff --staged --shortstat | grep -q '^' && git diff --staged --shortstat || echo 'No files staged'"
     )[1]
-    local files = run_cmd("git status --porcelain --untracked")
+    local files = parse_and_run_cmd("status --porcelain --untracked")
     M._sort_status_files(files)
     vim.api.nvim_buf_set_lines(bufnr, start_line - 1, -1, false, { current_head, stat_line, unpack(files) })
     vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+
     require("trunks._ui.utils.get_current_head").highlight_head_line(bufnr, current_head, start_line - 1)
     -- For highlights, we don't want to include the 2 lines of non-files text.
     -- Lines are 0-indexed, so we only need to increment start_line by 1.

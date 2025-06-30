@@ -79,7 +79,8 @@ end
 function M._parse_log_cmd(command_builder)
     -- if command has no args, the default command is "git log" with special format
     if not command_builder then
-        return { cmd = string.format("git log %s", DEFAULT_LOG_FORMAT), use_native_output = false, show_head = true }
+        command_builder = require("trunks._core.command").base_command("log"):add_args(DEFAULT_LOG_FORMAT)
+        return { cmd = command_builder:build(), use_native_output = false, show_head = true }
     end
 
     local args = command_builder.base

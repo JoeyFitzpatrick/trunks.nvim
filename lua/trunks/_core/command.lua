@@ -40,13 +40,6 @@ function Command.base_command(cmd)
     return self
 end
 
---- Sometimes we need to pass around a -C flag that is generated, so here's a way
---- to get it from a Command instance.
----@return string | nil
-function Command:get_c_flag()
-    return self._prefix[2]
-end
-
 function Command:add_prefix_args(args)
     table.insert(self._prefix_args, args)
     return self
