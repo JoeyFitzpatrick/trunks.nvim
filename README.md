@@ -16,7 +16,7 @@ Trunks is a Neovim git client. It takes some ideas from [vim-fugitive](https://g
 - Easy and straightforward customizability
 
 Here's an example of the Home UI in Trunks, which is opened by invoking `:G`:
-![Home UI](./gifs/trunks_home_ui.gif)
+
 
 Here's an example of running some git commands with Trunks:
 ![trunks_some_commands](https://github.com/user-attachments/assets/a93743fa-056e-4d4d-917d-95e0dc0f2a86)
