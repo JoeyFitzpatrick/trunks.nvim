@@ -78,19 +78,11 @@ This should print the context lines, while not counting them for syntax highligh
 ### Git pull can't rebase multiple branches
 Sometimes when using the `git pull` mapping in a UI, instead of pulling, there is an error that says `can't rebase onto multiple branches`. This usually goes away after pulling a second or third time. It would be nice if this just didn't happen at all.
 
-### Status UI set cursor to first file
-Currently, the status UI just puts the cursor on the first line, even if there are files. This means the user has to move the cursor down twice just to start seeing file diffs. The cursor should automatically be moved to the first file:
-* if there is a file, and
-* if the cursor isn't already at or past the first file.
-
 ### Git integration tests
 The thought here is that integration tests could help ensure that our functions produce the correct git state, given some current state. This could be pretty powerful. Would probably look like:
 * A script to set up git repo for various states
 * Teardown script
 * Be able to call these before/after each test run
-
-### Git branch --all is sluggish
-It probably just needs to switch to streaming lines in.
 
 ### Git log -S with multiline visual selection
 It would be awesome if using `:G log -S` from visual mode worked with a multiline selection. One way this _could_ work is to use concepts from [this blog post](https://hoelz.ro/blog/applying-gits-pickaxe-option-across-multiple-lines-of-yaml-using-textconv). The gist of it is:
@@ -111,3 +103,4 @@ In git, many commands take a `--quiet` flag that surpresses informational messag
 
 ### Reblame handles files not in commit
 When reblaming a file that has a different name at a given commit, a pretty ugly error is shown. We should handle that more gracefully by either figuring out the old file name, or if that's not possible, show a better error.
+

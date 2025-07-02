@@ -7,7 +7,11 @@
 local M = {}
 
 ---@param branch string
+---@return string
 local function get_num_commits_to_pull_and_push(branch)
+    if branch:match("%s-remotes/") then
+        return ""
+    end
     local run_cmd = require("trunks._core.run_cmd").run_cmd
     local pull_lines, pull_error_code = run_cmd(string.format("rev-list --count %s..origin/%s", branch, branch))
     local push_lines, push_error_code = run_cmd(string.format("rev-list --count origin/%s..%s", branch, branch))

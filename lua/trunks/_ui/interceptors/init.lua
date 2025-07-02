@@ -80,17 +80,20 @@ local BRANCH_UI_OPTIONS = {
 
 --- Some branch commands, like `git branch new-branch old-branch`,
 --- should not open the special branch UI, and just run in terminal mode.
----@param cmd string
+---@param command_builder trunks.Command
 ---@return function | nil
-local function branch_interceptor(cmd)
-    local has_only_ui_options = require("trunks._core.texter").only_has_options(cmd, BRANCH_UI_OPTIONS)
+local function branch_interceptor(command_builder)
+    local has_only_ui_options = require("trunks._core.texter").only_has_options(command_builder, BRANCH_UI_OPTIONS)
     if has_only_ui_options then
-        return function(branch_cmd)
+        return function(branch_command_builder)
             local bufnr = require("trunks._ui.elements").new_buffer({
                 buffer_name = "TrunksBranch-" .. os.tmpname(),
                 win_config = { split = "below" },
             })
-            require("trunks._ui.home_options.branch").render(bufnr, { start_line = 0, cmd = branch_cmd })
+            require("trunks._ui.home_options.branch").render(
+                bufnr,
+                { start_line = 0, command_builder = branch_command_builder }
+            )
             -- By default branch UI "q" map will go back to last buffer, but in a split we just want to close it
             require("trunks._ui.keymaps.set").safe_set_keymap("n", "q", function()
                 require("trunks._core.register").deregister_buffer(bufnr)
@@ -122,7 +125,7 @@ function M.get_ui(command_builder)
     end
     if vim.startswith(cmd, "branch") then
         -- If this is nil, fall back to terminal mode
-        return branch_interceptor(cmd)
+        return branch_interceptor(command_builder)
     end
     local is_help_command = cmd:match("%-h%s*$") or cmd:match("%-%-help%s*$")
     if is_help_command then

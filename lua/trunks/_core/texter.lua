@@ -68,10 +68,14 @@ end
 
 --- Check if a given string only contains any of a list of options.
 --- Some commands are handled differently depending on the options given.
----@param cmd string
+---@param command_builder trunks.Command
 ---@param options string[]
 ---@return boolean
-function M.only_has_options(cmd, options)
+function M.only_has_options(command_builder, options)
+    local cmd = command_builder.base
+    if not cmd then
+        return true
+    end
     for word in cmd:gmatch("%S+") do
         if not vim.tbl_contains(options, word) then
             return false
