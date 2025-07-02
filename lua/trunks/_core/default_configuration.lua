@@ -134,4 +134,11 @@ return {
             stash_popup = "S",
         },
     },
+    worktree = {
+        keymaps = {
+            new = "n", -- Create new worktree
+            delete = "d", -- Delete worktree
+            switch = "s", -- Switch to worktree
+        },
+    },
 }

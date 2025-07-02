@@ -45,6 +45,11 @@ local cmd_ui_map = {
     end,
 }
 
+-- Keeping this out of the UI map, so that commands like "worktree add" don't render UI
+local worktree_render = function(command_builder)
+    require("trunks._ui.interceptors.worktree").render(command_builder)
+end
+
 local standard_output_commands = {
     "diff",
     "show",
@@ -122,6 +127,9 @@ function M.get_ui(command_builder)
 
     if cmd:match("^difftool%s*$") then
         return cmd_ui_map.staging_area
+    end
+    if cmd:match("^worktree%s*$") then
+        return worktree_render
     end
     if vim.startswith(cmd, "branch") then
         -- If this is nil, fall back to terminal mode

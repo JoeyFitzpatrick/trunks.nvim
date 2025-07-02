@@ -22,6 +22,7 @@
 ---@field stash? trunks.StashConfiguration
 ---@field stash_popup? trunks.StashPopupConfiguration
 ---@field status? trunks.StatusConfiguration
+---@field worktree? trunks.WorktreeConfiguration
 
 ---@class trunks.BlameConfiguration
 ---@field default_cmd_args? string[]
@@ -71,6 +72,9 @@
 ---@class trunks.StatusConfiguration
 ---@field keymaps? trunks.StatusKeymaps
 ---@field auto_display_on? boolean
+
+---@class trunks.WorktreeConfiguration
+---@field keymaps? trunks.WorktreeKeymaps
 
 ---@class trunks.HomeKeymaps
 ---@field next? string
@@ -167,3 +171,8 @@
 ---@field stage? string
 ---@field stage_all? string
 ---@field stash_popup? string
+
+---@class trunks.WorktreeKeymaps
+---@field new? string
+---@field delete? string
+---@field switch? string

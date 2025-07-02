@@ -37,7 +37,7 @@ In a file from a previous commit, be able to:
 In a git patch, be able to do the above, as well as:
 * restore a single hunk
 
-### Allow users to create custome command mappings
+### Allow users to create custom command mappings
 Users should be able to create their own keymaps for different UIs. This can be done in a couple of ways:
 1. In the config, allow specifying a map/function combination. For instance:
 ```lua

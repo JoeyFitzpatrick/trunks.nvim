@@ -112,6 +112,11 @@ M.long_descriptions = {
         stage_all = "Stage all files",
         stash_popup = "Open git stash options",
     },
+    worktree = {
+        new = "Create new worktree",
+        delete = "Delete worktree",
+        switch = "Switch to worktree",
+    },
 }
 
 local config = require("trunks._core.configuration").DATA
