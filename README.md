@@ -86,6 +86,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     pull = "p",
                     push = "<leader>p",
                     rename = "rn", -- Rename branch under cursor
+                    spinoff = "S", -- Create new branch off of current, then reset current to upstream
                     switch = "s", -- Switch to branch under cursor
                 },
             },

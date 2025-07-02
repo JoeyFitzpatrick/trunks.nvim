@@ -5,19 +5,8 @@ While the project is in alpha, we will not use versioning. Once all of the impro
 
 ## Features
 
-### Keymap discoverability
-This is a big one. Need to add keymaps to the UI so that they are more easily discoverable. Either at the top of the screen in the home UI, or at the bottom with virtual text.
-
 ### Display files in a tree
 In all UIs that display files, we currently display all files in a flat structure; each file takes up one line. It would be great to be able to display files in a tree instead. This should be config driven. This should be doable for most, if not all, UIs. The first one to tackle would be the status UI.
-
-### Display descriptions for mapping under cursor in popups and help float
-I like the idea of making this a one-key mapping, e.g. pressing `?` shows a description of the keymap under the cursor.
-
-I'd also be open to making this happen automatically on cursor move. But I wonder if this would look cluttered.
-
-### Branch spin-off mappings in branch UI
-This is a [magit feature](https://magit.vc/manual/magit/Branch-Commands.html#index-b-s).
 
 ### Undo
 Not well thought out, but the idea is that we could undo some operations:

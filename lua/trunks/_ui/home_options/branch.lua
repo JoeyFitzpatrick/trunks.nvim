@@ -186,7 +186,7 @@ local function set_keymaps(bufnr, opts)
         local log_bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = "TrunksLog-" .. os.tmpname() })
         require("trunks._ui.home_options.log").render(
             log_bufnr,
-            { start_line = 0, cmd = "log " .. line_data.branch_name }
+            { start_line = 0, command_builder = Command.base_command("log " .. line_data.branch_name) }
         )
     end, keymap_opts)
 
@@ -218,6 +218,36 @@ local function set_keymaps(bufnr, opts)
             end
             run_cmd.run_hidden_cmd(string.format("branch -m %s %s", line_data.branch_name, input), { rerender = true })
         end)
+    end, keymap_opts)
+
+    set("n", keymaps.spinoff, function()
+        local ok, line_data = pcall(get_line, bufnr)
+        if not ok or not line_data then
+            return
+        end
+        vim.ui.input({ prompt = "Name for new branch off of " .. line_data.branch_name .. ": " }, function(input)
+            if not input then
+                return
+            end
+            -- Create and switch to new branch
+            local new_branch_result =
+                run_cmd.run_hidden_cmd("switch --create " .. input .. " " .. line_data.branch_name, { rerender = true })
+            if new_branch_result == "error" then
+                return
+            end
+            -- Reset previous branch to upstream
+            run_cmd.run_hidden_cmd("fetch")
+            local upstream_branch =
+                run_cmd.run_cmd(string.format("rev-parse --abbrev-ref %s@{upstream}", line_data.branch_name))[1]
+            if not upstream_branch then
+                return
+            end
+            run_cmd.run_hidden_cmd(
+                string.format("update-ref refs/heads/%s refs/remotes/%s", line_data.branch_name, upstream_branch),
+                { rerender = true }
+            )
+        end)
+        set_lines(bufnr, opts)
     end, keymap_opts)
 
     set("n", keymaps.switch, function()

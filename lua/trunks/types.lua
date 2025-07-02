@@ -97,6 +97,7 @@
 ---@field pull? string
 ---@field push? string
 ---@field rename? string
+---@field spinoff? string
 ---@field switch? string
 
 ---@class trunks.CommitDetailsKeymaps

@@ -3,11 +3,11 @@ local M = {}
 --- If no command is passed in, return the current branch.
 --- Otherwise, parse the branch from the command passed in.
 --- Includes handling for detached HEAD and errors.
----@param cmd string?
+---@param command_builder? trunks.Command
 ---@return string
-function M.get_current_head(cmd)
-    if cmd then
-        local branch = require("trunks._core.texter").find_non_dash_arg(cmd:sub(5))
+function M.get_current_head(command_builder)
+    if command_builder and command_builder.base then
+        local branch = require("trunks._core.texter").find_non_dash_arg(command_builder.base:sub(5))
         if branch then
             return "Branch: " .. branch
         end

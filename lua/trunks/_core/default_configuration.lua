@@ -38,6 +38,7 @@ return {
             pull = "p",
             push = "<leader>p",
             rename = "rn", -- Rename branch under cursor
+            spinoff = "S", -- Create new branch off of current, then reset current to upstream
             switch = "s", -- Switch to branch under cursor
         },
     },

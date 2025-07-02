@@ -33,6 +33,7 @@ M.long_descriptions = {
         pull = PULL_DESCRIPTION,
         push = PUSH_DESCRIPTION,
         rename = "Rename branch",
+        spinoff = "Spinoff branch",
         switch = "Switch branch",
     },
     ---@type trunks.CommitDetailsKeymaps

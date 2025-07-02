@@ -149,7 +149,7 @@ local function set_lines(bufnr, opts)
     vim.bo[bufnr].modifiable = true
 
     if cmd_tbl.show_head then
-        local first_line = require("trunks._ui.utils.get_current_head").get_current_head(opts.cmd)
+        local first_line = require("trunks._ui.utils.get_current_head").get_current_head(opts.command_builder)
         vim.api.nvim_buf_set_lines(bufnr, start_line, start_line + 1, false, { first_line })
         require("trunks._ui.utils.get_current_head").highlight_head_line(bufnr, first_line, start_line)
         start_line = start_line + 1
