@@ -56,17 +56,27 @@ end
 local function display_keymap_help(mappings, ui_type, opts)
     ---@type string[]
     local keys_to_descriptions = {}
-    local descriptions = require("trunks._constants.keymap_descriptions")[ui_type] or {}
+    local descriptions = require("trunks._constants.keymap_descriptions").long_descriptions[ui_type] or {}
     if opts.open_file_keymaps then
-        descriptions =
-            vim.tbl_extend("force", descriptions, require("trunks._constants.keymap_descriptions").open_files)
+        descriptions = vim.tbl_extend(
+            "force",
+            descriptions,
+            require("trunks._constants.keymap_descriptions").long_descriptions.open_files
+        )
     end
     if opts.auto_display_keymaps then
-        descriptions =
-            vim.tbl_extend("force", descriptions, require("trunks._constants.keymap_descriptions").auto_display)
+        descriptions = vim.tbl_extend(
+            "force",
+            descriptions,
+            require("trunks._constants.keymap_descriptions").long_descriptions.auto_display
+        )
     end
     if opts.diff_keymaps then
-        descriptions = vim.tbl_extend("force", descriptions, require("trunks._constants.keymap_descriptions").diff)
+        descriptions = vim.tbl_extend(
+            "force",
+            descriptions,
+            require("trunks._constants.keymap_descriptions").long_descriptions.diff
+        )
     end
     local max_keymap_length = get_max_keymap_length(mappings)
 

@@ -183,6 +183,8 @@ local function create_and_render_buffer(tab, indices)
         tabs:cycle_tab("back")
         create_and_render_buffer(tabs.current_option, tabs.current_tab_indices)
     end, { buffer = bufnr })
+
+    require("trunks._ui.floating_text").show_keymaps(bufnr, 0, { "home", string.lower(tab) })
 end
 
 function M.open()

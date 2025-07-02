@@ -1,7 +1,9 @@
 local PULL_DESCRIPTION = "Pull changes"
 local PUSH_DESCRIPTION = "Push changes"
 
-return {
+local M = {}
+
+M.long_descriptions = {
     ---@type trunks.HomeKeymaps
     home = {
         next = "Move to next item",
@@ -110,3 +112,54 @@ return {
         stash_popup = "Open git stash options",
     },
 }
+
+local config = require("trunks._core.configuration").DATA
+
+---@type trunks.Configuration
+M.short_descriptions = {
+    home = { string.format("Change UI: %s/%s", config.home.keymaps.previous, config.home.keymaps.next) },
+    status = {
+        "Commit: " .. config.status.keymaps.commit_popup,
+        "Stash: " .. config.status.keymaps.stash_popup,
+        "Discard: " .. config.status.keymaps.restore,
+        "Staging Area: " .. config.status.keymaps.enter_staging_area,
+    },
+    branch = {
+        "Switch: " .. config.branch.keymaps.switch,
+        "New branch: " .. config.branch.keymaps.new_branch,
+        "Commits: " .. config.branch.keymaps.log,
+        "Rename: " .. config.branch.keymaps.rename,
+        "Delete: " .. config.branch.keymaps.delete,
+    },
+    log = {
+        "Details: " .. config.log.keymaps.commit_details,
+        "Rebase: " .. config.log.keymaps.rebase,
+        "Revert: " .. config.log.keymaps.revert,
+        "Checkout: " .. config.log.keymaps.checkout,
+        "Diff: " .. config.log.keymaps.diff_commit_against_head,
+    },
+    stash = {
+        "Apply: " .. config.stash.keymaps.apply,
+        "Pop: " .. config.stash.keymaps.pop,
+        "Drop: " .. config.stash.keymaps.drop,
+        "Details: " .. config.stash.keymaps.show,
+    },
+}
+
+---@param ui_types string[]
+---@return string
+function M.get_short_descriptions_as_string(ui_types)
+    local descriptions = {}
+    for _, ui_type in ipairs(ui_types) do
+        if M.short_descriptions[ui_type] then
+            for _, desc in ipairs(M.short_descriptions[ui_type]) do
+                table.insert(descriptions, desc)
+            end
+        end
+    end
+    table.insert(descriptions, "Keymaps: g?")
+    table.insert(descriptions, "Close: q")
+    return table.concat(descriptions, " | ")
+end
+
+return M

@@ -34,7 +34,7 @@
 ---@field keymaps? trunks.AutoDisplayKeymaps
 
 ---@class trunks.BranchConfiguration
----@field keymaps trunks.BranchKeymaps
+---@field keymaps? trunks.BranchKeymaps
 
 ---@class trunks.CommitDetailsConfiguration
 ---@field keymaps? trunks.CommitDetailsKeymaps

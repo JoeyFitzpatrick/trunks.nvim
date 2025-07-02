@@ -19,7 +19,7 @@ local function get_popup_lines(bufnr, mapping_config, title)
     if type(mapping_config) == "string" then
         local ui_type = mapping_config
         local mappings = require("trunks._core.configuration").DATA[ui_type].keymaps
-        local descriptions = require("trunks._constants.keymap_descriptions")[ui_type]
+        local descriptions = require("trunks._constants.keymap_descriptions").long_descriptions[ui_type]
         local lines = { " " .. title }
         for command, keys in pairs(mappings) do
             table.insert(lines, string.format(" %s %s\t", keys, descriptions[command]))
