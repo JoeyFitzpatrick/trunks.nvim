@@ -9,7 +9,7 @@ local function get_line(bufnr, line_num)
     if line == "" then
         return nil
     end
-    return { worktree = line:sub(6):match("%S+"), hash = line:match("%x+$") }
+    return { worktree = line:match("󰌹%s+([^%s%(]+)"), hash = line:match("%x+$") }
 end
 
 local function set_keymaps(bufnr)
@@ -22,12 +22,29 @@ local function set_keymaps(bufnr)
         if not ok or not line_data then
             return
         end
-        vim.ui.input({ prompt = "Name for new worktree off of " .. line_data.worktree .. ": " }, function(input)
-            if not input then
-                return
+
+        local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+        local default_worktree_location = "../" .. project_name .. "+"
+
+        vim.ui.select(
+            require("trunks._completion.completion").get_branches(),
+            { prompt = "Branch for new worktree" },
+            function(worktree_branch)
+                if not worktree_branch then
+                    return
+                end
+
+                vim.ui.input({
+                    prompt = "Name for new worktree off of " .. line_data.worktree .. ": ",
+                    default = default_worktree_location,
+                }, function(input)
+                    if not input then
+                        return
+                    end
+                    vim.cmd(string.format("G worktree add %s %s", input, worktree_branch))
+                end)
             end
-            vim.cmd(string.format("G worktree add %s %s", input, line_data.hash))
-        end)
+        )
     end, keymap_opts)
 
     set("n", keymaps.delete, function()
@@ -47,7 +64,27 @@ local function set_keymaps(bufnr)
         )
     end, keymap_opts)
 
-    set("n", keymaps.switch, function() end, keymap_opts)
+    set("n", keymaps.switch, function()
+        local ok, line_data = pcall(get_line, bufnr)
+        if not ok or not line_data then
+            return
+        end
+        vim.cmd(string.format("cd ../%s", line_data.worktree))
+    end, keymap_opts)
+end
+
+---@param command_builder trunks.Command
+---@return string[]
+local function get_lines(command_builder)
+    local worktrees = require("trunks._core.run_cmd").run_cmd(command_builder)
+    local output = {}
+    for _, line in ipairs(worktrees) do
+        local worktree_name = line:match(".*/([^%s]*)")
+        local worktree_hash = line:match("%s(%S+)")
+        local worktree_branch = line:match("%[(.+)%]")
+        table.insert(output, string.format(" 󰌹  %s (%s) -- %s", worktree_name, worktree_branch, worktree_hash))
+    end
+    return output
 end
 
 ---@param command_builder trunks.Command
@@ -56,21 +93,17 @@ function M.render(command_builder)
     local bufnr = require("trunks._ui.elements").new_buffer({
         buffer_name = "TrunksWorktree-" .. os.tmpname(),
         lines = function()
-            local worktrees = require("trunks._core.run_cmd").run_cmd(command_builder)
-            local output = {}
-            for _, line in ipairs(worktrees) do
-                local worktree_name = line:match(".*/([^%s]*)")
-                local worktree_hash = line:match("%s(%S+)")
-                local worktree_branch = line:match("%[(.+)%]")
-                table.insert(
-                    output,
-                    string.format(" 󰌹  %s (%s) -- %s", worktree_name, worktree_branch, worktree_hash)
-                )
-            end
-            return output
+            return get_lines(command_builder)
         end,
     })
     set_keymaps(bufnr)
+    require("trunks._core.register").register_buffer(bufnr, {
+        render_fn = function()
+            vim.bo[bufnr].modifiable = true
+            vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, get_lines(command_builder))
+            vim.bo[bufnr].modifiable = false
+        end,
+    })
 end
 
 return M

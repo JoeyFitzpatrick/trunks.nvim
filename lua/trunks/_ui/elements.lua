@@ -21,16 +21,16 @@ local function parse_display_strategy(cmd, display_strategy)
     return display_strategy
 end
 
---- Some commands parse command options to determine whether to enter in insert mode.
+--- Some commands parse command options to determine whether to return true or false.
 --- In this case, run the parse function, otherwise return the bool.
 ---@param cmd string[]
----@param should_enter_insert boolean | trunks.ShouldEnterInsert
+---@param parse_fn boolean | trunks.DisplayStrategyBoolParser
 ---@return boolean
-local function parse_should_enter_insert(cmd, should_enter_insert)
-    if type(should_enter_insert) == "function" then
-        return should_enter_insert(cmd)
+local function parse_bool_or_function(cmd, parse_fn)
+    if type(parse_fn) == "function" then
+        return parse_fn(cmd)
     end
-    return should_enter_insert
+    return parse_fn
 end
 
 --- Get the number of lines to trim in terminal output.
@@ -79,7 +79,7 @@ local function open_dynamic_terminal(cmd, bufnr, win, strategy)
             vim.api.nvim_win_set_height(win, math.min(height, max_height))
         end,
         on_exit = function()
-            if strategy.trigger_redraw then
+            if parse_bool_or_function(vim.split(cmd, " "), strategy.trigger_redraw) then
                 require("trunks._core.register").rerender_buffers()
             end
             local trim_terminal_output = function()
@@ -143,7 +143,7 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         channel_id = vim.fn.jobstart(cmd, {
             term = true,
             on_exit = function()
-                if strategy.trigger_redraw then
+                if parse_bool_or_function(vim.split(cmd, " "), strategy.trigger_redraw) then
                     require("trunks._core.register").rerender_buffers()
                 end
             end,
@@ -167,7 +167,7 @@ function M.terminal(cmd, strategy)
     local derived_strategy = require("trunks._constants.command_strategies")[base_cmd] or {}
     strategy = vim.tbl_extend("force", base_strategy, derived_strategy, strategy or {})
     local channel_id = open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
-    local should_enter_insert = parse_should_enter_insert(split_cmd, strategy.insert)
+    local should_enter_insert = parse_bool_or_function(split_cmd, strategy.insert)
     if should_enter_insert then
         vim.cmd("startinsert")
     else

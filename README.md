@@ -182,6 +182,13 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     stash_popup = "S",
                 },
             },
+            worktree = {
+                keymaps = {
+                    new = "n", -- Create new worktree
+                    delete = "d", -- Delete worktree
+                    switch = "s", -- Switch to worktree
+                },
+            },
             -- End of default configuration
         }
     end

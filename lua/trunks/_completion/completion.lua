@@ -10,7 +10,7 @@ local function get_subcommand(cmdline)
     return words[2]
 end
 
-function M._branch_completion()
+function M.get_branches()
     local all_branches_command = "git for-each-ref --format='%(refname:short)' refs/heads/ refs/remotes/"
     local branches = vim.fn.systemlist(all_branches_command)
     if vim.v.shell_error ~= 0 then
@@ -97,7 +97,7 @@ M.complete_git_command = function(arglead, cmdline)
         end
 
         if completion_tbl.completion_type == "branch" then
-            return M._branch_completion()
+            return M.get_branches()
         end
 
         if completion_tbl.completion_type == "subcommand" then

@@ -1,9 +1,8 @@
 local complete_git_command = require("trunks._completion.completion").complete_git_command
-local branch_completion = require("trunks._completion.completion")._branch_completion
 
 describe("complete_git_command", function()
     before_each(function()
-        require("trunks._completion.completion")._branch_completion = function()
+        require("trunks._completion.completion").get_branches = function()
             return { "branch_completion" }
         end
 

@@ -1,11 +1,11 @@
 ---@alias trunks.DisplayStrategy "above" | "below" | "right" | "left" | "full" | "dynamic"
 ---@alias trunks.DisplayStrategyParser fun(cmd: string[]): trunks.DisplayStrategy
----@alias trunks.ShouldEnterInsert fun(cmd: string[]): boolean
+---@alias trunks.DisplayStrategyBoolParser fun(cmd: string[]): boolean
 
 ---@class trunks.Strategy
 ---@field display_strategy? trunks.DisplayStrategy | trunks.DisplayStrategyParser
----@field insert? boolean | trunks.ShouldEnterInsert
----@field trigger_redraw? boolean
+---@field insert? boolean | trunks.DisplayStrategyBoolParser
+---@field trigger_redraw? boolean | trunks.DisplayStrategyBoolParser
 ---@field enter? boolean
 ---@field win_size? number
 
@@ -105,5 +105,16 @@ M.stage = { trigger_redraw = true }
 M.stash = { trigger_redraw = true }
 M.switch = { trigger_redraw = true }
 M.whatchanged = { insert = true }
+
+M.worktree = {
+    trigger_redraw = function(cmd)
+        local worktree_subcommand = cmd[3]
+        vim.print("here")
+        if not worktree_subcommand or worktree_subcommand == "list" then
+            return false
+        end
+        return true
+    end,
+}
 
 return M
