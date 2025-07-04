@@ -16,7 +16,7 @@ local function highlight(bufnr, start_line, lines)
             vim.hl.range(
                 bufnr,
                 vim.api.nvim_create_namespace(""),
-                highlight_groups.trunks_DIFF_ADD,
+                highlight_groups.TRUNKS_DIFF_ADD,
                 { line_num, 2 },
                 { line_num, -1 }
             )

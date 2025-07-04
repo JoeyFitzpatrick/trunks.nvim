@@ -136,7 +136,7 @@ return {
     },
     worktree = {
         keymaps = {
-            new = "n", -- Create new worktree
+            create = "c", -- Create new worktree
             delete = "d", -- Delete worktree
             switch = "s", -- Switch to worktree
         },

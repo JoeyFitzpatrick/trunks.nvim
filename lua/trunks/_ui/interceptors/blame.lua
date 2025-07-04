@@ -124,7 +124,7 @@ local function highlight_line(bufnr, line, line_num)
         return
     end
     local hex_obj = require("trunks._ui.highlight").commit_hash_to_hex(first_word)
-    local hlgroup = hlgroups.trunks_BLAME_HASH .. hex_obj.stripped_hash
+    local hlgroup = hlgroups.TRUNKS_BLAME_HASH .. hex_obj.stripped_hash
     vim.cmd(string.format("highlight %s guifg=%s", hlgroup, hex_obj.hex))
     require("trunks._ui.highlight").highlight_line(bufnr, hlgroup, line_num, 1, #first_word)
 
@@ -226,12 +226,12 @@ end
 
 ---@param command_builder trunks.Command
 M.render = function(command_builder)
-    local trunks_BLAME_PREFIX = "TrunksBlame://"
+    local TRUNKS_BLAME_PREFIX = "TrunksBlame://"
     local current_filename = vim.api.nvim_buf_get_name(0)
-    if current_filename:sub(1, #trunks_BLAME_PREFIX) == trunks_BLAME_PREFIX then
+    if current_filename:sub(1, #TRUNKS_BLAME_PREFIX) == TRUNKS_BLAME_PREFIX then
         return
     end
-    local blame_buffer_name = trunks_BLAME_PREFIX .. current_filename
+    local blame_buffer_name = TRUNKS_BLAME_PREFIX .. current_filename
     local existing_blame_win = BLAME_WINDOWS[blame_buffer_name]
     if existing_blame_win then
         if vim.api.nvim_win_is_valid(existing_blame_win) then

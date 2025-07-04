@@ -23,11 +23,11 @@ local function highlight(bufnr, start_line, lines)
         -- Some statuses that are "modified" are also "staged", and for highlights,
         -- we want modified to take precedence
         if require("trunks._core.git").is_modified(status) then
-            highlight_group = highlight_groups.trunks_DIFF_MODIFIED
+            highlight_group = highlight_groups.TRUNKS_DIFF_MODIFIED
         elseif require("trunks._core.git").is_staged(status) then
-            highlight_group = highlight_groups.trunks_DIFF_ADD
+            highlight_group = highlight_groups.TRUNKS_DIFF_ADD
         else
-            highlight_group = highlight_groups.trunks_DIFF_REMOVE
+            highlight_group = highlight_groups.TRUNKS_DIFF_REMOVE
         end
         vim.hl.range(
             bufnr,

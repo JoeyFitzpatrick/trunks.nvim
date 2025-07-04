@@ -173,6 +173,6 @@
 ---@field stash_popup? string
 
 ---@class trunks.WorktreeKeymaps
----@field new? string
+---@field create? string
 ---@field delete? string
 ---@field switch? string

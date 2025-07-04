@@ -113,7 +113,7 @@ M.long_descriptions = {
         stash_popup = "Open git stash options",
     },
     worktree = {
-        new = "Create new worktree",
+        create = "Create new worktree",
         delete = "Delete worktree",
         switch = "Switch to worktree",
     },

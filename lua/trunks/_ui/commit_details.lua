@@ -27,9 +27,9 @@ local function highlight_line(bufnr, i, line)
     )
     local hl_groups = require("trunks._constants.highlight_groups").highlight_groups
     local plus_start, plus_end = line:find("%++", start)
-    require("trunks._ui.highlight").highlight_line(bufnr, hl_groups.trunks_DIFF_ADD, i - 1, plus_start, plus_end)
+    require("trunks._ui.highlight").highlight_line(bufnr, hl_groups.TRUNKS_DIFF_ADD, i - 1, plus_start, plus_end)
     local minus_start, minus_end = line:find("%-+", start)
-    require("trunks._ui.highlight").highlight_line(bufnr, hl_groups.trunks_DIFF_REMOVE, i - 1, minus_start, minus_end)
+    require("trunks._ui.highlight").highlight_line(bufnr, hl_groups.TRUNKS_DIFF_REMOVE, i - 1, minus_start, minus_end)
 end
 
 ---@param bufnr integer

@@ -157,7 +157,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
             },
             worktree = {
                 keymaps = {
-                    new = "n", -- Create new worktree
+                    create = "c", -- Create new worktree
                     delete = "d", -- Delete worktree
                     switch = "s", -- Switch to worktree
                 },
