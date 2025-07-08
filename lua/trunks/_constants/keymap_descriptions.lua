@@ -123,32 +123,31 @@ local config = require("trunks._core.configuration").DATA
 
 ---@type trunks.Configuration
 M.short_descriptions = {
-    home = { string.format("Change UI: %s/%s", config.home.keymaps.previous, config.home.keymaps.next) },
+    home = { string.format("%s/%s Change UI", config.home.keymaps.previous, config.home.keymaps.next) },
     status = {
-        "Commit: " .. config.status.keymaps.commit_popup,
-        "Stash: " .. config.status.keymaps.stash_popup,
-        "Discard: " .. config.status.keymaps.restore,
-        "Staging Area: " .. config.status.keymaps.enter_staging_area,
+        config.status.keymaps.commit_popup .. " Commit",
+        config.status.keymaps.stash_popup .. " Stash",
+        config.status.keymaps.restore .. " Discard",
     },
     branch = {
-        "Switch: " .. config.branch.keymaps.switch,
-        "New branch: " .. config.branch.keymaps.new_branch,
-        "Commits: " .. config.branch.keymaps.log,
-        "Rename: " .. config.branch.keymaps.rename,
-        "Delete: " .. config.branch.keymaps.delete,
+        config.branch.keymaps.switch .. " Switch",
+        config.branch.keymaps.new_branch .. " New branch",
+        config.branch.keymaps.log .. " Commits",
+        config.branch.keymaps.rename .. " Rename",
+        config.branch.keymaps.delete .. " Delete",
     },
     log = {
-        "Details: " .. config.log.keymaps.commit_details,
-        "Rebase: " .. config.log.keymaps.rebase,
-        "Revert: " .. config.log.keymaps.revert,
-        "Checkout: " .. config.log.keymaps.checkout,
-        "Diff: " .. config.log.keymaps.diff_commit_against_head,
+        config.log.keymaps.commit_details .. " Details",
+        config.log.keymaps.rebase .. " Rebase",
+        config.log.keymaps.revert .. " Revert",
+        config.log.keymaps.checkout .. " Checkout",
+        config.log.keymaps.diff_commit_against_head .. " Diff",
     },
     stash = {
-        "Apply: " .. config.stash.keymaps.apply,
-        "Pop: " .. config.stash.keymaps.pop,
-        "Drop: " .. config.stash.keymaps.drop,
-        "Details: " .. config.stash.keymaps.show,
+        config.stash.keymaps.apply .. " Apply",
+        config.stash.keymaps.pop .. " Pop",
+        config.stash.keymaps.drop .. " Drop",
+        config.stash.keymaps.show .. " Details",
     },
 }
 
@@ -163,8 +162,7 @@ function M.get_short_descriptions_as_string(ui_types)
             end
         end
     end
-    table.insert(descriptions, "Keymaps: g?")
-    table.insert(descriptions, "Close: q")
+    table.insert(descriptions, "g? Help")
     return table.concat(descriptions, " | ")
 end
 

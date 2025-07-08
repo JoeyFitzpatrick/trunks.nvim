@@ -142,7 +142,6 @@ local tab_render_map = {
 local function create_and_render_buffer(tab, indices)
     local bufnr, win = require("trunks._ui.elements").new_buffer({})
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, tabs_text)
-
     local ui_render = tab_render_map[tab]
     require("trunks._core.register").register_buffer(bufnr, {
         render_fn = function()
@@ -183,8 +182,7 @@ local function create_and_render_buffer(tab, indices)
         tabs:cycle_tab("back")
         create_and_render_buffer(tabs.current_option, tabs.current_tab_indices)
     end, { buffer = bufnr })
-
-    require("trunks._ui.floating_text").show_keymaps(bufnr, 0, { "home", string.lower(tab) })
+    require("trunks._ui.keymaps.keymaps_text").show(bufnr, { "home", string.lower(tab) })
 end
 
 function M.open()
