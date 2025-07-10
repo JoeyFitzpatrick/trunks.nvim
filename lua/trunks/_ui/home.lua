@@ -9,11 +9,12 @@
 ---@field command_builder? trunks.Command -- The command used for this UI
 ---@field keymap_opts? trunks.GetKeymapsOpts
 ---@field win? integer
+---@field ui_types? string[]
 
 local M = {}
 
--- includes padding
-local TAB_HEIGHT = 4
+-- includes padding and keymap text
+local TAB_HEIGHT = 6
 
 --- Creates tabs for home UI
 ---@param options string[]
@@ -114,10 +115,10 @@ local highlight_namespace = vim.api.nvim_create_namespace("TrunksHomeTabs")
 ---@param bufnr integer
 ---@param indices trunks.TabHighlightIndices[]
 local function highlight_tabs(bufnr, indices)
-    vim.api.nvim_buf_clear_namespace(bufnr, highlight_namespace, 0, 3)
+    vim.api.nvim_buf_clear_namespace(bufnr, highlight_namespace, 2, 5)
     for i = 1, 3 do
-        vim.hl.range(bufnr, highlight_namespace, "Conceal", { i - 1, 1 }, { i - 1, indices[i].start - 4 })
-        vim.hl.range(bufnr, highlight_namespace, "Conceal", { i - 1, indices[i].ending }, { i - 1, -1 })
+        vim.hl.range(bufnr, highlight_namespace, "Conceal", { i + 1, 1 }, { i + 1, indices[i].start - 4 })
+        vim.hl.range(bufnr, highlight_namespace, "Conceal", { i + 1, indices[i].ending }, { i + 1, -1 })
     end
 end
 
@@ -145,16 +146,16 @@ local function create_and_render_buffer(tab, indices)
     local ui_render = tab_render_map[tab]
     require("trunks._core.register").register_buffer(bufnr, {
         render_fn = function()
-            ui_render(bufnr, { start_line = TAB_HEIGHT })
+            ui_render(bufnr, { start_line = TAB_HEIGHT, ui_types = { "home", string.lower(tab) } })
         end,
     })
 
     vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    ui_render(bufnr, { start_line = TAB_HEIGHT, win = win })
+    ui_render(bufnr, { start_line = TAB_HEIGHT, win = win, ui_types = { "home", string.lower(tab) } })
     vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-    local line_to_set_cursor_to = 5
+    local line_to_set_cursor_to = TAB_HEIGHT + 3
     if tab == "Status" then
-        line_to_set_cursor_to = 7
+        line_to_set_cursor_to = line_to_set_cursor_to + 2
     end
     vim.api.nvim_win_set_cursor(win, { math.min(vim.api.nvim_buf_line_count(bufnr), line_to_set_cursor_to), 0 })
     highlight_tabs(bufnr, indices)
@@ -182,7 +183,6 @@ local function create_and_render_buffer(tab, indices)
         tabs:cycle_tab("back")
         create_and_render_buffer(tabs.current_option, tabs.current_tab_indices)
     end, { buffer = bufnr })
-    require("trunks._ui.keymaps.keymaps_text").show(bufnr, { "home", string.lower(tab) })
 end
 
 function M.open()

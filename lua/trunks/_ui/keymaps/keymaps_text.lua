@@ -4,7 +4,11 @@ local M = {}
 ---@param ui_types string[]
 function M.show(bufnr, ui_types)
     local keymaps_string = require("trunks._constants.keymap_descriptions").get_short_descriptions_as_string(ui_types)
-    require("trunks._ui.utils.buffer_text").set(bufnr, { keymaps_string }, 0, 0)
+    local line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
+    if line == keymaps_string then
+        return
+    end
+    require("trunks._ui.utils.buffer_text").set(bufnr, { keymaps_string, "" }, 0, 0)
 
     -- Highlight
     local mapping_hlgroup = "Keyword"

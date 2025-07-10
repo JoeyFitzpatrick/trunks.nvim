@@ -56,6 +56,7 @@ function M.set_lines(bufnr, opts)
     if not vim.api.nvim_buf_is_valid(bufnr) then
         return
     end
+    require("trunks._ui.keymaps.keymaps_text").show(bufnr, opts.ui_types)
     local Command = require("trunks._core.command")
 
     ---@param cmd string
