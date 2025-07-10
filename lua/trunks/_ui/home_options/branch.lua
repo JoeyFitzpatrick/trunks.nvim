@@ -38,7 +38,8 @@ end
 ---@param opts trunks.UiRenderOpts
 ---@return string[]
 local function set_lines(bufnr, opts)
-    local start_line = opts.start_line or 0
+    require("trunks._ui.keymaps.keymaps_text").show(bufnr, opts.ui_types)
+    local start_line = opts.start_line or 2
     -- if cmd is nil, the default command is "git branch"
     if not opts.command_builder then
         -- This sorts branches such that the current branch appears first
@@ -53,7 +54,7 @@ local function set_lines(bufnr, opts)
     highlight(bufnr, start_line, output)
     require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(
         bufnr,
-        { highlight = highlight, start_line = opts.start_line, line_type = "branch" }
+        { highlight = highlight, start_line = start_line, line_type = "branch" }
     )
     return output
 end

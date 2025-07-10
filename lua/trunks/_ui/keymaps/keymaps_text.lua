@@ -1,8 +1,12 @@
 local M = {}
 
 ---@param bufnr integer
----@param ui_types string[]
+---@param ui_types string[] | nil
 function M.show(bufnr, ui_types)
+    if not ui_types then
+        return
+    end
+
     local keymaps_string = require("trunks._constants.keymap_descriptions").get_short_descriptions_as_string(ui_types)
     local line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
     if line == keymaps_string then

@@ -144,7 +144,8 @@ end
 ---@param opts trunks.UiRenderOpts
 ---@return { use_native_keymaps: boolean, use_graph_output?: boolean }
 local function set_lines(bufnr, opts)
-    local start_line = opts.start_line or 0
+    require("trunks._ui.keymaps.keymaps_text").show(bufnr, opts.ui_types)
+    local start_line = opts.start_line or 2
     local cmd_tbl = M._parse_log_cmd(opts.command_builder)
     vim.bo[bufnr].modifiable = true
 

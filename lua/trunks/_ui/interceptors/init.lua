@@ -27,7 +27,10 @@ local cmd_ui_map = {
     end,
     log = function(command_builder)
         local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = "TrunksLog-" .. os.tmpname() })
-        require("trunks._ui.home_options.log").render(bufnr, { start_line = 0, command_builder = command_builder })
+        require("trunks._ui.home_options.log").render(
+            bufnr,
+            { start_line = 2, command_builder = command_builder, ui_types = { "log" } }
+        )
     end,
     mergetool = function()
         require("trunks._ui.interceptors.mergetool").render()
@@ -97,7 +100,7 @@ local function branch_interceptor(command_builder)
             })
             require("trunks._ui.home_options.branch").render(
                 bufnr,
-                { start_line = 0, command_builder = branch_command_builder }
+                { command_builder = branch_command_builder, ui_types = { "branch" } }
             )
             -- By default branch UI "q" map will go back to last buffer, but in a split we just want to close it
             require("trunks._ui.keymaps.set").safe_set_keymap("n", "q", function()
