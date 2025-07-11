@@ -8,7 +8,7 @@ local M = {}
 ---@param rhs string | function
 ---@param opts vim.keymap.set.Opts
 function M.safe_set_keymap(mode, lhs, rhs, opts)
-    if not lhs then
+    if not lhs or lhs == "" then
         return
     end
     vim.keymap.set(mode, lhs, rhs, opts)

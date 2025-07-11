@@ -121,40 +121,57 @@ M.long_descriptions = {
 
 local config = require("trunks._core.configuration").DATA
 
+local function is_empty(str)
+    return str == nil or str == ""
+end
+
+---@param ui_type string
+---@param map_name string
+---@param desc string
+local function add_description(ui_type, map_name, desc)
+    local lhs = config[ui_type].keymaps[map_name]
+    if is_empty(lhs) then
+        return
+    end
+
+    M.short_descriptions[ui_type] = M.short_descriptions[ui_type] or {}
+    table.insert(M.short_descriptions[ui_type], lhs .. " " .. desc)
+end
+
+M.short_descriptions = {}
+
 ---@type trunks.Configuration
-M.short_descriptions = {
-    home = { string.format("%s/%s Change UI", config.home.keymaps.previous, config.home.keymaps.next) },
-    status = {
-        config.status.keymaps.commit_popup .. " Commit",
-        config.status.keymaps.stash_popup .. " Stash",
-        config.status.keymaps.restore .. " Discard",
-    },
-    branch = {
-        config.branch.keymaps.switch .. " Switch",
-        config.branch.keymaps.new_branch .. " New branch",
-        config.branch.keymaps.log .. " Commits",
-        config.branch.keymaps.rename .. " Rename",
-        config.branch.keymaps.delete .. " Delete",
-    },
-    log = {
-        config.log.keymaps.commit_details .. " Details",
-        config.log.keymaps.rebase .. " Rebase",
-        config.log.keymaps.revert .. " Revert",
-        config.log.keymaps.checkout .. " Checkout",
-        config.log.keymaps.diff_commit_against_head .. " Diff",
-    },
-    reflog = {
-        config.reflog.keymaps.checkout .. " Checkout",
-        config.reflog.keymaps.commit_details .. " Details",
-        config.reflog.keymaps.recover .. " Recover as branch",
-    },
-    stash = {
-        config.stash.keymaps.apply .. " Apply",
-        config.stash.keymaps.pop .. " Pop",
-        config.stash.keymaps.drop .. " Drop",
-        config.stash.keymaps.show .. " Details",
-    },
-}
+M.short_descriptions = {}
+
+if not is_empty(config.home.keymaps.previous) and not is_empty(config.home.keymaps.next) then
+    M.short_descriptions.home =
+        { string.format("%s/%s Change UI", config.home.keymaps.previous, config.home.keymaps.next) }
+end
+
+add_description("status", "commit_popup", "Commit")
+add_description("status", "stash_popup", "Stash")
+add_description("status", "restore", "Discard")
+
+add_description("branch", "switch", "Switch")
+add_description("branch", "new_branch", "New branch")
+add_description("branch", "log", "Commits")
+add_description("branch", "rename", "Rename")
+add_description("branch", "delete", "Delete")
+
+add_description("log", "commit_details", "Details")
+add_description("log", "rebase", "Rebase")
+add_description("log", "revert", "Revert")
+add_description("log", "checkout", "Checkout")
+add_description("log", "diff_commit_against_head", "Diff")
+
+add_description("reflog", "checkout", "Checkout")
+add_description("reflog", "commit_details", "Details")
+add_description("reflog", "recover", "Recover as branch")
+
+add_description("stash", "apply", "Apply")
+add_description("stash", "pop", "Pop")
+add_description("stash", "drop", "Drop")
+add_description("stash", "show", "Details")
 
 ---@param ui_types string[]
 ---@return string
