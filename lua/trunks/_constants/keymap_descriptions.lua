@@ -143,6 +143,11 @@ M.short_descriptions = {
         config.log.keymaps.checkout .. " Checkout",
         config.log.keymaps.diff_commit_against_head .. " Diff",
     },
+    reflog = {
+        config.reflog.keymaps.checkout .. " Checkout",
+        config.reflog.keymaps.commit_details .. " Details",
+        config.reflog.keymaps.recover .. " Recover as branch",
+    },
     stash = {
         config.stash.keymaps.apply .. " Apply",
         config.stash.keymaps.pop .. " Pop",

@@ -7,9 +7,10 @@ local M = {}
 function M.set(bufnr, lines, start, end_)
     start = start or 0
     end_ = end_ or -1
+    local original_modifiable = vim.bo[bufnr].modifiable
     vim.bo[bufnr].modifiable = true
     vim.api.nvim_buf_set_lines(bufnr, start, end_, false, lines)
-    vim.bo[bufnr].modifiable = false
+    vim.bo[bufnr].modifiable = original_modifiable
 end
 
 return M

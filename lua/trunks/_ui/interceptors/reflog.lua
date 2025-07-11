@@ -1,7 +1,8 @@
 local M = {}
 
 local function highlight(bufnr)
-    for i, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
+    for i, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 2, -1, false)) do
+        i = i + 2
         local hash_start, hash_end = line:find("%x+")
         require("trunks._ui.highlight").highlight_line(bufnr, "Identifier", i - 1, hash_start, hash_end)
         if not hash_start or not hash_end then
@@ -92,11 +93,10 @@ function M.render(command_builder)
     local bufnr = require("trunks._ui.elements").new_buffer({
         buffer_name = os.tmpname() .. "TrunksReflog",
         filetype = "git",
-        lines = function()
-            local output = require("trunks._core.run_cmd").run_cmd(command_builder)
-            return output
-        end,
     })
+    require("trunks._ui.keymaps.keymaps_text").show(bufnr, { "reflog" })
+    local output = require("trunks._core.run_cmd").run_cmd(command_builder)
+    require("trunks._ui.utils.buffer_text").set(bufnr, output, 2)
     highlight(bufnr)
     set_keymaps(bufnr)
 end

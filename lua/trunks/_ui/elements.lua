@@ -244,8 +244,9 @@ function M.new_buffer(opts)
             vim.cmd("e " .. opts.buffer_name)
         else
             if opts.lines then
+                vim.bo[bufnr].modifiable = true
                 vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, opts.lines(bufnr))
-                vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+                vim.bo[bufnr].modifiable = false
             end
         end
     end
