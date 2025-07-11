@@ -1,5 +1,3 @@
--- Staging area render
-
 ---@class trunks.StagingAreaSetupDiffParams
 ---@field bufnr integer
 ---@field win integer
