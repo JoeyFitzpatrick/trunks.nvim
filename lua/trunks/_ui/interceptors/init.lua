@@ -26,7 +26,7 @@ local cmd_ui_map = {
         end, { buffer = 0 })
     end,
     log = function(command_builder)
-        local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = "TrunksLog-" .. os.tmpname() })
+        local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = os.tmpname() .. "/TrunksLog" })
         require("trunks._ui.home_options.log").render(
             bufnr,
             { start_line = 2, command_builder = command_builder, ui_types = { "log" } }
@@ -48,7 +48,12 @@ local cmd_ui_map = {
     end,
 }
 
--- Keeping this out of the UI map, so that commands like "worktree add" don't render UI
+-- Keeping these out of the UI map, so that commands like "worktree add" or "stash list" don't render UI
+local stash_render = function()
+    local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = os.tmpname() .. "/TrunksStash" })
+    return require("trunks._ui.home_options.stash").render(bufnr, { ui_types = { "stash" } })
+end
+
 local worktree_render = function(command_builder)
     require("trunks._ui.interceptors.worktree").render(command_builder)
 end
@@ -95,7 +100,7 @@ local function branch_interceptor(command_builder)
     if has_only_ui_options then
         return function(branch_command_builder)
             local bufnr = require("trunks._ui.elements").new_buffer({
-                buffer_name = "TrunksBranch-" .. os.tmpname(),
+                buffer_name = os.tmpname() .. "/TrunksBranch",
                 win_config = { split = "below" },
             })
             require("trunks._ui.home_options.branch").render(
@@ -130,6 +135,9 @@ function M.get_ui(command_builder)
 
     if cmd:match("^difftool%s*$") then
         return cmd_ui_map.staging_area
+    end
+    if cmd:match("^stash%s*$") then
+        return stash_render
     end
     if cmd:match("^worktree%s*$") then
         return worktree_render
