@@ -47,7 +47,7 @@ end
 ---@param is_staged boolean
 local function set_diff_keymaps(bufnr, is_staged)
     require("trunks._ui.interceptors.diff.diff_keymaps").set_keymaps(bufnr)
-    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "diff")
+    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "diff", { diff_keymaps = true })
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
 
@@ -167,18 +167,21 @@ local function set_autocmds(bufnr)
             CURRENT_DIFF_FILE = line_data.filename
             local filename = line_data.safe_filename
 
-            require("trunks._core.register").deregister_buffer(UNSTAGED_BUFNR)
-            require("trunks._core.register").deregister_buffer(STAGED_BUFNR)
-
             local win = vim.api.nvim_get_current_win()
             local diff_cmds = get_diff_cmd(line_data.status, filename)
 
-            local unstaged_win
-            UNSTAGED_BUFNR, unstaged_win = require("trunks._ui.elements").new_buffer({
+            require("trunks._core.register").deregister_buffer(UNSTAGED_BUFNR, { delete_win_buffers = false })
+            require("trunks._core.register").deregister_buffer(STAGED_BUFNR, { delete_win_buffers = false })
+
+            local new_unstaged_bufnr, unstaged_win = require("trunks._ui.elements").new_buffer({
                 filetype = "git",
                 buffer_name = "TrunksDiffUnstaged--" .. line_data.filename .. ".git",
                 win_config = { split = "below", height = math.floor(vim.o.lines * 0.67) },
+                enter = true,
             })
+
+            UNSTAGED_BUFNR = new_unstaged_bufnr
+
             require("trunks._ui.stream").stream_lines(UNSTAGED_BUFNR, diff_cmds.unstaged_diff_cmd, {
                 silent = true,
             })
@@ -190,6 +193,7 @@ local function set_autocmds(bufnr)
                 win_config = { split = "right" },
             })
             require("trunks._ui.stream").stream_lines(STAGED_BUFNR, diff_cmds.staged_diff_cmd, { silent = true })
+
             setup_diff_buffer({
                 bufnr = UNSTAGED_BUFNR,
                 win = unstaged_win,
@@ -225,9 +229,7 @@ end
 
 ---@return integer -- created bufnr
 M.render = function()
-    local bufnr = require("trunks._ui.elements").new_buffer({
-        buffer_name = "TrunksStagingArea",
-    })
+    local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = "TrunksStagingArea" })
     require("trunks._ui.home_options.status").set_lines(bufnr, {})
     set_keymaps(bufnr, {})
     set_autocmds(bufnr)

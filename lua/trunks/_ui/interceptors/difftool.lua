@@ -133,12 +133,10 @@ end
 ---@param command_builder trunks.Command
 M.render = function(command_builder)
     local bufnr = require("trunks._ui.elements").new_buffer({})
-    local cmd = command_builder:build()
-    local commits_to_diff = M._get_commits_to_diff(cmd)
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, get_diff_files(commits_to_diff))
+    local commits_to_diff = M._get_commits_to_diff(command_builder.base)
+
+    require("trunks._ui.utils.buffer_text").set(bufnr, get_diff_files(commits_to_diff))
     highlight(bufnr)
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
     set_keymaps(bufnr, commits_to_diff)
     require("trunks._ui.auto_display").create_auto_display(bufnr, "difftool", {
         generate_cmd = function()

@@ -8,6 +8,9 @@
 ---@field state table<string, any>
 ---@field win? integer
 
+---@class trunks.DeregisterOpts
+---@field delete_win_buffers? boolean
+
 local M = {}
 
 ---@type table<integer, trunks.RegisterOptsWithState>
@@ -53,14 +56,18 @@ local function delete_trunks_buffers_for_win(win)
 end
 
 ---@param bufnr? integer
-function M.deregister_buffer(bufnr)
+---@param opts? trunks.DeregisterOpts
+function M.deregister_buffer(bufnr, opts)
     if not bufnr then
         return
     end
+    opts = opts or {}
     M.buffers[bufnr] = nil
     if vim.api.nvim_buf_is_valid(bufnr) then
         navigate_to_last_non_trunks_buffer(bufnr)
-        delete_trunks_buffers_for_win(vim.api.nvim_get_current_win())
+        if opts.delete_win_buffers ~= false then
+            delete_trunks_buffers_for_win(vim.api.nvim_get_current_win())
+        end
         vim.api.nvim_buf_delete(bufnr, { force = true })
     end
 end
