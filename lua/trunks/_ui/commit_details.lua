@@ -6,6 +6,7 @@
 
 ---@class trunks.CommitDetailsRenderOpts
 ---@field is_stash? boolean
+---@field filename? string
 
 local M = {}
 
@@ -120,11 +121,25 @@ local function set_keymaps(bufnr, commit)
     end, keymap_opts)
 end
 
+---@param bufnr integer
+---@param win integer
+---@param filename string
+local function set_cursor_to_filename(bufnr, win, filename)
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    for i, line in ipairs(lines) do
+        if line:match("^%s*" .. vim.pesc(filename)) then
+            pcall(vim.api.nvim_win_set_cursor, win, { i, 0 })
+            return
+        end
+    end
+end
+
 ---@param commit string
 ---@param opts trunks.CommitDetailsRenderOpts
 function M.render(commit, opts)
-    local bufnr = require("trunks._ui.elements").new_buffer({ filetype = "git" })
+    local bufnr, win = require("trunks._ui.elements").new_buffer({ filetype = "git" })
     M.set_lines(bufnr, commit)
+
     require("trunks._ui.auto_display").create_auto_display(bufnr, "commit_details", {
         generate_cmd = function()
             local ok, line_data = pcall(M.get_line, bufnr)
@@ -156,6 +171,11 @@ function M.render(commit, opts)
         end,
         strategy = { display_strategy = "below", win_size = 0.67, insert = false, enter = false },
     })
+
+    if opts.filename then
+        set_cursor_to_filename(bufnr, win, opts.filename)
+    end
+
     set_keymaps(bufnr, commit)
 end
 

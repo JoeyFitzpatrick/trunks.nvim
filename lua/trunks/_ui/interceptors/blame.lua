@@ -16,7 +16,9 @@ local function get_line(bufnr, line_num)
     return { hash = line:match("%w+") }
 end
 
-local function set_keymaps(bufnr)
+---@param bufnr integer
+---@param filename string
+local function set_keymaps(bufnr, filename)
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "blame", {})
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
@@ -36,7 +38,7 @@ local function set_keymaps(bufnr)
             return
         end
         vim.api.nvim_buf_delete(bufnr, { force = true })
-        require("trunks._ui.commit_details").render(line_data.hash, {})
+        require("trunks._ui.commit_details").render(line_data.hash, { filename = filename })
     end, keymap_opts)
 
     set("n", keymaps.commit_info, function()
@@ -261,7 +263,9 @@ M.render = function(command_builder)
         return
     end
 
-    set_keymaps(bufnr)
+    -- get filename with current project as base
+    local filename = vim.fn.fnamemodify(current_filename, ":~:.")
+    set_keymaps(bufnr, filename)
     set_autocmds(bufnr, original_win, blame_buffer_name)
 
     local ok = pcall(function()
