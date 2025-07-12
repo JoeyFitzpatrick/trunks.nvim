@@ -100,10 +100,8 @@ local function set_keymaps(bufnr, filename)
             vim.api.nvim_create_buf(false, true),
             { title = "Git show " .. line_data.hash }
         )
-        require("trunks._ui.elements").terminal(
-            "git show " .. line_data.hash,
-            { display_strategy = "full", insert = true }
-        )
+        local command = require("trunks._core.command").base_command("show " .. line_data.hash, filename):build()
+        require("trunks._ui.elements").terminal(command, { display_strategy = "full", insert = true })
     end, keymap_opts)
 end
 

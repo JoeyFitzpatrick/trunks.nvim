@@ -100,27 +100,31 @@ function M._find_git_root(path)
     return nil
 end
 
+---@param path? string
 ---@return string | nil
-function M.get_git_c_flag()
-    local buffer_to_check
-    if not vim.b.is_trunks_buffer then
-        buffer_to_check = vim.api.nvim_get_current_buf()
-    else
-        buffer_to_check =
-            require("trunks._core.register").last_non_trunks_buffer_for_win[vim.api.nvim_get_current_win()]
-    end
-    if not buffer_to_check or not vim.api.nvim_buf_is_valid(buffer_to_check) then
-        return nil
+function M.get_git_c_flag(path)
+    if not path then
+        local buffer_to_check
+        if not vim.b.is_trunks_buffer then
+            buffer_to_check = vim.api.nvim_get_current_buf()
+        else
+            buffer_to_check =
+                require("trunks._core.register").last_non_trunks_buffer_for_win[vim.api.nvim_get_current_win()]
+        end
+        if not buffer_to_check or not vim.api.nvim_buf_is_valid(buffer_to_check) then
+            return nil
+        end
+
+        path = vim.api.nvim_buf_get_name(buffer_to_check or 0)
     end
 
-    local buf_path = vim.api.nvim_buf_get_name(buffer_to_check or 0)
-    if buf_path == "" then
+    if path == "" then
         return nil
     end
-    if is_in_cwd(buf_path) then
+    if is_in_cwd(path) then
         return nil
     else
-        local git_root = M._find_git_root(buf_path)
+        local git_root = M._find_git_root(path)
         if git_root then
             return "-C " .. vim.fn.shellescape(git_root)
         end

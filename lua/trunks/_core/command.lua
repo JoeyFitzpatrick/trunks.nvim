@@ -4,7 +4,6 @@
 ---@field _args string[]
 ---@field _prefix_args string[]
 ---@field _postfix_args string[]
----@field base_command fun(cmd: string | nil): trunks.Command
 ---@field add_args fun(self: trunks.Command, args: string): trunks.Command
 ---@field add_prefix_args fun(self: trunks.Command, args: string): trunks.Command
 ---@field add_postfix_args fun(self: trunks.Command, args: string): trunks.Command
@@ -23,7 +22,10 @@ end
 
 Command.__index = Command
 
-function Command.base_command(cmd)
+---@param cmd? string
+---@param filename? string
+---@return trunks.Command
+function Command.base_command(cmd, filename)
     local self = setmetatable({}, Command)
     self.base = cmd
     self._prefix = { "git" }
@@ -32,7 +34,7 @@ function Command.base_command(cmd)
     self._postfix_args = {}
 
     -- If the current buffer is outside cwd when this Command is instatiated, add a -C flag
-    local git_c_flag = require("trunks._core.parse_command").get_git_c_flag()
+    local git_c_flag = require("trunks._core.parse_command").get_git_c_flag(filename)
     if git_c_flag then
         table.insert(self._prefix, git_c_flag)
     end
