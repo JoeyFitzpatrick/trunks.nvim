@@ -91,18 +91,12 @@ local function set_keymaps(bufnr, filename)
         vim.api.nvim_win_set_cursor(0, { current_cursor_line, 0 })
     end, keymap_opts)
 
-    set("n", keymaps.show, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-        require("trunks._ui.elements").float(
-            vim.api.nvim_create_buf(false, true),
-            { title = "Git show " .. line_data.hash }
-        )
-        local command = require("trunks._core.command").base_command("show " .. line_data.hash, filename):build()
-        require("trunks._ui.elements").terminal(command, { display_strategy = "full", insert = true })
-    end, keymap_opts)
+    set(
+        "n",
+        keymaps.show,
+        require("trunks._ui.keymaps.base").git_show_keymap_fn(bufnr, get_line, filename),
+        keymap_opts
+    )
 end
 
 local function highlight_line(bufnr, line, line_num)

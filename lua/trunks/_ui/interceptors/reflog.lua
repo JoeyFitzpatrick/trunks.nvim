@@ -60,20 +60,7 @@ local function set_keymaps(bufnr)
         end)
     end, keymap_opts)
 
-    set("n", keymaps.show, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-        require("trunks._ui.elements").float(
-            vim.api.nvim_create_buf(false, true),
-            { title = "Git show " .. line_data.hash }
-        )
-        require("trunks._ui.elements").terminal(
-            "git show " .. line_data.hash,
-            { display_strategy = "full", insert = true }
-        )
-    end, keymap_opts)
+    set("n", keymaps.show, require("trunks._ui.keymaps.base").git_show_keymap_fn(bufnr, get_line), keymap_opts)
 end
 
 ---@param command_builder trunks.Command
