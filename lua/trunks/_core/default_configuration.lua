@@ -23,7 +23,6 @@ return {
         keymaps = {
             checkout = "c",
             commit_details = "<enter>",
-            commit_info = "i",
             diff_file = "d",
             reblame = "r", -- Display the file as of the given commit, then blame from that commit
             return_to_original_file = "gq", -- If in reblamed file, return to original
@@ -76,7 +75,6 @@ return {
         keymaps = {
             checkout = "c", -- Checkout commmit under cursor
             commit_details = "<enter>",
-            commit_info = "i",
             diff_commit_against_head = "d",
             pull = "p",
             push = "<leader>p",
@@ -99,7 +97,6 @@ return {
         keymaps = {
             checkout = "c",
             commit_details = "<enter>",
-            commit_info = "i",
             recover = "r",
             show = "s",
         },

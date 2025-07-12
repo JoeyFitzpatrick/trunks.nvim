@@ -142,7 +142,6 @@ Fields ~
     {checkout} `(optional)` `(string)`
     {diff_file} `(optional)` `(string)`
     {commit_details} `(optional)` `(string)`
-    {commit_info} `(optional)` `(string)`
     {reblame} `(optional)` `(string)`
     {return_to_original_file} `(optional)` `(string)`
     {show} `(optional)` `(string)`
@@ -198,7 +197,6 @@ Fields ~
 Fields ~
     {checkout} `(optional)` `(string)`
     {commit_details} `(optional)` `(string)`
-    {commit_info} `(optional)` `(string)`
     {diff_commit_against_head} `(optional)` `(string)`
     {pull} `(optional)` `(string)`
     {push} `(optional)` `(string)`
@@ -223,7 +221,6 @@ Fields ~
 Fields ~
     {checkout} `(optional)` `(string)`
     {commit_details} `(optional)` `(string)`
-    {commit_info} `(optional)` `(string)`
     {show} `(optional)` `(string)`
 
 ------------------------------------------------------------------------------

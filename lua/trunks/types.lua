@@ -89,7 +89,6 @@
 ---@field checkout? string
 ---@field diff_file? string
 ---@field commit_details? string
----@field commit_info? string
 ---@field reblame? string
 ---@field return_to_original_file? string
 ---@field show? string
@@ -127,7 +126,6 @@
 ---@class trunks.LogKeymaps
 ---@field checkout? string
 ---@field commit_details? string
----@field commit_info? string
 ---@field diff_commit_against_head? string
 ---@field pull? string
 ---@field push? string
@@ -146,7 +144,6 @@
 ---@class trunks.ReflogKeymaps
 ---@field checkout? string
 ---@field commit_details? string
----@field commit_info? string
 ---@field recover? string
 ---@field show? string
 

@@ -41,18 +41,6 @@ local function set_keymaps(bufnr, filename)
         require("trunks._ui.commit_details").render(line_data.hash, { filename = filename })
     end, keymap_opts)
 
-    set("n", keymaps.commit_info, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-        require("trunks._ui.elements").float(
-            vim.api.nvim_create_buf(false, true),
-            { title = "Git log " .. line_data.hash }
-        )
-        require("trunks._ui.elements").terminal("git log -n 1 " .. line_data.hash, { display_strategy = "full" })
-    end, keymap_opts)
-
     local function get_filepath()
         local buf_name = vim.api.nvim_buf_get_name(0)
         local start, finish = buf_name:find(FILENAME_PREFIX, 1, true)
