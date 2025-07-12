@@ -263,8 +263,8 @@ M.render = function(command_builder)
     end
     -- Make the top line of the blame window the same as the original window
     vim.fn.winrestview({ topline = vim.fn.line("w0", original_win) })
-    vim.api.nvim_win_set_cursor(0, { original_cursor_pos[1], 0 })
-    vim.api.nvim_win_set_cursor(original_win, original_cursor_pos)
+    pcall(vim.api.nvim_win_set_cursor, 0, { original_cursor_pos[1], 0 })
+    pcall(vim.api.nvim_win_set_cursor, original_win, original_cursor_pos)
     vim.cmd("syncbind")
 end
 
