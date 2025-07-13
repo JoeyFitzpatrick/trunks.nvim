@@ -183,8 +183,18 @@ function M.render(commit, opts)
             local command_builder
 
             if opts.is_stash then
-                command_builder =
-                    Command.base_command(string.format("diff %s^1 %s -- %s", commit, commit, line_data.safe_filename))
+                -- Diffs for stashed files require different approaches,
+                -- depending on whether the file was tracked or untracked.
+                local diff_output = require("trunks._core.run_cmd").run_cmd(
+                    string.format("git diff %s^1 %s -- %s", commit, commit, line_data.safe_filename)
+                )
+                if #diff_output > 0 then
+                    return string.format("git diff %s^1 %s -- %s", commit, commit, line_data.safe_filename)
+                else
+                    -- If there is no output, the file might be untracked,
+                    -- which requires diffing against different parent.
+                    return string.format("git diff %s %s^3 -- %s", commit, commit, line_data.safe_filename)
+                end
             else
                 -- The -m flag diffs both merge commits and normal commits.
                 -- Empty pretty format omits commit message, and everything aside from the diff itself.
