@@ -48,12 +48,31 @@ end
 
 ---@param bufnr integer
 ---@param commit string
-function M.set_lines(bufnr, commit)
-    local command_builder =
-        require("trunks._core.command").base_command("show --stat=10000 --stat-graph-width=40 " .. commit)
-    local commit_data = require("trunks._core.run_cmd").run_cmd(command_builder)
-    move_commit_stats_above_files(commit_data)
+---@param opts trunks.CommitDetailsRenderOpts
+function M.set_lines(bufnr, commit, opts)
+    local commit_data = {}
+    if opts.is_stash then
+        local commit_info_command_builder = require("trunks._core.command").base_command("log -n 1 " .. commit)
+        local commit_info = require("trunks._core.run_cmd").run_cmd(commit_info_command_builder)
+        for _, line in ipairs(commit_info) do
+            table.insert(commit_data, line)
+        end
+        table.insert(commit_data, "")
 
+        local commit_stats_command_builder =
+            require("trunks._core.command").base_command("stash show -u --stat=10000 --stat-graph-width=40 " .. commit)
+        local commit_stats = require("trunks._core.run_cmd").run_cmd(commit_stats_command_builder)
+        for _, line in ipairs(commit_stats) do
+            table.insert(commit_data, line)
+        end
+    else
+        local command_builder =
+            require("trunks._core.command").base_command("show --stat=10000 --stat-graph-width=40 " .. commit)
+
+        commit_data = require("trunks._core.run_cmd").run_cmd(command_builder)
+    end
+
+    move_commit_stats_above_files(commit_data)
     local set_lines = require("trunks._ui.utils.buffer_text").set
     set_lines(bufnr, commit_data)
 
@@ -151,7 +170,7 @@ end
 ---@param opts trunks.CommitDetailsRenderOpts
 function M.render(commit, opts)
     local bufnr, win = require("trunks._ui.elements").new_buffer({ filetype = "git" })
-    M.set_lines(bufnr, commit)
+    M.set_lines(bufnr, commit, opts)
 
     require("trunks._ui.auto_display").create_auto_display(bufnr, "commit_details", {
         generate_cmd = function()
