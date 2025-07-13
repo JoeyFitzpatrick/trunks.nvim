@@ -33,29 +33,42 @@ local function highlight_line(bufnr, i, line)
     require("trunks._ui.highlight").highlight_line(bufnr, hl_groups.TRUNKS_DIFF_REMOVE, i - 1, minus_start, minus_end)
 end
 
+--- This changes the table in place instead of returning a new table
+---@param commit_data string[]
+local function move_commit_stats_above_files(commit_data)
+    local commit_stats = commit_data[#commit_data]
+    for i, line in ipairs(commit_data) do
+        if line:match("^%s%S") then
+            table.insert(commit_data, i, commit_stats)
+            table.remove(commit_data, #commit_data)
+            return
+        end
+    end
+end
+
 ---@param bufnr integer
 ---@param commit string
 function M.set_lines(bufnr, commit)
-    if not vim.api.nvim_buf_is_valid(bufnr) then
-        return
-    end
-
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     local command_builder =
         require("trunks._core.command").base_command("show --stat=10000 --stat-graph-width=40 " .. commit)
     local commit_data = require("trunks._core.run_cmd").run_cmd(command_builder)
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, commit_data)
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+    move_commit_stats_above_files(commit_data)
+
+    local set_lines = require("trunks._ui.utils.buffer_text").set
+    set_lines(bufnr, commit_data)
 
     for i, line in ipairs(commit_data) do
         highlight_line(bufnr, i, line)
     end
     for i, line in ipairs(commit_data) do
         if line:match("^%s%S") then
-            vim.api.nvim_win_set_cursor(0, { i, 0 })
+            vim.api.nvim_win_set_cursor(0, { i + 1, 0 })
             return
         end
     end
+
+    -- If no files found to set cursor to, the commit is empty and we want to be explicit
+    set_lines(bufnr, { "", "(Empty commit)" }, #commit_data, #commit_data)
 end
 
 ---@param bufnr integer
