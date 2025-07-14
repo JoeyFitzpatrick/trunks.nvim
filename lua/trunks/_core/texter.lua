@@ -19,9 +19,13 @@ end
 
 --- Surround `text` with quotes
 ---@param text string The text to surround with quotes
+---@param surrounding string? The character to use for the surrounding
 ---@return string # The text surrounded with quotes
-function M.surround_with_quotes(text)
-    return "'" .. text .. "'"
+function M.surround_with_quotes(text, surrounding)
+    if not surrounding then
+        return "'" .. text .. "'"
+    end
+    return surrounding .. text .. surrounding
 end
 
 --- This is used to find an argument in a command

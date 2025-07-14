@@ -3,7 +3,7 @@
 local PREFIX = "G"
 
 ---@param input_args vim.api.keyset.create_user_command.command_args
-local function run_command(input_args)
+local function run_git_command(input_args)
     local cmd = require("trunks._core.parse_command").parse(input_args)
     local cmd_with_git_dir_flag = require("trunks._core.parse_command").add_git_dir_flag(cmd)
     local cmd_with_git_prefix = "git " .. cmd_with_git_dir_flag
@@ -23,19 +23,14 @@ local function run_command(input_args)
     end
 end
 
+---@param input_args vim.api.keyset.create_user_command.command_args
+local function run_trunks_command(input_args)
+    require("trunks._ui.trunks_commands").run_trunks_cmd(input_args)
+end
+
 vim.api.nvim_create_user_command(PREFIX, function(input_args)
     require("trunks")
-    if vim.g.trunks_in_git_repo == false then
-        if input_args.args and input_args.args:match("^init") then
-            run_command(input_args)
-            vim.g.trunks_in_git_repo = true
-            return
-        else
-            vim.notify("trunks: working directory does not belong to a Git repository", vim.log.levels.ERROR)
-            return
-        end
-    end
-    run_command(input_args)
+    run_git_command(input_args)
 end, {
     nargs = "*",
     desc = "Trunks's git command API. Mostly the same as the Git API.",
@@ -51,7 +46,7 @@ end, {
 
 vim.api.nvim_create_user_command("Trunks", function(input_args)
     require("trunks")
-    print(input_args)
+    run_trunks_command(input_args)
 end, {
     nargs = "*",
     desc = "Trunks command API. For commands that aren't native git commands.",
