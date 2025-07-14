@@ -20,31 +20,69 @@ function M.stream_lines(bufnr, cmd, opts)
     if opts.filetype then
         vim.api.nvim_set_option_value("filetype", opts.filetype, { buf = bufnr })
     end
+
     local line_num = opts.start_line or 0
+    local line_buffer = {}
+
+    -- Add a line buffer to process chunks of lines
+    local MAX_BUFFER_SIZE = 1000
+
+    local function flush_buffer()
+        if #line_buffer == 0 then
+            return
+        end
+
+        if not vim.api.nvim_buf_is_valid(bufnr) then
+            return
+        end
+
+        vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+        local lines_to_add = {}
+
+        for _, line in ipairs(line_buffer) do
+            if opts.transform_line then
+                line = opts.transform_line(line)
+            end
+            if not (opts.filter_empty_lines and line == "") then
+                table.insert(lines_to_add, line)
+            end
+        end
+
+        if #lines_to_add > 0 then
+            vim.api.nvim_buf_set_lines(bufnr, line_num, line_num + #lines_to_add, false, lines_to_add)
+
+            if opts.highlight_line then
+                for i, line in ipairs(lines_to_add) do
+                    pcall(opts.highlight_line, bufnr, line, line_num + i - 1)
+                end
+            end
+
+            line_num = line_num + #lines_to_add
+        end
+
+        vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+
+        line_buffer = {}
+    end
 
     local function on_stdout(_, data, _)
         if data then
-            -- Populate the buffer with the incoming lines
-            vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
             for _, line in ipairs(data) do
                 POSSIBLE_ERROR_OUTPUT = line
-                if opts.transform_line then
-                    line = opts.transform_line(line)
-                end
-                local should_filter_line = opts.filter_empty_lines and line == ""
-                if not should_filter_line then
-                    vim.api.nvim_buf_set_lines(bufnr, line_num, line_num + 1, false, { line })
-                    if opts.highlight_line then
-                        pcall(opts.highlight_line, bufnr, line, line_num)
-                    end
-                    line_num = line_num + 1
+                table.insert(line_buffer, line)
+
+                if #line_buffer >= MAX_BUFFER_SIZE then
+                    flush_buffer()
+                    -- Add a small delay to allow the UI to update
+                    vim.schedule(function() end)
                 end
             end
-            vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
         end
     end
 
     local function on_exit(_, code, _)
+        flush_buffer()
+
         if opts.filetype then
             vim.api.nvim_set_option_value("filetype", opts.filetype, { buf = bufnr })
         end
@@ -63,12 +101,8 @@ function M.stream_lines(bufnr, cmd, opts)
     end
 
     -- Remove existing lines before adding new lines.
-    -- This is for when we rerender the output.
-    -- If a start line is passed in, we don't want to overwrite lines
-    -- before the start line.
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    vim.api.nvim_buf_set_lines(bufnr, opts.start_line or 0, -1, false, {})
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+    require("trunks._ui.utils.buffer_text").set(bufnr, {}, opts.start_line or 0, -1)
+
     -- Start the asynchronous job
     vim.fn.jobstart(cmd, {
         on_stdout = function(...)
