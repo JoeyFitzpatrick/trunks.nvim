@@ -3,9 +3,14 @@ local M = {}
 local MIN_HASH_LENGTH = 7
 
 ---@param hash string | nil
-local function drop_commit(hash)
-    MIN_HASH_LENGTH = 7
-    if not hash or #hash < MIN_HASH_LENGTH then
+---@return boolean
+local function validate_hash(hash)
+    return type(hash) == "string" and #hash >= MIN_HASH_LENGTH
+end
+
+---@param hash string | nil
+local function commit_drop(hash)
+    if not hash or not validate_hash(hash) then
         return
     end
     hash = hash:sub(1, MIN_HASH_LENGTH)
@@ -22,6 +27,13 @@ local function drop_commit(hash)
     )
 
     return require("trunks._core.run_cmd").run_cmd(command_builder, { rerender = true })
+end
+
+---@param hash string
+local function commit_fixup(hash)
+    if not hash or not validate_hash(hash) then
+        return
+    end
 end
 
 ---@param ok_text string
@@ -42,12 +54,20 @@ end
 ---@param input_args vim.api.keyset.create_user_command.command_args
 function M.run_trunks_cmd(input_args)
     local cmd = input_args.args
-    if cmd:match("^drop%-commit") then
+    if cmd:match("^commit%-drop") then
         local hash = vim.split(cmd, " ")[2]
-        local output, error_code = drop_commit(hash)
+        local output, error_code = commit_drop(hash)
         hash = hash:sub(1, MIN_HASH_LENGTH)
-        local error_text = output or ("Unable to drop commit " .. hash)
+        local error_text = output or ("Unable to commit drop " .. hash)
         handle_output("Dropped commit " .. hash .. " and rebased.", error_text, error_code)
+    end
+
+    if cmd:match("^commit%-instant%-fixup") then
+        local hash = vim.split(cmd, " ")[2]
+        local output, error_code = commit_fixup(hash)
+        hash = hash:sub(1, MIN_HASH_LENGTH)
+        local error_text = output or ("Unable to fixup commit " .. hash)
+        handle_output("Applied fixup to commit " .. hash .. " and rebased.", error_text, error_code)
     end
 end
 

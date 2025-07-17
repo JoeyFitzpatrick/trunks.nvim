@@ -124,6 +124,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     checkout = "c", -- Checkout commmit under cursor
                     commit_details = "<enter>",
                     diff_commit_against_head = "d",
+                    commit_drop = "D",
                     pull = "p",
                     push = "<leader>p",
                     rebase = "rb", -- Interactive rebase from current commit to commit under cursor

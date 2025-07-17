@@ -127,7 +127,7 @@
 ---@field checkout? string
 ---@field commit_details? string
 ---@field diff_commit_against_head? string
----@field drop_commit? string
+---@field commit_drop? string
 ---@field pull? string
 ---@field push? string
 ---@field rebase? string

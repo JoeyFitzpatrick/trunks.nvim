@@ -76,7 +76,7 @@ return {
             checkout = "c", -- Checkout commmit under cursor
             commit_details = "<enter>",
             diff_commit_against_head = "d",
-            drop_commit = "D",
+            commit_drop = "D",
             pull = "p",
             push = "<leader>p",
             rebase = "rb", -- Interactive rebase from current commit to commit under cursor

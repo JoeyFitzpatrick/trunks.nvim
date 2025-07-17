@@ -213,7 +213,7 @@ local function set_keymaps(bufnr, get_line, opts)
         vim.cmd("G difftool " .. line_data.hash)
     end, keymap_opts)
 
-    set("n", keymaps.drop_commit, function()
+    set("n", keymaps.commit_drop, function()
         local ok, line_data = pcall(get_line, bufnr)
         if not ok or not line_data then
             return
@@ -223,7 +223,7 @@ local function set_keymaps(bufnr, get_line, opts)
                 "Are you sure you want to drop commit " .. line_data.hash .. "?"
             )
         then
-            vim.cmd("Trunks drop-commit " .. line_data.hash)
+            vim.cmd("Trunks commit-drop " .. line_data.hash)
         end
     end, keymap_opts)
 
