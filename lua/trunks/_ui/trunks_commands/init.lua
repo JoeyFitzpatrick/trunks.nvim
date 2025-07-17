@@ -2,9 +2,11 @@ local M = {}
 
 ---@param hash string | nil
 local function drop_commit(hash)
-    if not hash then
+    local MIN_HASH_LENGTH = 7
+    if not hash or #hash < MIN_HASH_LENGTH then
         return
     end
+    hash = hash:sub(1, 7)
 
     local command_builder = require("trunks._core.command").base_command(
         string.format("rebase --interactive --autostash --keep-empty --no-autosquash --rebase-merges %s~1", hash)
