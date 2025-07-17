@@ -2,6 +2,7 @@
 ---@field stdin? string[]
 ---@field rerender? boolean
 ---@field error_codes_to_ignore? integer[]
+---@field raw_cmd? boolean -- Run a string command without parsing with command builder
 
 local M = {}
 
@@ -13,12 +14,16 @@ M.run_cmd = function(cmd, opts)
     opts = opts or {}
     local final_command
     if type(cmd) == "string" then
-        -- Remove "git " prefix if given. We shouldn't be passing commands with that
-        -- prefix here, but this prevents errors just in case.
-        if vim.startswith(cmd, "git ") then
-            cmd = cmd:sub(5)
+        if opts.raw_cmd then
+            final_command = cmd
+        else
+            -- Remove "git " prefix if given. We shouldn't be passing commands with that
+            -- prefix here, but this prevents errors just in case.
+            if vim.startswith(cmd, "git ") then
+                cmd = cmd:sub(5)
+            end
+            final_command = require("trunks._core.command").base_command(cmd):build()
         end
-        final_command = require("trunks._core.command").base_command(cmd):build()
     else
         final_command = cmd:build()
     end

@@ -30,10 +30,18 @@ local function commit_drop(hash)
 end
 
 ---@param hash string
-local function commit_fixup(hash)
+local function commit_instant_fixup(hash)
     if not hash or not validate_hash(hash) then
         return
     end
+    local command_builder = require("trunks._core.command").base_command(
+        string.format(
+            "commit --fixup=%s && GIT_SEQUENCE_EDITOR=true git rebase -i --autostash --autosquash %s^",
+            hash,
+            hash
+        )
+    )
+    return require("trunks._core.run_cmd").run_cmd(command_builder, { rerender = true })
 end
 
 ---@param ok_text string
@@ -64,7 +72,7 @@ function M.run_trunks_cmd(input_args)
 
     if cmd:match("^commit%-instant%-fixup") then
         local hash = vim.split(cmd, " ")[2]
-        local output, error_code = commit_fixup(hash)
+        local output, error_code = commit_instant_fixup(hash)
         hash = hash:sub(1, MIN_HASH_LENGTH)
         local error_text = output or ("Unable to fixup commit " .. hash)
         handle_output("Applied fixup to commit " .. hash .. " and rebased.", error_text, error_code)
