@@ -23,16 +23,17 @@ M.run_cmd = function(cmd, opts)
         final_command = cmd:build()
     end
 
-    local output
+    local output, return_code
     if opts.stdin then
         output = vim.fn.systemlist(final_command, opts.stdin)
     else
         output = vim.fn.systemlist(final_command)
     end
+    return_code = vim.v.shell_error
     if opts.rerender then
         require("trunks._core.register").rerender_buffers()
     end
-    return output, vim.v.shell_error
+    return output, return_code
 end
 
 --- Runs a command that doesn't display output.
