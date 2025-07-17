@@ -21,7 +21,7 @@ local function drop_commit(hash)
             )
     )
 
-    return require("trunks._core.run_cmd").run_cmd(command_builder)
+    return require("trunks._core.run_cmd").run_cmd(command_builder, { rerender = true })
 end
 
 ---@param ok_text string
