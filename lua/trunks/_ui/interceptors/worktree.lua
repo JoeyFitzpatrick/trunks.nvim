@@ -90,20 +90,19 @@ local function set_keymaps(bufnr, command_builder)
     end, keymap_opts)
 
     set("n", keymaps.delete, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-        vim.ui.select(
-            { "Yes", "No" },
-            { prompt = "Are you sure you want to delete worktree " .. line_data.name .. "?" },
-            function(selection)
-                if not selection or selection ~= "Yes" then
-                    return
-                end
+        require("trunks._core.async").run_async(function()
+            local ok, line_data = pcall(get_line, bufnr)
+            if not ok or not line_data then
+                return
+            end
+            if
+                require("trunks._ui.utils.confirm").confirm_choice(
+                    "Are you sure you want to delete worktree " .. line_data.name .. "?"
+                )
+            then
                 vim.cmd(string.format("G worktree remove %s", line_data.name))
             end
-        )
+        end)
     end, keymap_opts)
 
     set("n", keymaps.switch, function()
