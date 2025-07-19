@@ -34,6 +34,20 @@ local function commit_instant_fixup(hash)
     if not hash or not validate_hash(hash) then
         return
     end
+    local run_cmd = require("trunks._core.run_cmd").run_cmd
+
+    if not require("trunks._core.git").is_anything_staged() then
+        if require("trunks._ui.utils.confirm").confirm_choice("No changes are staged. Stage all changes?") then
+            run_cmd("stage --all")
+        end
+    end
+
+    -- If after running stage --all, if there are still no staged changes
+    -- (maybe there were no changes to begin with), just return
+    if not require("trunks._core.git").is_anything_staged() then
+        return "Unable to fixup commit with no changes.", 1
+    end
+
     local command_builder = require("trunks._core.command").base_command(
         string.format(
             "commit --fixup=%s && GIT_SEQUENCE_EDITOR=true git rebase -i --autostash --autosquash %s^",
@@ -41,7 +55,7 @@ local function commit_instant_fixup(hash)
             hash
         )
     )
-    return require("trunks._core.run_cmd").run_cmd(command_builder, { rerender = true })
+    return run_cmd(command_builder, { rerender = true })
 end
 
 ---@param ok_text string
@@ -61,22 +75,24 @@ end
 
 ---@param input_args vim.api.keyset.create_user_command.command_args
 function M.run_trunks_cmd(input_args)
-    local cmd = input_args.args
-    if cmd:match("^commit%-drop") then
-        local hash = vim.split(cmd, " ")[2]
-        local output, error_code = commit_drop(hash)
-        hash = hash:sub(1, MIN_HASH_LENGTH)
-        local error_text = output or ("Unable to commit drop " .. hash)
-        handle_output("Dropped commit " .. hash .. " and rebased.", error_text, error_code)
-    end
+    require("trunks._core.async").run_async(function()
+        local cmd = input_args.args
+        if cmd:match("^commit%-drop") then
+            local hash = vim.split(cmd, " ")[2]
+            local output, error_code = commit_drop(hash)
+            hash = hash:sub(1, MIN_HASH_LENGTH)
+            local error_text = output or ("Unable to commit drop " .. hash)
+            handle_output("Dropped commit " .. hash .. " and rebased.", error_text, error_code)
+        end
 
-    if cmd:match("^commit%-instant%-fixup") then
-        local hash = vim.split(cmd, " ")[2]
-        local output, error_code = commit_instant_fixup(hash)
-        hash = hash:sub(1, MIN_HASH_LENGTH)
-        local error_text = output or ("Unable to fixup commit " .. hash)
-        handle_output("Applied fixup to commit " .. hash .. " and rebased.", error_text, error_code)
-    end
+        if cmd:match("^commit%-instant%-fixup") then
+            local hash = vim.split(cmd, " ")[2]
+            local output, error_code = commit_instant_fixup(hash)
+            hash = hash:sub(1, MIN_HASH_LENGTH)
+            local error_text = output or ("Unable to fixup commit " .. hash)
+            handle_output("Applied fixup to commit " .. hash .. " and rebased.", error_text, error_code)
+        end
+    end)
 end
 
 return M
