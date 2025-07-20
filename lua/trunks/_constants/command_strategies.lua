@@ -109,7 +109,6 @@ M.whatchanged = { insert = true }
 M.worktree = {
     trigger_redraw = function(cmd)
         local worktree_subcommand = cmd[3]
-        vim.print("here")
         if not worktree_subcommand or worktree_subcommand == "list" then
             return false
         end

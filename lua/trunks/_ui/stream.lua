@@ -28,15 +28,11 @@ function M.stream_lines(bufnr, cmd, opts)
     local MAX_BUFFER_SIZE = 1000
 
     local function flush_buffer()
-        if #line_buffer == 0 then
+        if #line_buffer == 0 or not vim.api.nvim_buf_is_valid(bufnr) then
             return
         end
 
-        if not vim.api.nvim_buf_is_valid(bufnr) then
-            return
-        end
-
-        vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+        vim.bo[bufnr].modifiable = true
         local lines_to_add = {}
 
         for _, line in ipairs(line_buffer) do
@@ -60,7 +56,7 @@ function M.stream_lines(bufnr, cmd, opts)
             line_num = line_num + #lines_to_add
         end
 
-        vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+        vim.bo[bufnr].modifiable = false
 
         line_buffer = {}
     end
@@ -84,10 +80,11 @@ function M.stream_lines(bufnr, cmd, opts)
         flush_buffer()
 
         if opts.filetype then
-            vim.api.nvim_set_option_value("filetype", opts.filetype, { buf = bufnr })
+            vim.bo[bufnr].filetype = opts.filetype
         end
-        vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-        if code ~= 0 then
+        vim.bo[bufnr].modifiable = false
+
+        if code ~= 0 and not opts.silent then
             local error_message = "command '" .. cmd .. "' failed with exit code " .. code
             if POSSIBLE_ERROR_OUTPUT and POSSIBLE_ERROR_OUTPUT ~= "" then
                 error_message = "command '" .. cmd .. "' failed with message: " .. POSSIBLE_ERROR_OUTPUT
@@ -112,9 +109,6 @@ function M.stream_lines(bufnr, cmd, opts)
             pcall(on_stdout, ...)
         end,
         on_exit = function(...)
-            if opts.silent then
-                return
-            end
             pcall(on_exit, ...)
         end,
     })
