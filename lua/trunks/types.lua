@@ -23,6 +23,7 @@
 ---@field stash_popup? trunks.StashPopupConfiguration
 ---@field status? trunks.StatusConfiguration
 ---@field worktree? trunks.WorktreeConfiguration
+---@field time_machine? trunks.TimeMachineConfiguration
 
 ---@class trunks.BlameConfiguration
 ---@field default_cmd_args? string[]
@@ -75,6 +76,9 @@
 
 ---@class trunks.WorktreeConfiguration
 ---@field keymaps? trunks.WorktreeKeymaps
+
+---@class trunks.TimeMachineConfiguration
+---@field auto_display_on? boolean
 
 ---@class trunks.HomeKeymaps
 ---@field next? string

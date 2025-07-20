@@ -139,4 +139,7 @@ return {
             switch = "s", -- Switch to worktree
         },
     },
+    time_machine = {
+        auto_display_on = true,
+    },
 }

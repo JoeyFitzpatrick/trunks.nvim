@@ -58,13 +58,15 @@ local function commit_instant_fixup(hash)
     return run_cmd(command_builder, { rerender = true })
 end
 
----@param ok_text string
+---@param ok_text string | nil
 ---@param error_text string[] | string
 ---@param error_code integer | nil
 local function handle_output(ok_text, error_text, error_code)
     local is_ok = error_code == nil or error_code == 0
     if is_ok then
-        vim.notify(ok_text, vim.log.levels.INFO)
+        if ok_text then
+            vim.notify(ok_text, vim.log.levels.INFO)
+        end
         return
     end
     if type(error_text) == "table" then
@@ -77,20 +79,27 @@ end
 function M.run_trunks_cmd(input_args)
     require("trunks._core.async").run_async(function()
         local cmd = input_args.args
-        if cmd:match("^commit%-drop") then
+        if vim.startswith(cmd, "commit-drop") then
             local hash = vim.split(cmd, " ")[2]
-            local output, error_code = commit_drop(hash)
+            local output, exit_code = commit_drop(hash)
             hash = hash:sub(1, MIN_HASH_LENGTH)
             local error_text = output or ("Unable to commit drop " .. hash)
-            handle_output("Dropped commit " .. hash .. " and rebased.", error_text, error_code)
+            handle_output("Dropped commit " .. hash .. " and rebased.", error_text, exit_code)
         end
 
-        if cmd:match("^commit%-instant%-fixup") then
+        if vim.startswith(cmd, "commit-instant-fixup") then
             local hash = vim.split(cmd, " ")[2]
-            local output, error_code = commit_instant_fixup(hash)
+            local output, exit_code = commit_instant_fixup(hash)
             hash = hash:sub(1, MIN_HASH_LENGTH)
             local error_text = output or ("Unable to fixup commit " .. hash)
-            handle_output("Applied fixup to commit " .. hash .. " and rebased.", error_text, error_code)
+            handle_output("Applied fixup to commit " .. hash .. " and rebased.", error_text, exit_code)
+        end
+
+        if vim.startswith(cmd, "time-machine") then
+            local filename = vim.split(cmd, " ")[2]
+            local output, exit_code = require("trunks._ui.trunks_commands.time_machine").render(filename)
+            local error_text = output or "Unable to run time-machine"
+            handle_output(nil, error_text, exit_code)
         end
     end)
 end

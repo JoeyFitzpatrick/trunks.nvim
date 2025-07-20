@@ -143,7 +143,7 @@ end
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 ---@return { use_native_keymaps: boolean, use_graph_output?: boolean }
-local function set_lines(bufnr, opts)
+function M.set_lines(bufnr, opts)
     require("trunks._ui.keymaps.keymaps_text").show(bufnr, opts.ui_types)
     local start_line = opts.start_line or 2
     local cmd_tbl = M._parse_log_cmd(opts.command_builder)
@@ -244,7 +244,7 @@ local function set_keymaps(bufnr, get_line, opts)
         end
         vim.ui.select({ "mixed", "soft", "hard" }, { prompt = "Git reset type: " }, function(selection)
             require("trunks._core.run_cmd").run_hidden_cmd("git reset --" .. selection .. " " .. line_data.hash)
-            set_lines(bufnr, opts)
+            M.set_lines(bufnr, opts)
         end)
     end, keymap_opts)
 
@@ -278,7 +278,7 @@ end
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
     vim.api.nvim_set_option_value("wrap", false, { win = 0 })
-    local set_lines_result = set_lines(bufnr, opts)
+    local set_lines_result = M.set_lines(bufnr, opts)
     if set_lines_result.use_native_keymaps then
         require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
     else
