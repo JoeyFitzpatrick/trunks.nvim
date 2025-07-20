@@ -121,6 +121,10 @@ function M.get_git_c_flag(path)
     if path == "" then
         return nil
     end
+
+    -- If path is "%", expand it to filename
+    path = replace_percent_outside_quotes(path)
+
     if is_in_cwd(path) then
         return nil
     else
