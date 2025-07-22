@@ -46,8 +46,17 @@ end
 ---@param bufnr integer
 local function set_keymaps(bufnr)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine", {})
+    local safe_set_keymap = require("trunks._ui.keymaps.set").safe_set_keymap
 
-    require("trunks._ui.keymaps.set").safe_set_keymap("n", "q", function()
+    safe_set_keymap("n", keymaps.commit_details, function()
+        local ok, line_data = pcall(M._get_line, bufnr)
+        if not ok or not line_data then
+            return
+        end
+        require("trunks._ui.commit_details").render(line_data.hash, {})
+    end, { buffer = bufnr })
+
+    safe_set_keymap("n", "q", function()
         require("trunks._core.register").deregister_buffer(bufnr, {})
         vim.cmd.tabclose()
     end, { buffer = bufnr })
