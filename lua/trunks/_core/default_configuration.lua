@@ -141,5 +141,10 @@ return {
     },
     time_machine = {
         auto_display_on = true,
+        keymaps = {
+            commit_details = "<enter>",
+            diff_against_previous_commit = "d",
+            diff_against_head = "D",
+        },
     },
 }

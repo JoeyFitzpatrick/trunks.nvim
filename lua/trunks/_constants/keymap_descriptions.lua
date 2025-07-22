@@ -115,6 +115,12 @@ M.long_descriptions = {
         delete = "Delete worktree",
         switch = "Switch to worktree",
     },
+    ---@type trunks.TimeMachineKeymaps
+    time_machine = {
+        commit_details = "Show commit details",
+        diff_against_previous_commit = "Diff file against previous commit",
+        diff_against_head = "Diff file against HEAD",
+    },
 }
 
 local config = require("trunks._core.configuration").DATA
@@ -170,6 +176,10 @@ add_description("stash", "apply", "Apply")
 add_description("stash", "pop", "Pop")
 add_description("stash", "drop", "Drop")
 add_description("stash", "show", "Details")
+
+add_description("time_machine", "commit_details", "Details")
+add_description("time_machine", "diff_against_previous_commit", "Diff")
+add_description("time_machine", "diff_against_head", "Diff against HEAD")
 
 ---@param ui_types string[]
 ---@return string

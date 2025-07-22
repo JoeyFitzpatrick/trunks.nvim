@@ -43,6 +43,16 @@ function M._get_line(bufnr, start_line, line_num)
     return { hash = hash }
 end
 
+---@param bufnr integer
+local function set_keymaps(bufnr)
+    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine", {})
+
+    require("trunks._ui.keymaps.set").safe_set_keymap("n", "q", function()
+        require("trunks._core.register").deregister_buffer(bufnr, {})
+        vim.cmd.tabclose()
+    end, { buffer = bufnr })
+end
+
 ---@param filename string | nil
 ---@return string?, integer? -- error text and error code
 function M.render(filename)
@@ -55,11 +65,12 @@ function M.render(filename)
     local command_builder = Command.base_command("log --follow " .. filename, filename)
 
     -- Use the same lines that the log UI uses
-    require("trunks._ui.home_options.log").set_lines(bufnr, { command_builder = command_builder })
-    require("trunks._ui.keymaps.set").safe_set_keymap("n", "q", function()
-        require("trunks._core.register").deregister_buffer(bufnr, {})
-        vim.cmd.tabclose()
-    end, { buffer = bufnr })
+    require("trunks._ui.home_options.log").set_lines(
+        bufnr,
+        { command_builder = command_builder, ui_types = { "time_machine" } }
+    )
+
+    set_keymaps(bufnr)
 
     -- Track renames: get filename for each commit asynchronously
     local filename_by_commit = {}

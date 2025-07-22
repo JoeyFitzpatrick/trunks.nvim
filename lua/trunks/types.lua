@@ -79,6 +79,7 @@
 
 ---@class trunks.TimeMachineConfiguration
 ---@field auto_display_on? boolean
+---@field keymaps? trunks.TimeMachineKeymaps
 
 ---@class trunks.HomeKeymaps
 ---@field next? string
@@ -178,3 +179,8 @@
 ---@field create? string
 ---@field delete? string
 ---@field switch? string
+
+---@class trunks.TimeMachineKeymaps
+---@field commit_details? string
+---@field diff_against_previous_commit? string
+---@field diff_against_head? string
