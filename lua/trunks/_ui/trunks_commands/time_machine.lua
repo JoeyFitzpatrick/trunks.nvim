@@ -52,6 +52,17 @@ local function set_keymaps(bufnr, filename, filename_by_commit)
         vim.cmd("G Vdiff " .. line_data.hash .. "^")
     end, { buffer = bufnr, nowait = true })
 
+    safe_set_keymap("n", keymaps.diff_against_head, function()
+        local ok, line_data = pcall(M._get_line, bufnr)
+        if not ok or not line_data then
+            return
+        end
+
+        local filename_to_use = filename_by_commit[line_data.hash] or filename
+        require("trunks._core.open_file").open_file_in_current_window(filename_to_use, line_data.hash)
+        vim.cmd("G Vdiff")
+    end, { buffer = bufnr, nowait = true })
+
     safe_set_keymap("n", "q", function()
         require("trunks._core.register").deregister_buffer(bufnr, {})
         vim.cmd.tabclose()
