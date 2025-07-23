@@ -153,11 +153,13 @@ function M.previous(bufnr)
     local time_machine_index = vim.w.time_machine_index or 0
 
     local output, exit_code = require("trunks._core.run_cmd").run_cmd(
-        string.format("log --oneline -n 1 --skip %d --follow %s", time_machine_index, filename)
+        string.format("log --oneline --name-only -n 1 --skip %d --follow %s", time_machine_index, filename)
     )
     vim.w.time_machine_index = time_machine_index + 1
 
     local commit = output[1]:match("%x+")
+    filename = output[2] -- second line of output for --name-only is filename
+
     if exit_code ~= 0 or not commit then
         print("nope")
     end
