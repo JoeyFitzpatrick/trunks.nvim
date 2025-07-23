@@ -187,6 +187,14 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     switch = "s", -- Switch to worktree
                 },
             },
+            time_machine = {
+                auto_display_on = true,
+                keymaps = {
+                    commit_details = "<enter>",
+                    diff_against_previous_commit = "d",
+                    diff_against_head = "D",
+                },
+            },
             -- End of default configuration
         }
     end

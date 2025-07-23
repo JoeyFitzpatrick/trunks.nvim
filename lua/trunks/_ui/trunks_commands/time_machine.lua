@@ -3,23 +3,6 @@ local M = {}
 -- After keymap text and padding
 local START_LINE = 1
 
----@param commit string
----@param filename string | nil
-local function render_file_at_revision(commit, filename)
-    local filetype
-    if filename then
-        filetype = vim.filetype.match({ filename = filename })
-    else
-        local original_bufnr = vim.api.nvim_get_current_buf()
-        filetype = vim.filetype.match({ buf = original_bufnr })
-        filename = vim.fn.expand("%")
-    end
-    require("trunks._ui.elements").new_buffer({
-        buffer_name = "TrunksTimeMachine/" .. filename,
-        filetype = filetype,
-    })
-end
-
 ---@param bufnr integer
 ---@param start_line? integer
 ---@param line_num? integer
@@ -44,7 +27,9 @@ function M._get_line(bufnr, start_line, line_num)
 end
 
 ---@param bufnr integer
-local function set_keymaps(bufnr)
+---@param filename string
+---@param filename_by_commit table<string, string>
+local function set_keymaps(bufnr, filename, filename_by_commit)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine", {})
     local safe_set_keymap = require("trunks._ui.keymaps.set").safe_set_keymap
 
@@ -55,6 +40,17 @@ local function set_keymaps(bufnr)
         end
         require("trunks._ui.commit_details").render(line_data.hash, {})
     end, { buffer = bufnr })
+
+    safe_set_keymap("n", keymaps.diff_against_previous_commit, function()
+        local ok, line_data = pcall(M._get_line, bufnr)
+        if not ok or not line_data then
+            return
+        end
+
+        local filename_to_use = filename_by_commit[line_data.hash] or filename
+        require("trunks._core.open_file").open_file_in_current_window(filename_to_use, line_data.hash)
+        vim.cmd("G Vdiff " .. line_data.hash .. "^")
+    end, { buffer = bufnr, nowait = true })
 
     safe_set_keymap("n", "q", function()
         require("trunks._core.register").deregister_buffer(bufnr, {})
@@ -78,8 +74,6 @@ function M.render(filename)
         bufnr,
         { command_builder = command_builder, ui_types = { "time_machine" } }
     )
-
-    set_keymaps(bufnr)
 
     -- Track renames: get filename for each commit asynchronously
     local filename_by_commit = {}
@@ -106,6 +100,8 @@ function M.render(filename)
             end
         end,
     })
+
+    set_keymaps(bufnr, filename, filename_by_commit)
 
     require("trunks._ui.auto_display").create_auto_display(bufnr, "time_machine", {
         generate_cmd = function()

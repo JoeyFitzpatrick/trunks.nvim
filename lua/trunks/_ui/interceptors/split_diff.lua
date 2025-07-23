@@ -7,22 +7,21 @@ local SUBCOMMAND_LENGTH = 6
 
 local M = {}
 
----@param cmd string
+---@param command_builder trunks.Command
 ---@return trunks.SplitDiffParams
-function M._parse_split_diff_args(cmd)
-    local args = cmd:sub(SUBCOMMAND_LENGTH)
+function M._parse_split_diff_args(command_builder)
+    local cmd = command_builder.base
+    local args = cmd and cmd:sub(SUBCOMMAND_LENGTH) or ""
+    local filepath = vim.b[vim.api.nvim_get_current_buf()].original_filename or vim.fn.expand("%")
+
     local commit = args:match("%S+")
-    if not commit then
-        return { filepath = vim.fn.expand("%"), commit = "HEAD" }
-    end
-    return { filepath = vim.fn.expand("%"), commit = commit }
+    return { filepath = filepath, commit = commit or "HEAD" }
 end
 
 ---@param command_builder trunks.Command
 ---@param split_type "below" | "right"
 function M.split_diff(command_builder, split_type)
-    local args = command_builder:build()
-    local params = M._parse_split_diff_args(args)
+    local params = M._parse_split_diff_args(command_builder)
 
     vim.cmd("diffthis")
     require("trunks._core.open_file").open_file_in_split(params.filepath, params.commit, split_type)

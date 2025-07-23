@@ -34,10 +34,14 @@ local function setup_git_file(bufnr, filename, commit)
         lines = { "" }
     end
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+    vim.bo[bufnr].modifiable = false
+
     local commit_filename = get_filename(filename, commit)
     vim.api.nvim_buf_set_name(bufnr, commit_filename)
-    vim.api.nvim_set_option_value("filetype", vim.filetype.match({ buf = bufnr }), { buf = bufnr })
+
+    vim.bo[bufnr].filetype = vim.filetype.match({ buf = bufnr }) or ""
+
+    vim.b[bufnr].original_filename = filename
 
     vim.keymap.set("n", "q", function()
         require("trunks._core.register").deregister_buffer(bufnr)
