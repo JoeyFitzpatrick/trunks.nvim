@@ -1,5 +1,7 @@
 local M = {}
 
+local Command = require("trunks._core.command")
+
 -- After keymap text and padding
 local START_LINE = 1
 
@@ -69,24 +71,9 @@ local function set_keymaps(bufnr, filename, filename_by_commit)
     end, { buffer = bufnr })
 end
 
----@param filename string | nil
----@return string?, integer? -- error text and error code
-function M.render(filename)
-    filename = filename or vim.fn.expand("%")
-    vim.cmd.tabnew()
-    local bufnr =
-        require("trunks._ui.elements").new_buffer({ filetype = "git", buffer_name = "TrunksTimeMachine--" .. filename })
-
-    local Command = require("trunks._core.command")
-    local command_builder = Command.base_command("log --follow " .. filename, filename)
-
-    -- Use the same lines that the log UI uses
-    require("trunks._ui.home_options.log").set_lines(
-        bufnr,
-        { command_builder = command_builder, ui_types = { "time_machine" } }
-    )
-
-    -- Track renames: get filename for each commit asynchronously
+--- get filename for each commit asynchronously
+---@param filename string
+local function get_filenames_by_commit(filename)
     local filename_by_commit = {}
     local current_commit = nil
     local current_filename = filename
@@ -101,7 +88,8 @@ function M.render(filename)
                 if commit then
                     current_commit = commit
                 else
-                    if vim.startswith(line, "R") and current_commit then
+                    local file_was_renamed = vim.startswith(line, "R")
+                    if file_was_renamed and current_commit then
                         current_filename = line:match("%s(%S+)")
                         filename_by_commit[current_commit] = current_filename
                     elseif current_commit then
@@ -111,7 +99,26 @@ function M.render(filename)
             end
         end,
     })
+    return filename_by_commit
+end
 
+---@param filename string | nil
+---@return string?, integer? -- error text and error code
+function M.render(filename)
+    filename = filename or vim.fn.expand("%")
+    vim.cmd.tabnew()
+    local bufnr =
+        require("trunks._ui.elements").new_buffer({ filetype = "git", buffer_name = "TrunksTimeMachine--" .. filename })
+
+    local command_builder = Command.base_command("log --follow " .. filename, filename)
+
+    -- Use the same lines that the log UI uses
+    require("trunks._ui.home_options.log").set_lines(
+        bufnr,
+        { command_builder = command_builder, ui_types = { "time_machine" } }
+    )
+
+    local filename_by_commit = get_filenames_by_commit(filename)
     set_keymaps(bufnr, filename, filename_by_commit)
 
     require("trunks._ui.auto_display").create_auto_display(bufnr, "time_machine", {
@@ -138,6 +145,28 @@ function M.render(filename)
         end,
         strategy = { display_strategy = "below", win_size = 0.67, insert = false, enter = false },
     })
+end
+
+---@param bufnr integer
+function M.previous(bufnr)
+    local filename = vim.b[bufnr].original_filename or vim.fn.expand("%")
+    local time_machine_index = vim.w.time_machine_index or 0
+
+    local output, exit_code = require("trunks._core.run_cmd").run_cmd(
+        string.format("log --oneline -n 1 --skip %d --follow %s", time_machine_index, filename)
+    )
+    vim.w.time_machine_index = time_machine_index + 1
+
+    local commit = output[1]:match("%x+")
+    if exit_code ~= 0 or not commit then
+        print("nope")
+    end
+
+    vim.b[bufnr].original_filename = filename
+    vim.b[bufnr].commit = commit
+
+    require("trunks._core.open_file").open_file_in_current_window(filename, commit)
+    vim.cmd("G Vdiff " .. commit .. "^")
 end
 
 return M

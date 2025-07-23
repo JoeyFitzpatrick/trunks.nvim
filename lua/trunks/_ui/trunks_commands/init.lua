@@ -75,32 +75,56 @@ local function handle_output(ok_text, error_text, error_code)
     vim.notify(error_text, vim.log.levels.ERROR)
 end
 
+local cmd_map = {
+    ["commit-drop"] = function(cmd)
+        local hash = vim.split(cmd, " ")[2]
+        local output, exit_code = commit_drop(hash)
+        hash = hash:sub(1, MIN_HASH_LENGTH)
+        local error_text = output or ("Unable to commit drop " .. hash)
+        handle_output("Dropped commit " .. hash .. " and rebased.", error_text, exit_code)
+    end,
+
+    ["commit-instant-fixup"] = function(cmd)
+        local hash = vim.split(cmd, " ")[2]
+        local output, exit_code = commit_instant_fixup(hash)
+        hash = hash:sub(1, MIN_HASH_LENGTH)
+        local error_text = output or ("Unable to fixup commit " .. hash)
+        handle_output("Applied fixup to commit " .. hash .. " and rebased.", error_text, exit_code)
+    end,
+
+    ["time-machine"] = function(cmd)
+        local filename = vim.split(cmd, " ")[2]
+        local output, exit_code = require("trunks._ui.trunks_commands.time_machine").render(filename)
+        local error_text = output or "Unable to run time-machine"
+        handle_output(nil, error_text, exit_code)
+    end,
+
+    ["time-machine-next"] = function(cmd)
+        print(cmd)
+    end,
+
+    ["time-machine-previous"] = function()
+        require("trunks._ui.trunks_commands.time_machine").previous(vim.api.nvim_get_current_buf())
+    end,
+}
+
 ---@param input_args vim.api.keyset.create_user_command.command_args
 function M.run_trunks_cmd(input_args)
     require("trunks._core.async").run_async(function()
         local cmd = input_args.args
-        if vim.startswith(cmd, "commit-drop") then
-            local hash = vim.split(cmd, " ")[2]
-            local output, exit_code = commit_drop(hash)
-            hash = hash:sub(1, MIN_HASH_LENGTH)
-            local error_text = output or ("Unable to commit drop " .. hash)
-            handle_output("Dropped commit " .. hash .. " and rebased.", error_text, exit_code)
+        local trunks_command = cmd:match("^%S+")
+        if not trunks_command then
+            vim.notify("Unable to parse Trunks command " .. (cmd or ""))
         end
 
-        if vim.startswith(cmd, "commit-instant-fixup") then
-            local hash = vim.split(cmd, " ")[2]
-            local output, exit_code = commit_instant_fixup(hash)
-            hash = hash:sub(1, MIN_HASH_LENGTH)
-            local error_text = output or ("Unable to fixup commit " .. hash)
-            handle_output("Applied fixup to commit " .. hash .. " and rebased.", error_text, exit_code)
+        local trunks_command_fn = cmd_map[trunks_command]
+        if not trunks_command_fn then
+            vim.notify(
+                require("trunks._core.texter").surround_with_quotes(trunks_command) .. " is not a Trunks command"
+            )
         end
 
-        if vim.startswith(cmd, "time-machine") then
-            local filename = vim.split(cmd, " ")[2]
-            local output, exit_code = require("trunks._ui.trunks_commands.time_machine").render(filename)
-            local error_text = output or "Unable to run time-machine"
-            handle_output(nil, error_text, exit_code)
-        end
+        trunks_command_fn(cmd)
     end)
 end
 

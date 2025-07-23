@@ -42,6 +42,7 @@ local function setup_git_file(bufnr, filename, commit)
     vim.bo[bufnr].filetype = vim.filetype.match({ buf = bufnr }) or ""
 
     vim.b[bufnr].original_filename = filename
+    vim.b[bufnr].commit = commit
 
     vim.keymap.set("n", "q", function()
         require("trunks._core.register").deregister_buffer(bufnr)
