@@ -1,3 +1,7 @@
+---@class trunks.TimeMachineCacheEntry
+---@field hash string
+---@field filename string
+
 local M = {}
 
 local Command = require("trunks._core.command")
@@ -5,10 +9,58 @@ local Command = require("trunks._core.command")
 -- After keymap text and padding
 local START_LINE = 1
 
+---@type table<string, trunks.TimeMachineCacheEntry[]>
+M.cache = {}
+
+---@param filename string
+local function cache_commits_with_filename(filename)
+    if M.cache[filename] then
+        return
+    end
+
+    local current_commit = nil
+    local current_filename = filename
+    M.cache[filename] = {}
+    local get_historical_filenames_cmd = "git log --follow --name-status --oneline -- " .. filename
+    vim.fn.jobstart(get_historical_filenames_cmd, {
+        on_stdout = function(_, data, _)
+            if not data then
+                return
+            end
+            for _, line in ipairs(data) do
+                local commit = line:match("%x%x%x%x%x%x%x")
+                if commit then
+                    current_commit = commit
+                else
+                    local file_was_renamed = vim.startswith(line, "R")
+                    if file_was_renamed and current_commit then
+                        current_filename = line:match("%s(%S+)")
+                        table.insert(M.cache[filename], { hash = current_commit, filename = current_filename })
+                        current_commit = nil
+                    elseif current_commit then
+                        table.insert(M.cache[filename], { hash = current_commit, filename = current_filename })
+                        current_commit = nil
+                    end
+                end
+            end
+        end,
+    })
+end
+
+---@param filename string
+---@param index integer
+---@return string
+local function get_cache_filename(filename, index)
+    if M.cache[filename] and M.cache[filename][index] and M.cache[filename][index].filename then
+        return M.cache[filename][index].filename
+    end
+    return filename
+end
+
 ---@param bufnr integer
 ---@param start_line? integer
 ---@param line_num? integer
----@return { hash: string } | nil
+---@return { hash: string, time_machine_index: integer } | nil
 function M._get_line(bufnr, start_line, line_num)
     start_line = start_line or START_LINE
     line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
@@ -25,13 +77,13 @@ function M._get_line(bufnr, start_line, line_num)
         return nil
     end
 
-    return { hash = hash }
+    -- commits start on line 3, 0-indexed to line 2
+    return { hash = hash, time_machine_index = line_num - 2 }
 end
 
 ---@param bufnr integer
 ---@param filename string
----@param filename_by_commit table<string, string>
-local function set_keymaps(bufnr, filename, filename_by_commit)
+local function set_keymaps(bufnr, filename)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine", {})
     local safe_set_keymap = require("trunks._ui.keymaps.set").safe_set_keymap
 
@@ -49,8 +101,9 @@ local function set_keymaps(bufnr, filename, filename_by_commit)
             return
         end
 
-        local filename_to_use = filename_by_commit[line_data.hash] or filename
-        require("trunks._core.open_file").open_file_in_current_window(filename_to_use, line_data.hash)
+        local filename_at_commit = get_cache_filename(filename, line_data.time_machine_index)
+        require("trunks._core.open_file").open_file_in_current_window(filename_at_commit, line_data.hash)
+        vim.b[bufnr].time_machine_index = line_data.time_machine_index
         vim.cmd("G Vdiff " .. line_data.hash .. "^")
     end, { buffer = bufnr, nowait = true })
 
@@ -60,8 +113,9 @@ local function set_keymaps(bufnr, filename, filename_by_commit)
             return
         end
 
-        local filename_to_use = filename_by_commit[line_data.hash] or filename
-        require("trunks._core.open_file").open_file_in_current_window(filename_to_use, line_data.hash)
+        local filename_at_commit = get_cache_filename(filename, line_data.time_machine_index)
+        require("trunks._core.open_file").open_file_in_current_window(filename_at_commit, line_data.hash)
+        vim.b[bufnr].time_machine_index = line_data.time_machine_index
         vim.cmd("G Vdiff")
     end, { buffer = bufnr, nowait = true })
 
@@ -69,37 +123,6 @@ local function set_keymaps(bufnr, filename, filename_by_commit)
         require("trunks._core.register").deregister_buffer(bufnr, {})
         vim.cmd.tabclose()
     end, { buffer = bufnr })
-end
-
---- get filename for each commit asynchronously
----@param filename string
-local function get_filenames_by_commit(filename)
-    local filename_by_commit = {}
-    local current_commit = nil
-    local current_filename = filename
-    local get_historical_filenames_cmd = "git log --follow --name-status --oneline -- " .. filename
-    vim.fn.jobstart(get_historical_filenames_cmd, {
-        on_stdout = function(_, data, _)
-            if not data then
-                return
-            end
-            for _, line in ipairs(data) do
-                local commit = line:match("%x%x%x%x%x%x%x")
-                if commit then
-                    current_commit = commit
-                else
-                    local file_was_renamed = vim.startswith(line, "R")
-                    if file_was_renamed and current_commit then
-                        current_filename = line:match("%s(%S+)")
-                        filename_by_commit[current_commit] = current_filename
-                    elseif current_commit then
-                        filename_by_commit[current_commit] = current_filename
-                    end
-                end
-            end
-        end,
-    })
-    return filename_by_commit
 end
 
 ---@param filename string | nil
@@ -118,8 +141,8 @@ function M.render(filename)
         { command_builder = command_builder, ui_types = { "time_machine" } }
     )
 
-    local filename_by_commit = get_filenames_by_commit(filename)
-    set_keymaps(bufnr, filename, filename_by_commit)
+    cache_commits_with_filename(filename)
+    set_keymaps(bufnr, filename)
 
     require("trunks._ui.auto_display").create_auto_display(bufnr, "time_machine", {
         generate_cmd = function()
@@ -129,7 +152,7 @@ function M.render(filename)
             end
 
             -- Use historical name if found, otherwise fall back to current filename
-            local filename_to_use = filename_by_commit[line_data.hash] or filename
+            local filename_to_use = get_cache_filename(filename, line_data.time_machine_index)
 
             local diff_command_builder = Command.base_command(
                 string.format("show %s -- %s", line_data.hash, vim.fn.shellescape(filename_to_use))
@@ -150,25 +173,25 @@ end
 ---@param bufnr integer
 function M.previous(bufnr)
     local filename = vim.b[bufnr].original_filename or vim.fn.expand("%")
-    local time_machine_index = vim.w.time_machine_index or 0
 
-    local output, exit_code = require("trunks._core.run_cmd").run_cmd(
-        string.format("log --oneline --name-only -n 1 --skip %d --follow %s", time_machine_index, filename)
-    )
-    vim.w.time_machine_index = time_machine_index + 1
+    cache_commits_with_filename(filename)
+    local time_machine_index = vim.b[bufnr].time_machine_index or 1
 
-    local commit = output[1]:match("%x+")
-    filename = output[2] -- second line of output for --name-only is filename
+    local time_machine_data = M.cache[filename][time_machine_index]
 
-    if exit_code ~= 0 or not commit then
-        print("nope")
+    if not time_machine_data then
+        -- Cache might not have values yet; wait a moment and retry
+        vim.cmd("sleep 50m")
+        time_machine_data = M.cache[filename][time_machine_index]
     end
 
-    vim.b[bufnr].original_filename = filename
-    vim.b[bufnr].commit = commit
+    vim.b[bufnr].original_filename = time_machine_data.filename
+    vim.b[bufnr].commit = time_machine_data.hash
 
-    require("trunks._core.open_file").open_file_in_current_window(filename, commit)
-    vim.cmd("G Vdiff " .. commit .. "^")
+    local winview = vim.fn.winsaveview()
+    local new_bufnr = require("trunks._core.open_file").open_file_in_current_window(filename, time_machine_data.hash)
+    vim.b[new_bufnr].time_machine_index = time_machine_index + 1
+    vim.fn.winrestview(winview)
 end
 
 return M

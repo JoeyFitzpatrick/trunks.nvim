@@ -69,10 +69,12 @@ end
 
 ---@param filename string
 ---@param commit string
+---@return integer -- bufnr of created buffer
 function M.open_file_in_current_window(filename, commit)
     delete_existing_buffer(get_filename(filename, commit))
     local bufnr = require("trunks._ui.elements").new_buffer({})
     setup_git_file(bufnr, filename, commit)
+    return bufnr
 end
 
 return M

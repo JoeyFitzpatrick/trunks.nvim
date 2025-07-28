@@ -58,7 +58,7 @@ local notify_when_done_call = "trunks_notify_when_done_editing("
     .. ")"
 vim.fn.rpcnotify(sock, "nvim_exec_lua", notify_when_done_call, {})
 
--- Sleep fortrunks. The host session will kill this when it's done editing.
+-- Sleep forever. The host session will kill this when it's done editing.
 while true do
     vim.cmd("sleep 10")
 end

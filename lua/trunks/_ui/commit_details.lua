@@ -1,5 +1,3 @@
--- Commit details
-
 ---@class trunks.CommitDetailsLineData
 ---@field filename string
 ---@field safe_filename string
