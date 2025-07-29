@@ -93,9 +93,57 @@ end
 
 ---@param bufnr integer
 ---@param filename string
+---@param open_type "tab" | "window" | "vertical" | "horizontal"
+local function open_file(bufnr, filename, open_type)
+    local ok, line_data = pcall(M._get_line, bufnr)
+    if not ok or not line_data then
+        return
+    end
+
+    if not M.cache[filename] or not M.cache[filename][line_data.time_machine_index] then
+        return
+    end
+
+    local time_machine_data = M.cache[filename][line_data.time_machine_index]
+    local file_to_open = time_machine_data.filename
+
+    if open_type == "tab" then
+        require("trunks._core.open_file").open_file_in_tab(file_to_open, time_machine_data.hash)
+    elseif open_type == "window" then
+        require("trunks._core.open_file").open_file_in_current_window(file_to_open, time_machine_data.hash)
+    elseif open_type == "vertical" then
+        require("trunks._ui.auto_display").close_auto_display(bufnr, "time_machine")
+        require("trunks._core.open_file").open_file_in_split(file_to_open, time_machine_data.hash, "right")
+    elseif open_type == "horizontal" then
+        require("trunks._ui.auto_display").close_auto_display(bufnr, "time_machine")
+        require("trunks._core.open_file").open_file_in_split(file_to_open, time_machine_data.hash, "below")
+    end
+
+    vim.b.time_machine_index = line_data.time_machine_index + 1
+end
+
+---@param bufnr integer
+---@param filename string
 local function set_keymaps(bufnr, filename)
-    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine", {})
+    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine", { open_file_keymaps = true })
+    local keymap_opts = { buffer = bufnr, nowait = true }
     local safe_set_keymap = require("trunks._ui.keymaps.set").safe_set_keymap
+
+    safe_set_keymap("n", keymaps.open_in_current_window, function()
+        open_file(bufnr, filename, "window")
+    end, keymap_opts)
+
+    safe_set_keymap("n", keymaps.open_in_horizontal_split, function()
+        open_file(bufnr, filename, "horizontal")
+    end, keymap_opts)
+
+    safe_set_keymap("n", keymaps.open_in_new_tab, function()
+        open_file(bufnr, filename, "tab")
+    end, keymap_opts)
+
+    safe_set_keymap("n", keymaps.open_in_vertical_split, function()
+        open_file(bufnr, filename, "vertical")
+    end, keymap_opts)
 
     safe_set_keymap("n", keymaps.commit_details, function()
         local ok, line_data = pcall(M._get_line, bufnr)
@@ -103,7 +151,7 @@ local function set_keymaps(bufnr, filename)
             return
         end
         require("trunks._ui.commit_details").render(line_data.hash, {})
-    end, { buffer = bufnr })
+    end, keymap_opts)
 
     safe_set_keymap("n", keymaps.diff_against_previous_commit, function()
         local ok, line_data = pcall(M._get_line, bufnr)
@@ -115,7 +163,7 @@ local function set_keymaps(bufnr, filename)
         require("trunks._core.open_file").open_file_in_current_window(filename_at_commit, line_data.hash)
         vim.b[bufnr].time_machine_index = line_data.time_machine_index
         vim.cmd("G Vdiff " .. line_data.hash .. "^")
-    end, { buffer = bufnr, nowait = true })
+    end, keymap_opts)
 
     safe_set_keymap("n", keymaps.diff_against_head, function()
         local ok, line_data = pcall(M._get_line, bufnr)
@@ -127,12 +175,12 @@ local function set_keymaps(bufnr, filename)
         require("trunks._core.open_file").open_file_in_current_window(filename_at_commit, line_data.hash)
         vim.b[bufnr].time_machine_index = line_data.time_machine_index
         vim.cmd("G Vdiff")
-    end, { buffer = bufnr, nowait = true })
+    end, keymap_opts)
 
     safe_set_keymap("n", "q", function()
         require("trunks._core.register").deregister_buffer(bufnr, {})
         vim.cmd.tabclose()
-    end, { buffer = bufnr })
+    end, keymap_opts)
 end
 
 ---@param filename string | nil

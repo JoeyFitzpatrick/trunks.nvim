@@ -77,7 +77,6 @@ end
 ---@param bufnr integer
 ---@param commits string
 ---@param open_type "tab" | "window" | "vertical" | "horizontal"
----@return { file_to_open: string, commit_to_use: string } | nil
 local function open_file(bufnr, commits, open_type)
     local ok, line_data = pcall(get_line, bufnr)
     if not ok or not line_data then
