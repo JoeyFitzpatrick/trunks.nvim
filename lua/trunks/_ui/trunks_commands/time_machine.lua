@@ -1,6 +1,7 @@
 ---@class trunks.TimeMachineCacheEntry
 ---@field hash string
 ---@field filename string
+---@field rename_filename? string
 
 local M = {}
 
@@ -17,10 +18,11 @@ local function cache_commits_with_filename(filename)
     if M.cache[filename] then
         return
     end
+    M.cache[filename] = {}
 
     local current_commit = nil
     local current_filename = filename
-    M.cache[filename] = {}
+
     local get_historical_filenames_cmd = "git log --follow --name-status --oneline -- " .. filename
     vim.fn.jobstart(get_historical_filenames_cmd, {
         on_stdout = function(_, data, _)
@@ -32,14 +34,22 @@ local function cache_commits_with_filename(filename)
                 if commit then
                     current_commit = commit
                 else
-                    local file_was_renamed = vim.startswith(line, "R")
-                    if file_was_renamed and current_commit then
-                        current_filename = line:match("%s(%S+)")
-                        table.insert(M.cache[filename], { hash = current_commit, filename = current_filename })
+                    if current_commit then
+                        local cache_data = { hash = current_commit, filename = current_filename }
+
+                        local file_was_renamed = vim.startswith(line, "R")
+                        local rename_filename
+                        if file_was_renamed then
+                            rename_filename = line:match("%s(%S+)")
+                            cache_data.rename_filename = rename_filename
+                        end
+
+                        table.insert(M.cache[filename], cache_data)
                         current_commit = nil
-                    elseif current_commit then
-                        table.insert(M.cache[filename], { hash = current_commit, filename = current_filename })
-                        current_commit = nil
+
+                        if file_was_renamed then
+                            current_filename = rename_filename
+                        end
                     end
                 end
             end
@@ -49,10 +59,10 @@ end
 
 ---@param filename string
 ---@param index integer
----@return string
+---@return string, string? -- filename to use, and optional rename filename
 local function get_cache_filename(filename, index)
     if M.cache[filename] and M.cache[filename][index] and M.cache[filename][index].filename then
-        return M.cache[filename][index].filename
+        return M.cache[filename][index].filename, M.cache[filename][index].rename_filename
     end
     return filename
 end
@@ -152,11 +162,23 @@ function M.render(filename)
             end
 
             -- Use historical name if found, otherwise fall back to current filename
-            local filename_to_use = get_cache_filename(filename, line_data.time_machine_index)
+            local filename_to_use, rename_filename = get_cache_filename(filename, line_data.time_machine_index)
 
             local diff_command_builder = Command.base_command(
                 string.format("show %s -- %s", line_data.hash, vim.fn.shellescape(filename_to_use))
             )
+
+            if rename_filename then
+                diff_command_builder = Command.base_command(
+                    string.format(
+                        "show %s --diff-filter=R --format= -- %s %s",
+                        line_data.hash,
+                        vim.fn.shellescape(filename_to_use),
+                        vim.fn.shellescape(rename_filename)
+                    )
+                )
+            end
+
             return diff_command_builder:build()
         end,
         get_current_diff = function()
@@ -189,7 +211,10 @@ function M.previous(bufnr)
     vim.b[bufnr].commit = time_machine_data.hash
 
     local winview = vim.fn.winsaveview()
-    local new_bufnr = require("trunks._core.open_file").open_file_in_current_window(filename, time_machine_data.hash)
+    local new_bufnr = require("trunks._core.open_file").open_file_in_current_window(
+        time_machine_data.filename,
+        time_machine_data.hash
+    )
     vim.b[new_bufnr].time_machine_index = time_machine_index + 1
     vim.fn.winrestview(winview)
 end
