@@ -11,9 +11,9 @@ local function highlight_line(bufnr, line, line_num)
         return
     end
     local hash_start, hash_end = line:find("^%w+")
-    ui_highlight_line(bufnr, "MatchParen", line_num, hash_start, hash_end)
+    ui_highlight_line(bufnr, "Constant", line_num, hash_start, hash_end)
     local date_start, date_end = line:find(".+ago", hash_end + 1)
-    ui_highlight_line(bufnr, "Function", line_num, date_start, date_end)
+    ui_highlight_line(bufnr, "Number", line_num, date_start, date_end)
     local author_start, author_end = line:find("%s%s+(.-)%s%s+", date_end + 1)
     ui_highlight_line(bufnr, "Identifier", line_num, author_start, author_end)
 end
