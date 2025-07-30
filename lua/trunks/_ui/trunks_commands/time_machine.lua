@@ -116,6 +116,22 @@ local function time_machine_split(old_bufnr, commit)
 end
 
 ---@param bufnr integer
+local function time_machine_close(bufnr)
+    -- Clear cache
+    local cache_key = vim.t.time_machine_cache_key
+    if cache_key then
+        M.cache[cache_key] = nil
+        vim.t.time_machine_cache_key = nil
+    end
+
+    require("trunks._core.register").deregister_buffer(bufnr, {})
+    local num_tabs = #vim.api.nvim_list_tabpages()
+    if num_tabs > 1 then
+        vim.cmd.tabclose()
+    end
+end
+
+---@param bufnr integer
 local function set_file_keymaps(bufnr)
     local time_machine_keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine", {})
     local time_machine_file_keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine_file", {})
@@ -151,11 +167,7 @@ local function set_file_keymaps(bufnr)
     end, keymap_opts)
 
     safe_set_keymap("n", "q", function()
-        require("trunks._core.register").deregister_buffer(bufnr, {})
-        local num_tabs = #vim.api.nvim_list_tabpages()
-        if num_tabs > 1 then
-            vim.cmd.tabclose()
-        end
+        time_machine_close(bufnr)
     end, keymap_opts)
 end
 
@@ -252,8 +264,7 @@ local function set_keymaps(bufnr, filename)
     end, keymap_opts)
 
     safe_set_keymap("n", "q", function()
-        require("trunks._core.register").deregister_buffer(bufnr, {})
-        vim.cmd.tabclose()
+        time_machine_close(bufnr)
     end, keymap_opts)
 end
 
@@ -262,6 +273,8 @@ end
 function M.render(filename)
     filename = filename or vim.fn.expand("%")
     vim.cmd.tabnew()
+    vim.t.time_machine_cache_key = filename
+
     local bufnr =
         require("trunks._ui.elements").new_buffer({ filetype = "git", buffer_name = "TrunksTimeMachine--" .. filename })
 
@@ -318,6 +331,11 @@ end
 ---@param direction "next" | "previous"
 local function move_through_time_machine(bufnr, direction)
     local filename = vim.b[bufnr].original_filename or vim.fn.expand("%")
+
+    -- Set cache key on tab
+    if not vim.t.time_machine_cache_key then
+        vim.t.time_machine_cache_key = filename
+    end
     cache_commits_with_filename(filename)
 
     local time_machine_index = vim.b[bufnr].time_machine_index
