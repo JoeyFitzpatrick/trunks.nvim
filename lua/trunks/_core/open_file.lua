@@ -1,3 +1,6 @@
+---@class trunks.OpenFileOpts
+---@field original_filename? string
+
 local M = {}
 
 ---@param filename string
@@ -26,7 +29,8 @@ end
 ---@param bufnr integer
 ---@param filename string
 ---@param commit string
-local function setup_git_file(bufnr, filename, commit)
+---@param opts trunks.OpenFileOpts
+local function setup_git_file(bufnr, filename, commit, opts)
     local lines, error_code = require("trunks._core.run_cmd").run_cmd(
         string.format("show %s:%s", commit, require("trunks._core.texter").surround_with_quotes(filename))
     )
@@ -41,7 +45,7 @@ local function setup_git_file(bufnr, filename, commit)
 
     vim.bo[bufnr].filetype = vim.filetype.match({ buf = bufnr }) or ""
 
-    vim.b[bufnr].original_filename = filename
+    vim.b[bufnr].original_filename = opts.original_filename or filename
     vim.b[bufnr].commit = commit
 
     vim.keymap.set("n", "q", function()
@@ -52,28 +56,31 @@ end
 ---@param filename string
 ---@param commit string
 ---@param split "above" | "below" | "right" | "left"
-function M.open_file_in_split(filename, commit, split)
+---@param opts trunks.OpenFileOpts
+function M.open_file_in_split(filename, commit, split, opts)
     delete_existing_buffer(get_filename(filename, commit))
     local bufnr = require("trunks._ui.elements").new_buffer({ win_config = { split = split } })
-    setup_git_file(bufnr, filename, commit)
+    setup_git_file(bufnr, filename, commit, opts)
 end
 
 ---@param filename string
 ---@param commit string
-function M.open_file_in_tab(filename, commit)
+---@param opts trunks.OpenFileOpts
+function M.open_file_in_tab(filename, commit, opts)
     vim.cmd("tabnew")
     delete_existing_buffer(get_filename(filename, commit))
     local bufnr = require("trunks._ui.elements").new_buffer({})
-    setup_git_file(bufnr, filename, commit)
+    setup_git_file(bufnr, filename, commit, opts)
 end
 
 ---@param filename string
 ---@param commit string
+---@param opts trunks.OpenFileOpts
 ---@return integer -- bufnr of created buffer
-function M.open_file_in_current_window(filename, commit)
+function M.open_file_in_current_window(filename, commit, opts)
     delete_existing_buffer(get_filename(filename, commit))
     local bufnr = require("trunks._ui.elements").new_buffer({})
-    setup_git_file(bufnr, filename, commit)
+    setup_git_file(bufnr, filename, commit, opts)
     return bufnr
 end
 

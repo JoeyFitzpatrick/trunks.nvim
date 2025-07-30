@@ -117,7 +117,7 @@ local function set_keymaps(bufnr, commit)
         if not ok or not line_data then
             return
         end
-        require("trunks._core.open_file").open_file_in_current_window(line_data.filename, commit)
+        require("trunks._core.open_file").open_file_in_current_window(line_data.filename, commit, {})
     end, keymap_opts)
 
     set("n", keymaps.open_in_horizontal_split, function()
@@ -126,7 +126,7 @@ local function set_keymaps(bufnr, commit)
             return
         end
         require("trunks._ui.auto_display").close_auto_display(bufnr, "commit_details")
-        require("trunks._core.open_file").open_file_in_split(line_data.filename, commit, "below")
+        require("trunks._core.open_file").open_file_in_split(line_data.filename, commit, "below", {})
     end, keymap_opts)
 
     set("n", keymaps.open_in_new_tab, function()
@@ -134,7 +134,7 @@ local function set_keymaps(bufnr, commit)
         if not ok or not line_data then
             return
         end
-        require("trunks._core.open_file").open_file_in_tab(line_data.filename, commit)
+        require("trunks._core.open_file").open_file_in_tab(line_data.filename, commit, {})
     end, keymap_opts)
 
     set("n", keymaps.open_in_vertical_split, function()
@@ -143,7 +143,7 @@ local function set_keymaps(bufnr, commit)
             return
         end
         require("trunks._ui.auto_display").close_auto_display(bufnr, "commit_details")
-        require("trunks._core.open_file").open_file_in_split(line_data.filename, commit, "right")
+        require("trunks._core.open_file").open_file_in_split(line_data.filename, commit, "right", {})
     end, keymap_opts)
 
     set("n", keymaps.show_all_changes, function()

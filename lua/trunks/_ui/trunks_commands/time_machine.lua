@@ -105,21 +105,23 @@ local function open_file(bufnr, filename, open_type)
     end
 
     local time_machine_data = M.cache[filename][line_data.time_machine_index]
-    local file_to_open = time_machine_data.filename
+    local file = time_machine_data.filename
+    local hash = time_machine_data.hash
 
     if open_type == "tab" then
-        require("trunks._core.open_file").open_file_in_tab(file_to_open, time_machine_data.hash)
+        require("trunks._core.open_file").open_file_in_tab(file, hash, { original_filename = filename })
     elseif open_type == "window" then
-        require("trunks._core.open_file").open_file_in_current_window(file_to_open, time_machine_data.hash)
+        require("trunks._core.open_file").open_file_in_current_window(file, hash, { original_filename = filename })
     elseif open_type == "vertical" then
         require("trunks._ui.auto_display").close_auto_display(bufnr, "time_machine")
-        require("trunks._core.open_file").open_file_in_split(file_to_open, time_machine_data.hash, "right")
+        require("trunks._core.open_file").open_file_in_split(file, hash, "right", { original_filename = filename })
     elseif open_type == "horizontal" then
         require("trunks._ui.auto_display").close_auto_display(bufnr, "time_machine")
-        require("trunks._core.open_file").open_file_in_split(file_to_open, time_machine_data.hash, "below")
+        require("trunks._core.open_file").open_file_in_split(file, hash, "below", { original_filename = filename })
     end
 
-    vim.b.time_machine_index = line_data.time_machine_index + 1
+    vim.b.time_machine_index = line_data.time_machine_index
+    vim.b.original_filename = filename
 end
 
 ---@param bufnr integer
@@ -241,11 +243,27 @@ function M.render(filename)
 end
 
 ---@param bufnr integer
-function M.previous(bufnr)
+---@param direction "next" | "previous"
+local function move_through_time_machine(bufnr, direction)
     local filename = vim.b[bufnr].original_filename or vim.fn.expand("%")
-
     cache_commits_with_filename(filename)
-    local time_machine_index = vim.b[bufnr].time_machine_index or 1
+
+    local time_machine_index = vim.b[bufnr].time_machine_index
+    if not time_machine_index then
+        -- If using `next` from most recent revision, no-op
+        if direction == "next" then
+            vim.notify("Can't run time-machine-next, already at most recent revision", vim.log.levels.INFO)
+            return
+        elseif direction == "previous" then
+            time_machine_index = 0
+        end
+    end
+
+    if direction == "next" then
+        time_machine_index = time_machine_index - 1
+    elseif direction == "previous" then
+        time_machine_index = time_machine_index + 1
+    end
 
     local time_machine_data = M.cache[filename][time_machine_index]
 
@@ -255,16 +273,28 @@ function M.previous(bufnr)
         time_machine_data = M.cache[filename][time_machine_index]
     end
 
-    vim.b[bufnr].original_filename = time_machine_data.filename
     vim.b[bufnr].commit = time_machine_data.hash
 
     local winview = vim.fn.winsaveview()
     local new_bufnr = require("trunks._core.open_file").open_file_in_current_window(
         time_machine_data.filename,
-        time_machine_data.hash
+        time_machine_data.hash,
+        { original_filename = filename }
     )
-    vim.b[new_bufnr].time_machine_index = time_machine_index + 1
+
+    vim.b[new_bufnr].time_machine_index = time_machine_index
+    vim.b[new_bufnr].original_filename = filename
     vim.fn.winrestview(winview)
+end
+
+---@param bufnr integer
+function M.previous(bufnr)
+    move_through_time_machine(bufnr, "previous")
+end
+
+---@param bufnr integer
+function M.next(bufnr)
+    move_through_time_machine(bufnr, "next")
 end
 
 return M

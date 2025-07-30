@@ -93,15 +93,15 @@ local function open_file(bufnr, commits, open_type)
     end
 
     if open_type == "tab" then
-        require("trunks._core.open_file").open_file_in_tab(file_to_open, commits)
+        require("trunks._core.open_file").open_file_in_tab(file_to_open, commits, {})
     elseif open_type == "window" then
-        require("trunks._core.open_file").open_file_in_current_window(file_to_open, commits)
+        require("trunks._core.open_file").open_file_in_current_window(file_to_open, commits, {})
     elseif open_type == "vertical" then
         require("trunks._ui.auto_display").close_auto_display(bufnr, "difftool")
-        require("trunks._core.open_file").open_file_in_split(file_to_open, commits, "right")
+        require("trunks._core.open_file").open_file_in_split(file_to_open, commits, "right", {})
     elseif open_type == "horizontal" then
         require("trunks._ui.auto_display").close_auto_display(bufnr, "difftool")
-        require("trunks._core.open_file").open_file_in_split(file_to_open, commits, "below")
+        require("trunks._core.open_file").open_file_in_split(file_to_open, commits, "below", {})
     end
 end
 

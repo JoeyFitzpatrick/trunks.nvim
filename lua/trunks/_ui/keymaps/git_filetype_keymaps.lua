@@ -132,13 +132,13 @@ local function open_file(line_data, open_type)
     end
 
     if open_type == "tab" then
-        require("trunks._core.open_file").open_file_in_tab(file_to_open, commit_to_use)
+        require("trunks._core.open_file").open_file_in_tab(file_to_open, commit_to_use, {})
     elseif open_type == "window" then
-        require("trunks._core.open_file").open_file_in_current_window(file_to_open, commit_to_use)
+        require("trunks._core.open_file").open_file_in_current_window(file_to_open, commit_to_use, {})
     elseif open_type == "vertical" then
-        require("trunks._core.open_file").open_file_in_split(file_to_open, commit_to_use, "right")
+        require("trunks._core.open_file").open_file_in_split(file_to_open, commit_to_use, "right", {})
     elseif open_type == "horizontal" then
-        require("trunks._core.open_file").open_file_in_split(file_to_open, commit_to_use, "below")
+        require("trunks._core.open_file").open_file_in_split(file_to_open, commit_to_use, "below", {})
     end
 end
 

@@ -99,8 +99,8 @@ local cmd_map = {
         handle_output(nil, error_text, exit_code)
     end,
 
-    ["time-machine-next"] = function(cmd)
-        print(cmd)
+    ["time-machine-next"] = function()
+        require("trunks._ui.trunks_commands.time_machine").next(vim.api.nvim_get_current_buf())
     end,
 
     ["time-machine-previous"] = function()
