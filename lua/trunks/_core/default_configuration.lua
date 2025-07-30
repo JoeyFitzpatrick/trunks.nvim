@@ -143,8 +143,14 @@ return {
         auto_display_on = true,
         keymaps = {
             commit_details = "<enter>",
-            diff_against_previous_commit = "d",
-            diff_against_head = "D",
+            diff_against_previous_commit = "d", -- Diff file against previous commit
+            diff_against_head = "D", -- Diff file against HEAD
+        },
+    },
+    time_machine_file = {
+        keymaps = {
+            next = "<C-n>", -- Navigate to next revision for file
+            previous = "<C-p>", -- Navigate to previous revision for file
         },
     },
 }

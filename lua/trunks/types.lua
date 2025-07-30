@@ -24,6 +24,7 @@
 ---@field status? trunks.StatusConfiguration
 ---@field worktree? trunks.WorktreeConfiguration
 ---@field time_machine? trunks.TimeMachineConfiguration
+---@field time_machine_file? trunks.TimeMachineFileConfiguration
 
 ---@class trunks.BlameConfiguration
 ---@field default_cmd_args? string[]
@@ -80,6 +81,9 @@
 ---@class trunks.TimeMachineConfiguration
 ---@field auto_display_on? boolean
 ---@field keymaps? trunks.TimeMachineKeymaps
+
+---@class trunks.TimeMachineFileConfiguration
+---@field keymaps? trunks.TimeMachineFileKeymaps
 
 ---@class trunks.HomeKeymaps
 ---@field next? string
@@ -184,3 +188,7 @@
 ---@field commit_details? string
 ---@field diff_against_previous_commit? string
 ---@field diff_against_head? string
+
+---@class trunks.TimeMachineFileKeymaps
+---@field next? string
+---@field previous? string

@@ -121,6 +121,11 @@ M.long_descriptions = {
         diff_against_previous_commit = "Diff file against previous commit",
         diff_against_head = "Diff file against HEAD",
     },
+    ---@type trunks.TimeMachineFileKeymaps
+    time_machine_file = {
+        next = "Display next revision for this file",
+        previous = "Display previous revision for this file",
+    },
 }
 
 local config = require("trunks._core.configuration").DATA
