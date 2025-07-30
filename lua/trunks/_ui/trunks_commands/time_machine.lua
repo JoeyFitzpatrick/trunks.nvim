@@ -91,6 +91,30 @@ function M._get_line(bufnr, start_line, line_num)
     return { hash = hash, time_machine_index = line_num - 2 }
 end
 
+---@param old_bufnr integer
+---@param commit? string
+local function time_machine_split(old_bufnr, commit)
+    local win = vim.api.nvim_get_current_win()
+    if commit then
+        vim.cmd("G Vdiff " .. commit .. "^")
+    else
+        vim.cmd("G Vdiff")
+    end
+
+    local new_bufnr = vim.api.nvim_get_current_buf()
+    vim.b[old_bufnr].time_machine_split_args =
+        { bufnr = new_bufnr, split_type = commit and "previous_commit" or "HEAD" }
+    vim.api.nvim_set_current_win(win)
+
+    vim.api.nvim_create_autocmd({ "BufUnload", "BufWipeout", "BufHidden" }, {
+        buffer = new_bufnr,
+        callback = function()
+            vim.b[old_bufnr].time_machine_split_args = nil
+        end,
+        group = vim.api.nvim_create_augroup("TrunksRemoveTimeMachineSplitVars", { clear = true }),
+    })
+end
+
 ---@param bufnr integer
 local function set_file_keymaps(bufnr)
     local time_machine_keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine", {})
@@ -110,12 +134,12 @@ local function set_file_keymaps(bufnr)
     safe_set_keymap("n", keymaps.diff_against_previous_commit, function()
         local commit = vim.b.commit
         if commit then
-            vim.cmd("G Vdiff " .. commit .. "^")
+            time_machine_split(bufnr, commit)
         end
     end, keymap_opts)
 
     safe_set_keymap("n", keymaps.diff_against_head, function()
-        vim.cmd("G Vdiff")
+        time_machine_split(bufnr)
     end, keymap_opts)
 
     safe_set_keymap("n", keymaps.next, function()
@@ -138,6 +162,7 @@ end
 ---@param bufnr integer
 ---@param filename string
 ---@param open_type "tab" | "window" | "vertical" | "horizontal"
+---@return integer | nil -- Bufnr of opened file
 local function open_file(bufnr, filename, open_type)
     local ok, line_data = pcall(M._get_line, bufnr)
     if not ok or not line_data then
@@ -152,22 +177,27 @@ local function open_file(bufnr, filename, open_type)
     local file = time_machine_data.filename
     local hash = time_machine_data.hash
 
+    local new_bufnr
     if open_type == "tab" then
-        require("trunks._core.open_file").open_file_in_tab(file, hash, { original_filename = filename })
+        new_bufnr = require("trunks._core.open_file").open_file_in_tab(file, hash, { original_filename = filename })
     elseif open_type == "window" then
-        require("trunks._core.open_file").open_file_in_current_window(file, hash, { original_filename = filename })
+        new_bufnr =
+            require("trunks._core.open_file").open_file_in_current_window(file, hash, { original_filename = filename })
     elseif open_type == "vertical" then
         require("trunks._ui.auto_display").close_auto_display(bufnr, "time_machine")
-        require("trunks._core.open_file").open_file_in_split(file, hash, "right", { original_filename = filename })
+        new_bufnr =
+            require("trunks._core.open_file").open_file_in_split(file, hash, "right", { original_filename = filename })
     elseif open_type == "horizontal" then
         require("trunks._ui.auto_display").close_auto_display(bufnr, "time_machine")
-        require("trunks._core.open_file").open_file_in_split(file, hash, "below", { original_filename = filename })
+        new_bufnr =
+            require("trunks._core.open_file").open_file_in_split(file, hash, "below", { original_filename = filename })
     end
 
     set_file_keymaps(vim.api.nvim_get_current_buf())
 
     vim.b.time_machine_index = line_data.time_machine_index
     vim.b.original_filename = filename
+    return new_bufnr
 end
 
 ---@param bufnr integer
@@ -318,15 +348,28 @@ local function move_through_time_machine(bufnr, direction)
     vim.b[bufnr].commit = time_machine_data.hash
 
     local winview = vim.fn.winsaveview()
+    local split_args = vim.b[bufnr].time_machine_split_args
+
     local new_bufnr = require("trunks._core.open_file").open_file_in_current_window(
         time_machine_data.filename,
         time_machine_data.hash,
         { original_filename = filename }
     )
 
-    set_file_keymaps(new_bufnr)
     vim.b[new_bufnr].time_machine_index = time_machine_index
     vim.b[new_bufnr].original_filename = filename
+
+    if split_args then
+        require("trunks._core.register").deregister_buffer(split_args.bufnr, { delete_win_buffers = false })
+        local split_commit = nil
+        if split_args.split_type == "previous_commit" then
+            split_commit = time_machine_data.hash
+        end
+        -- This relies on new_bufnr buffer variables to be set first
+        time_machine_split(new_bufnr, split_commit)
+    end
+
+    set_file_keymaps(new_bufnr)
     vim.fn.winrestview(winview)
 end
 

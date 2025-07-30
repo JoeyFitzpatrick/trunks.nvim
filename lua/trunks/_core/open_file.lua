@@ -57,20 +57,24 @@ end
 ---@param commit string
 ---@param split "above" | "below" | "right" | "left"
 ---@param opts trunks.OpenFileOpts
+---@return integer -- bufnr of created buffer
 function M.open_file_in_split(filename, commit, split, opts)
     delete_existing_buffer(get_filename(filename, commit))
     local bufnr = require("trunks._ui.elements").new_buffer({ win_config = { split = split } })
     setup_git_file(bufnr, filename, commit, opts)
+    return bufnr
 end
 
 ---@param filename string
 ---@param commit string
 ---@param opts trunks.OpenFileOpts
+---@return integer -- bufnr of created buffer
 function M.open_file_in_tab(filename, commit, opts)
     vim.cmd("tabnew")
     delete_existing_buffer(get_filename(filename, commit))
     local bufnr = require("trunks._ui.elements").new_buffer({})
     setup_git_file(bufnr, filename, commit, opts)
+    return bufnr
 end
 
 ---@param filename string
