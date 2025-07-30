@@ -24,7 +24,7 @@ function M.split_diff(command_builder, split_type)
     local params = M._parse_split_diff_args(command_builder)
 
     vim.cmd("diffthis")
-    require("trunks._core.open_file").open_file_in_split(params.filepath, params.commit, split_type)
+    require("trunks._core.open_file").open_file_in_split(params.filepath, params.commit, split_type, {})
     vim.cmd("diffthis")
     require("trunks._ui.keymaps.base").set_q_keymap(vim.api.nvim_get_current_buf())
 end

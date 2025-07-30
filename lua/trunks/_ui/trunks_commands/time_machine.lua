@@ -92,6 +92,39 @@ function M._get_line(bufnr, start_line, line_num)
 end
 
 ---@param bufnr integer
+local function set_file_keymaps(bufnr)
+    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine", {})
+    local keymap_opts = { buffer = bufnr, nowait = true }
+    local safe_set_keymap = require("trunks._ui.keymaps.set").safe_set_keymap
+
+    safe_set_keymap("n", keymaps.commit_details, function()
+        local commit = vim.b.commit
+        if commit then
+            require("trunks._ui.commit_details").render(commit, {})
+        end
+    end, keymap_opts)
+
+    safe_set_keymap("n", keymaps.diff_against_previous_commit, function()
+        local commit = vim.b.commit
+        if commit then
+            vim.cmd("G Vdiff " .. commit .. "^")
+        end
+    end, keymap_opts)
+
+    safe_set_keymap("n", keymaps.diff_against_head, function()
+        vim.cmd("G Vdiff")
+    end, keymap_opts)
+
+    safe_set_keymap("n", "q", function()
+        require("trunks._core.register").deregister_buffer(bufnr, {})
+        local num_tabs = #vim.api.nvim_list_tabpages()
+        if num_tabs > 1 then
+            vim.cmd.tabclose()
+        end
+    end, keymap_opts)
+end
+
+---@param bufnr integer
 ---@param filename string
 ---@param open_type "tab" | "window" | "vertical" | "horizontal"
 local function open_file(bufnr, filename, open_type)
@@ -119,6 +152,8 @@ local function open_file(bufnr, filename, open_type)
         require("trunks._ui.auto_display").close_auto_display(bufnr, "time_machine")
         require("trunks._core.open_file").open_file_in_split(file, hash, "below", { original_filename = filename })
     end
+
+    set_file_keymaps(vim.api.nvim_get_current_buf())
 
     vim.b.time_machine_index = line_data.time_machine_index
     vim.b.original_filename = filename
@@ -161,9 +196,7 @@ local function set_keymaps(bufnr, filename)
             return
         end
 
-        local filename_at_commit = get_cache_filename(filename, line_data.time_machine_index)
-        require("trunks._core.open_file").open_file_in_current_window(filename_at_commit, line_data.hash)
-        vim.b[bufnr].time_machine_index = line_data.time_machine_index
+        open_file(bufnr, filename, "window")
         vim.cmd("G Vdiff " .. line_data.hash .. "^")
     end, keymap_opts)
 
@@ -173,9 +206,7 @@ local function set_keymaps(bufnr, filename)
             return
         end
 
-        local filename_at_commit = get_cache_filename(filename, line_data.time_machine_index)
-        require("trunks._core.open_file").open_file_in_current_window(filename_at_commit, line_data.hash)
-        vim.b[bufnr].time_machine_index = line_data.time_machine_index
+        open_file(bufnr, filename, "window")
         vim.cmd("G Vdiff")
     end, keymap_opts)
 
@@ -282,6 +313,7 @@ local function move_through_time_machine(bufnr, direction)
         { original_filename = filename }
     )
 
+    set_file_keymaps(new_bufnr)
     vim.b[new_bufnr].time_machine_index = time_machine_index
     vim.b[new_bufnr].original_filename = filename
     vim.fn.winrestview(winview)
