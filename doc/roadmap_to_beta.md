@@ -17,18 +17,6 @@ Not well thought out, but the idea is that we could undo some operations:
 
 That kind of stuff. Not sure what's feasible, but it would be nice to be able to have this feature, especially for things that aren't covered by `reflog`, such as undoing `git restore`.
 
-### Worktree UI
-Self-explanatory, would be nice to have a UI around worktrees.
-
-### Time machine
-This feature would be similar to [git-timemachine](https://github.com/emacsmirror/git-timemachine) from emacs. Would probably work like this:
-1. Keymaps to move to next/previous version of file.
-1. A split that shows the commit details for the commit that time machine is using to show the file.
-1. Be able to toggle the split. Config drives whether it is on or off by default.
-
-Need to decide on the API for this. Probably would be better not to make it a `:G` command, just to keep that clean (just git commands).
-So maybe a plug mapping?
-
 ### Git restore hunk/lines/file from previous commit
 In a file from a previous commit, be able to:
 * visually select lines to restore
@@ -66,12 +54,6 @@ This should print the context lines, while not counting them for syntax highligh
 
 ### Git pull can't rebase multiple branches
 Sometimes when using the `git pull` mapping in a UI, instead of pulling, there is an error that says `can't rebase onto multiple branches`. This usually goes away after pulling a second or third time. It would be nice if this just didn't happen at all.
-
-### Git integration tests
-The thought here is that integration tests could help ensure that our functions produce the correct git state, given some current state. This could be pretty powerful. Would probably look like:
-* A script to set up git repo for various states
-* Teardown script
-* Be able to call these before/after each test run
 
 ### Git log -S with multiline visual selection
 It would be awesome if using `:G log -S` from visual mode worked with a multiline selection. One way this _could_ work is to use concepts from [this blog post](https://hoelz.ro/blog/applying-gits-pickaxe-option-across-multiple-lines-of-yaml-using-textconv). The gist of it is:
