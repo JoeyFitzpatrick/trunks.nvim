@@ -403,20 +403,22 @@ If you pass any options to the command, like `:G switch origin/some-branch
 ==============================================================================
 7. Custom Commands                                      *trunks-custom-commands*
 
-Trunks provides some commands that are not valid git commands.
+Trunks provides some commands that are not valid git commands. Instead of the
+`:G` command, these custom commands are under the `:Trunks` command, and `:G`
+is reserved for valid git commands.
 
 
 VDIFF ~
 
-`:G Vdiff` opens a vertical split and uses `vimdiff` to diff the current file
-against `HEAD`. You can pass a commit, e.g. `:G Vdiff abc123`, to diff the
+`:Trunks vdiff` opens a vertical split and uses `vimdiff` to diff the current file
+against `HEAD`. You can pass a commit, e.g. `:Trunks vdiff abc123`, to diff the
 current file against the same file in the given commit. You can also pass a
-branch, e.g. `:G Vdiff some-branch`. See |vimdiff|.
+branch, e.g. `:Trunks vdiff some-branch`. See |vimdiff|.
 
 
 HDIFF ~
 
-Like `:G Vdiff`, except horizontal instead of vertical. `:G Hdiff` opens a
+Like `:Trunks vdiff`, except horizontal instead of vertical. `:G Hdiff` opens a
 horizontal split and uses `vimdiff` to diff the current file against `HEAD`.
 You can pass a commit, e.g. `:G Hdiff abc123`, to diff the current file
 against the same file in the given commit. You can also pass a branch,

@@ -301,13 +301,32 @@ When running `:G switch origin/some-branch`, with no command options like `--cre
 If you pass any options to the command, like `:G switch origin/some-branch --create`, this behavior is not used.
 
 # Custom Commands
-Trunks provides some commands that are not valid git commands.
+Trunks provides some commands that are not valid git commands. Instead of the `:G` command, these custom commands are under the `:Trunks` command, and `:G` is reserved for valid git commands.
 
-### Vdiff
-`:G Vdiff` opens a vertical split and uses `vimdiff` to diff the current file against `HEAD`. You can pass a commit, e.g. `:G Vdiff abc123`, to diff the current file against the same file in the given commit. You can also pass a branch, e.g. `:G Vdiff some-branch`. See `:h vimdiff`.
+### commit-drop
+`:Trunks commit-drop {commit}` can be used to drop an arbitrary commit. Under the hood, it's an interactive rebase that drops the commit, so this is a destructive command that should be used with caution.
 
-### Hdiff
-Like `:G Vdiff`, except horizontal instead of vertical. `:G Hdiff` opens a horizontal split and uses `vimdiff` to diff the current file against `HEAD`. You can pass a commit, e.g. `:G Hdiff abc123`, to diff the current file against the same file in the given commit. You can also pass a branch, e.g. `:G Hdiff some-branch`. See `:h vimdiff`.
+### commit-instant-fixup
+`:Trunks commit-instant-fixup {commit}` will apply your staged changes to the given commit. This is useful for applying changes to a past commit in order to maintain a logic commit history (think atomic commits).
+
+This is a rebase under the hood, so use with caution.
+
+### time-machine
+`:Trunks time-machine <optional filename>` creates a time-machine buffer for the given file, or the current buffer if a file is not given. This displays a list of commits that changed the file. Putting the cursor on a given commit will display the diff for that file at that commit. There is a keymap to open the file at the given commit, plus other keymaps that can be viewed with `g?`.
+
+Once you have opened a file at a revision, there are keymaps to move to the next/previous revision, as well as open diff splits.
+
+### time-machine-next
+In a time-machine buffer, move to the next most recent revision for the given file. If a diff split is open, re-generate that diff.
+
+### time-machine-previous
+In a time-machine buffer, move to the previous revision for the given file. If a diff split is open, re-generate that diff. If this is run on a regular buffer, open a time-machine buffer at the previous revision for the current buffer.
+
+### vdiff
+`:Trunks vdiff` opens a vertical split and uses `vimdiff` to diff the current file against `HEAD`. You can pass a commit, e.g. `:Trunks vdiff abc123`, to diff the current file against the same file in the given commit. You can also pass a branch, e.g. `:Trunks vdiff some-branch`. See `:h vimdiff`.
+
+### hdiff
+Like `:Trunks vdiff`, except horizontal instead of vertical. `:Trunks hdiff` opens a horizontal split and uses `vimdiff` to diff the current file against `HEAD`. You can pass a commit, e.g. `:Trunks hdiff abc123`, to diff the current file against the same file in the given commit. You can also pass a branch, e.g. `:Trunks hdiff some-branch`. See `:h vimdiff`.
 
 # UI Management (Tabs, Windows, Buffers)
 When Trunks opens a UI, this will typically either open a new buffer in the current window, or open a new window in a split. 
