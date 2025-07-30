@@ -37,7 +37,7 @@ end, {
     bang = true, -- with a bang, always run command in terminal mode (no ui)
     range = true, -- some commands, like ":G log -L", work on a range of lines
     complete = function(arglead, cmdline)
-        local completion = require("trunks._completion").complete_git_command(arglead, cmdline)
+        local completion = require("trunks._completion").complete_command(arglead, cmdline, PREFIX)
         return vim.tbl_filter(function(val)
             return vim.startswith(val, arglead)
         end, completion)
@@ -52,7 +52,7 @@ end, {
     desc = "Trunks command API. For commands that aren't native git commands.",
     range = true,
     complete = function(arglead, cmdline)
-        local completion = require("trunks._completion").complete_git_command(arglead, cmdline)
+        local completion = require("trunks._completion").complete_command(arglead, cmdline, "Trunks")
         return vim.tbl_filter(function(val)
             return vim.startswith(val, arglead)
         end, completion)

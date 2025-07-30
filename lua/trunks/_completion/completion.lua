@@ -66,8 +66,68 @@ end
 --- Takes a git command in command mode, and returns completion options.
 ---@param arglead string
 ---@param cmdline string
+---@param command_type "G" | "Trunks"
 ---@return string[]
-M.complete_git_command = function(arglead, cmdline)
+M.complete_command = function(arglead, cmdline, command_type)
+    local space_count = 0
+    for _ in string.gmatch(cmdline, " ") do
+        space_count = space_count + 1
+    end
+    if space_count == 1 then
+        if command_type == "G" then
+            return require("trunks._constants.porcelain_commands")
+        elseif command_type == "Trunks" then
+            return require("trunks._constants.trunks_command_options").commands
+        end
+    end
+    if space_count > 1 then
+        -- Check that we have a valid git subcommand
+        local subcommand = get_subcommand(cmdline)
+        if not subcommand then
+            return {}
+        end
+        -- Check that we have completion for this subcommand
+        local completion_tbl
+        if command_type == "G" then
+            completion_tbl = require("trunks._constants.git_command_options")[subcommand]
+        elseif command_type == "Trunks" then
+            completion_tbl = require("trunks._constants.trunks_command_options").options[subcommand]
+        end
+        if not completion_tbl then
+            return {}
+        end
+
+        -- If a "-" is typed, provide option completion, e.g. "--no-verify"
+        if arglead:sub(1, 1) == "-" then
+            return completion_tbl.options or {}
+        end
+
+        if cmdline:match(" %-%- ") then
+            return M._path_completion(arglead) or {}
+        end
+
+        if completion_tbl.completion_type == "branch" then
+            return M.get_branches()
+        end
+
+        if completion_tbl.completion_type == "subcommand" then
+            return completion_tbl.subcommands or {}
+        end
+
+        if completion_tbl.completion_type == "filepath" then
+            return M._path_completion(arglead) or {}
+        end
+
+        return completion_tbl.options or {}
+    end
+    return {}
+end
+
+--- Takes a git command in command mode, and returns completion options.
+---@param arglead string
+---@param cmdline string
+---@return string[]
+M.complete_trunks_command = function(arglead, cmdline)
     local space_count = 0
     for _ in string.gmatch(cmdline, " ") do
         space_count = space_count + 1
@@ -82,7 +142,7 @@ M.complete_git_command = function(arglead, cmdline)
             return {}
         end
         -- Check that we have completion for this subcommand
-        local completion_tbl = require("trunks._constants.command_options")[subcommand]
+        local completion_tbl = require("_constants.git_command_options")[subcommand]
         if not completion_tbl then
             return {}
         end

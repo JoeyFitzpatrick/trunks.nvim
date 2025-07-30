@@ -96,9 +96,9 @@ end
 local function time_machine_split(old_bufnr, commit)
     local win = vim.api.nvim_get_current_win()
     if commit then
-        vim.cmd("G Vdiff " .. commit .. "^")
+        vim.cmd("Trunks vdiff " .. commit .. "^")
     else
-        vim.cmd("G Vdiff")
+        vim.cmd("Trunks vdiff")
     end
 
     local new_bufnr = vim.api.nvim_get_current_buf()
@@ -238,7 +238,7 @@ local function set_keymaps(bufnr, filename)
         end
 
         open_file(bufnr, filename, "window")
-        vim.cmd("G Vdiff " .. line_data.hash .. "^")
+        vim.cmd("Trunks vdiff " .. line_data.hash .. "^")
     end, keymap_opts)
 
     safe_set_keymap("n", keymaps.diff_against_head, function()
@@ -248,7 +248,7 @@ local function set_keymaps(bufnr, filename)
         end
 
         open_file(bufnr, filename, "window")
-        vim.cmd("G Vdiff")
+        vim.cmd("Trunks vdiff")
     end, keymap_opts)
 
     safe_set_keymap("n", "q", function()

@@ -75,6 +75,7 @@ local function handle_output(ok_text, error_text, error_code)
     vim.notify(error_text, vim.log.levels.ERROR)
 end
 
+---@type table<string, fun(cmd: string)>
 local cmd_map = {
     ["commit-drop"] = function(cmd)
         local hash = vim.split(cmd, " ")[2]
@@ -105,6 +106,13 @@ local cmd_map = {
 
     ["time-machine-previous"] = function()
         require("trunks._ui.trunks_commands.time_machine").previous(vim.api.nvim_get_current_buf())
+    end,
+
+    vdiff = function(cmd)
+        require("trunks._ui.interceptors.split_diff").split_diff(cmd, "right")
+    end,
+    hdiff = function(cmd)
+        require("trunks._ui.interceptors.split_diff").split_diff(cmd, "below")
     end,
 }
 

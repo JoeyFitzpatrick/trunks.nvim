@@ -2,12 +2,6 @@ local M = {}
 
 ---@type table<string, fun(command_builder?: trunks.Command)>
 local cmd_ui_map = {
-    Hdiff = function(command_builder)
-        require("trunks._ui.interceptors.split_diff").split_diff(command_builder, "below")
-    end,
-    Vdiff = function(command_builder)
-        require("trunks._ui.interceptors.split_diff").split_diff(command_builder, "right")
-    end,
     blame = function(command_builder)
         require("trunks._ui.interceptors.blame").render(command_builder)
     end,
