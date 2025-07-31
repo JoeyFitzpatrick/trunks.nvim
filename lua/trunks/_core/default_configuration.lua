@@ -54,6 +54,7 @@ return {
             commit_amend_reuse_message = "A",
             commit_dry_run = "d",
             commit_no_verify = "n",
+            commit_instant_fixup = "F", -- Run :Trunks commit-instant-fixup
         },
     },
     diff = {

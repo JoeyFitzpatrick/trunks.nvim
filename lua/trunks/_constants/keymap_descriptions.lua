@@ -45,7 +45,8 @@ M.long_descriptions = {
         commit_amend = "Amend commit",
         commit_amend_reuse_message = "Amend commit reusing message",
         commit_dry_run = "Run dry run commit",
-        commit_no_verify = "Commit with --no-verify to skip pre-commit hooks",
+        commit_no_verify = "Commit with --no-verify",
+        commit_instant_fixup = "Run :Trunks commit-instant-fixup",
     },
     ---@type trunks.DiffKeymaps
     diff = {

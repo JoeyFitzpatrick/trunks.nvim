@@ -1,22 +1,22 @@
----@class trunks.RenderPopupMapping
+---@class trunks.PopupMapping
 ---@field keys string
 ---@field description string
 ---@field action string | function
 
 ---@class trunks.PopupColumn
 ---@field title string
----@field rows trunks.RenderPopupMapping[]
+---@field rows trunks.PopupMapping[]
 
 ---@class trunks.RenderPopupOpts
 ---@field ui_type? string
 ---@field title string
 ---@field buffer_name string
----@field mappings? trunks.RenderPopupMapping[]
+---@field mappings? trunks.PopupMapping[]
 
 local M = {}
 
 ---@param bufnr integer
----@param mapping_config string | trunks.RenderPopupMapping[]
+---@param mapping_config string | trunks.PopupMapping[]
 ---@param title string
 ---@return string[]
 local function get_popup_lines(bufnr, mapping_config, title)
@@ -55,8 +55,11 @@ local function highlight(bufnr)
     require("trunks._ui.highlight").highlight_line(bufnr, "Function", 0, 1, -1)
     -- We highlight the first line differently, so skip the first line in this loop
     for i, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 1, -1, false)) do
-        local keys_start, keys_end = line:find("%s?%w+%s")
-        require("trunks._ui.highlight").highlight_line(bufnr, "Keyword", i, keys_start, keys_end)
+        local keys_start, keys_end = line:find("%s%w+%s")
+        while keys_start and keys_end do
+            require("trunks._ui.highlight").highlight_line(bufnr, "Keyword", i, keys_start, keys_end)
+            keys_start, keys_end = line:find("%s%s+%w+", keys_end)
+        end
     end
 end
 
@@ -158,6 +161,7 @@ function M.set_popup_lines(bufnr, columns)
     end
 
     table.insert(rows, 1, title_row)
+    require("trunks._ui.utils.buffer_text").set(bufnr, rows)
     return rows
 end
 

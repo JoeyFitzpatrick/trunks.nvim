@@ -121,6 +121,7 @@
 ---@field commit_amend_reuse_message? string
 ---@field commit_dry_run? string
 ---@field commit_no_verify? string
+---@field commit_instant_fixup? string
 
 ---@class trunks.DiffKeymaps
 ---@field next_hunk? string
