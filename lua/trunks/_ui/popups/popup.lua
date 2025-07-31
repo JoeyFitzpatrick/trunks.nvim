@@ -3,6 +3,10 @@
 ---@field description string
 ---@field action string | function
 
+---@class trunks.PopupColumn
+---@field title string
+---@field rows trunks.RenderPopupMapping[]
+
 ---@class trunks.RenderPopupOpts
 ---@field ui_type? string
 ---@field title string
@@ -57,8 +61,8 @@ local function highlight(bufnr)
 end
 
 local function set_popup_settings()
-    vim.opt.number = false
-    vim.opt.relativenumber = false
+    vim.wo.number = false
+    vim.wo.relativenumber = false
 end
 
 local function set_keymaps(bufnr)
@@ -85,6 +89,85 @@ function M.render_popup(opts)
     highlight(bufnr)
     set_keymaps(bufnr)
     return bufnr
+end
+
+M._PADDING = 6
+
+---@param bufnr integer
+---@param columns trunks.PopupColumn[]
+---@return string[]
+function M.set_popup_lines(bufnr, columns)
+    local rows = {}
+    local column_widths = {}
+    local padding = 1
+
+    -- First pass: calculate maximum width for each column
+    for col_idx, col in ipairs(columns) do
+        local max_width = #col.title
+        for _, row in ipairs(col.rows) do
+            local line_length = #row.keys + 1 + #row.description -- +1 for space between keys and description
+            max_width = math.max(max_width, line_length)
+        end
+        column_widths[col_idx] = max_width
+    end
+
+    -- Build title row
+    local title_row = ""
+    for col_idx, col in ipairs(columns) do
+        title_row = title_row .. string.rep(" ", padding) .. col.title
+        if col_idx < #columns then
+            local spacing = column_widths[col_idx] - #col.title + M._PADDING
+            title_row = title_row .. string.rep(" ", spacing)
+        end
+    end
+
+    -- Build content rows with proper spacing
+    for row_idx = 1, math.max(unpack(vim.tbl_map(function(col)
+        return #col.rows
+    end, columns))) do
+        local row = ""
+        for col_idx, col in ipairs(columns) do
+            row = row .. string.rep(" ", padding)
+            if col.rows[row_idx] then
+                local content = string.format("%s %s", col.rows[row_idx].keys, col.rows[row_idx].description)
+                row = row .. content
+                if col_idx < #columns then
+                    local spacing = column_widths[col_idx] - #content + M._PADDING
+                    row = row .. string.rep(" ", spacing)
+                end
+            end
+
+            -- Set up keymaps for this row
+            if col.rows[row_idx] then
+                require("trunks._ui.keymaps.set").safe_set_keymap("n", col.rows[row_idx].keys, function()
+                    require("trunks._core.register").deregister_buffer(bufnr)
+                    if type(col.rows[row_idx].action) == "string" then
+                        vim.cmd(col.rows[row_idx].action)
+                    else
+                        col.rows[row_idx].action()
+                    end
+                end, {
+                    buffer = bufnr,
+                    silent = true,
+                    nowait = true,
+                    desc = col.rows[row_idx].description,
+                })
+            end
+        end
+        table.insert(rows, row)
+    end
+
+    table.insert(rows, 1, title_row)
+    return rows
+end
+
+---@param bufnr integer
+---@param columns trunks.PopupColumn[]
+function M.render(bufnr, columns)
+    M.set_popup_lines(bufnr, columns)
+    set_popup_settings()
+    highlight(bufnr)
+    set_keymaps(bufnr)
 end
 
 return M
