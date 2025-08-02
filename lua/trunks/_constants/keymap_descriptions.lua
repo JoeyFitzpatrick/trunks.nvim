@@ -138,8 +138,10 @@ end
 ---@param ui_type string
 ---@param map_name string
 ---@param desc string
-local function add_description(ui_type, map_name, desc)
-    local lhs = config[ui_type].keymaps[map_name]
+---@param lhs? string
+local function add_description(ui_type, map_name, desc, lhs)
+    -- Passing in lhs bypasses using config
+    lhs = lhs or config[ui_type].keymaps[map_name]
     if is_empty(lhs) then
         return
     end
@@ -186,6 +188,8 @@ add_description("stash", "show", "Details")
 add_description("time_machine", "commit_details", "Details")
 add_description("time_machine", "diff_against_previous_commit", "Diff")
 add_description("time_machine", "diff_against_head", "Diff against HEAD")
+
+add_description("commit_instant_fixup", "", "Select commit to fixup", "<enter>")
 
 ---@param ui_types string[]
 ---@return string

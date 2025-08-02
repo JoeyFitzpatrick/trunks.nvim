@@ -308,9 +308,9 @@ Trunks provides some commands that are not valid git commands. Instead of the `:
 `:Trunks commit-drop {commit}` can be used to drop an arbitrary commit. Under the hood, it's an interactive rebase that drops the commit, so this is a destructive command that should be used with caution.
 
 ### commit-instant-fixup
-`:Trunks commit-instant-fixup {commit}` will apply your staged changes to the given commit. This is useful for applying changes to a past commit in order to maintain a logic commit history (think atomic commits).
+`:Trunks commit-instant-fixup {commit}` will apply your staged changes to the given commit. This is useful for applying changes to a past commit in order to maintain a logic commit history (think atomic commits). This is a rebase under the hood, so use with caution.
 
-This is a rebase under the hood, so use with caution.
+If no commit is given, a list of commits (e.g. `git log` output) is shown, so that a commit can be chosen to fixup.
 
 ### time-machine
 `:Trunks time-machine <optional filename>` creates a time-machine buffer for the given file, or the current buffer if a file is not given. This displays a list of commits that changed the file. Putting the cursor on a given commit will display the diff for that file at that commit. There is a keymap to open the file at the given commit, plus other keymaps that can be viewed with `g?`.
