@@ -142,7 +142,7 @@ M.complete_trunks_command = function(arglead, cmdline)
             return {}
         end
         -- Check that we have completion for this subcommand
-        local completion_tbl = require("_constants.git_command_options")[subcommand]
+        local completion_tbl = require("trunks._constants.git_command_options")[subcommand]
         if not completion_tbl then
             return {}
         end

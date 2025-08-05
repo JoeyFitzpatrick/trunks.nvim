@@ -3,6 +3,7 @@ local M = {}
 M.options = {
     ["commit-drop"] = { options = {} },
     ["commit-instant-fixup"] = { options = {} },
+    ["diff-qf"] = { options = {} },
     hdiff = { completion_type = "branch", options = {} },
     vdiff = { completion_type = "branch", options = {} },
     ["time-machine"] = { completion_type = "filepath", options = {} },

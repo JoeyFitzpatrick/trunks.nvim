@@ -58,6 +58,13 @@ local cmd_map = {
         handle_output("Applied fixup to commit " .. hash .. " and rebased.", error_text, exit_code)
     end,
 
+    ["diff-qf"] = function(cmd)
+        local commit_range = vim.split(cmd, " ")[2]
+        local output, exit_code = require("trunks._ui.trunks_commands.diff_qf").render(commit_range)
+        local error_text = output or ("Unable to display diff for " .. commit_range)
+        handle_output(nil, error_text, exit_code)
+    end,
+
     ["time-machine"] = function(cmd)
         local filename = vim.split(cmd, " ")[2]
         local output, exit_code = require("trunks._ui.trunks_commands.time_machine").render(filename)
