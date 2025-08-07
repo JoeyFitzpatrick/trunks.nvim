@@ -61,7 +61,7 @@ This should print the context lines, while not counting them for syntax highligh
 Ideally, we'd be able to highlight diffs with multiple files with multiple file types. A rough idea is to use treesitter to highlight each part of the file as it's filetype, using nested treesitter query stuff. Not really sure how this works though.
 
 ### Git pull can't rebase multiple branches
-Sometimes when using the `git pull` mapping in a UI, instead of pulling, there is an error that says `can't rebase onto multiple branches`. This usually goes away after pulling a second or third time. It would be nice if this just didn't happen at all.
+Sometimes when using the `git pull` mapping in a UI, instead of pulling, there is an error that says `can't rebase onto multiple branches`. This usually goes away after pulling a second or third time. It would be nice if this just didn't happen at all. I think this has something to do with `git fetch` or some other background command running, because sometimes this occurs even when I just open Trunks and use pull without switching branches.
 
 ### Git log -S with multiline visual selection
 It would be awesome if using `:G log -S` from visual mode worked with a multiline selection. One way this _could_ work is to use concepts from [this blog post](https://hoelz.ro/blog/applying-gits-pickaxe-option-across-multiple-lines-of-yaml-using-textconv). The gist of it is:
