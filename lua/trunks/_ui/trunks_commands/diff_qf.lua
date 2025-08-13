@@ -6,15 +6,6 @@ local M = {}
 
 local Command = require("trunks._core.command")
 
----@param line string
----@return string | nil
-local function parse_filename(line)
-    if vim.startswith(line, "---") or vim.startswith(line, "+++") then
-        return line:sub(7) -- Everything after diff text, e.g. "--- a/"
-    end
-    return nil
-end
-
 ---@param filename? string
 ---@param commit_range? string
 ---@return integer -- bufnr of created buffer
@@ -42,10 +33,11 @@ function M._parse_diff_output(lines, commit_range)
 
     for i, line in ipairs(lines) do
         if vim.startswith(line, "diff") and i ~= 1 then
-            table.insert(
-                qf_locations,
-                { bufnr = M._create_buffer(state.filename, commit_range), line_nums = state.line_nums }
-            )
+            table.insert(qf_locations, {
+                filename = state.filename,
+                bufnr = M._create_buffer(state.filename, commit_range),
+                line_nums = state.line_nums,
+            })
             state = get_initial_state()
         elseif vim.startswith(line, "---") or vim.startswith(line, "+++") then
             state.filename = line:sub(7) -- Everything after diff text, e.g. "--- a/"
@@ -82,10 +74,11 @@ function M._parse_diff_output(lines, commit_range)
         end
     end
     if #state.line_nums > 0 then
-        table.insert(
-            qf_locations,
-            { bufnr = M._create_buffer(state.filename, commit_range), line_nums = state.line_nums }
-        )
+        table.insert(qf_locations, {
+            filename = state.filename,
+            bufnr = M._create_buffer(state.filename, commit_range),
+            line_nums = state.line_nums,
+        })
     end
     return qf_locations
 end

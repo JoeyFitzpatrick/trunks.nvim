@@ -79,8 +79,8 @@ describe("diff-qf diff output parser", function()
         })
 
         local expected = {
-            { bufnr = -1, line_nums = { 105 } },
-            { bufnr = -1, line_nums = { 7, 40, 54, 61, 64, 86 } },
+            { filename = "README.md", bufnr = -1, line_nums = { 105 } },
+            { filename = "doc/roadmap_to_beta.md", bufnr = -1, line_nums = { 7, 40, 54, 61, 64, 86 } },
         }
         assert.are.same(expected, result)
     end)
@@ -173,7 +173,11 @@ describe("diff-qf diff output parser", function()
         })
 
         local expected = {
-            { bufnr = -1, line_nums = { 3, 6, 10, 14, 26, 43, 49, 51, 58 } },
+            {
+                filename = "lua/trunks/_ui/popups/commit_popup.lua",
+                bufnr = -1,
+                line_nums = { 3, 6, 10, 14, 26, 43, 49, 51, 58 },
+            },
         }
         assert.are.same(expected, result)
     end)
