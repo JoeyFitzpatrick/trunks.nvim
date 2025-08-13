@@ -88,4 +88,15 @@ function M.open_file_in_current_window(filename, commit, opts)
     return bufnr
 end
 
+---@param filename string
+---@param commit string
+---@param opts trunks.OpenFileOpts
+---@return integer -- bufnr of created buffer
+function M.open_file_hidden(filename, commit, opts)
+    delete_existing_buffer(get_filename(filename, commit))
+    local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
+    setup_git_file(bufnr, filename, commit, opts)
+    return bufnr
+end
+
 return M

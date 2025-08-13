@@ -1,5 +1,6 @@
 ---@class trunks.DiffQfHunk
 ---@field bufnr integer
+---@field filename string
 ---@field line_nums integer[]
 
 local M = {}
@@ -10,7 +11,15 @@ local Command = require("trunks._core.command")
 ---@param commit_range? string
 ---@return integer -- bufnr of created buffer
 function M._create_buffer(filename, commit_range)
-    return -1
+    if not filename then
+        return -1
+    end
+    if not commit_range then
+        commit_range = "HEAD"
+    end
+
+    local bufnr = require("trunks._core.open_file").open_file_hidden(filename, commit_range, {})
+    return bufnr
 end
 
 ---@param lines string[]
@@ -89,15 +98,25 @@ local function get_qf_locations(commit_range)
     local command_builder = Command.base_command(cmd)
     local diff_output = require("trunks._core.run_cmd").run_cmd(command_builder)
 
-    local qf_locations = M._parse_diff_output(diff_output, commit_range)
-
-    local bufnr = require("trunks._ui.elements").new_buffer({})
-    require("trunks._ui.utils.buffer_text").set(bufnr, qf_locations)
+    return M._parse_diff_output(diff_output, commit_range)
 end
 
 ---@param commit_range? string
 function M.render(commit_range)
-    get_qf_locations(commit_range)
+    local qf_locations = get_qf_locations(commit_range)
+    local flattened_qf_locations = {}
+
+    for _, location in ipairs(qf_locations) do
+        for _, line_num in ipairs(location.line_nums) do
+            table.insert(
+                flattened_qf_locations,
+                { filename = location.filename, bufnr = location.bufnr, lnum = line_num }
+            )
+        end
+    end
+
+    vim.fn.setqflist(flattened_qf_locations)
+    vim.cmd.copen()
 end
 
 return M
