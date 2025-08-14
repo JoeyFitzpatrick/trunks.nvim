@@ -31,7 +31,6 @@ end
 ---@return trunks.DiffQfHunk[]
 function M._parse_diff_output(lines, commit_range)
     local qf_locations = {}
-    local max_text_length = math.floor(vim.o.columns / 2.5)
     local function get_initial_state()
         return {
             filename = nil,
@@ -65,10 +64,7 @@ function M._parse_diff_output(lines, commit_range)
             -- Only add first changed line in each group of changed lines.
             -- A hunk can have multiple groups of changed lines.
             if state.should_use_line and is_changed_line then
-                table.insert(
-                    state.lines,
-                    { line_num = state.num_lines_since_start + state.start_line, text = line:sub(2, max_text_length) }
-                )
+                table.insert(state.lines, { line_num = state.num_lines_since_start + state.start_line, text = line })
                 state.should_use_line = false
                 state.finalized_line_num = false
             elseif not is_changed_line then
@@ -109,6 +105,49 @@ local function get_qf_locations(commit_range)
     return M._parse_diff_output(diff_output, commit_range)
 end
 
+---@return string[]
+local function format_qf(info)
+    local result = {}
+    local items = vim.fn.getqflist({ id = info.id, items = 0 }).items
+
+    local max_filename_length = 0
+    local max_line_num = 0
+    for _, item in ipairs(items) do
+        max_filename_length = math.max(max_filename_length, #item.user_data.filename)
+        max_line_num = math.max(max_line_num, item.lnum)
+    end
+    max_line_num = #tostring(max_line_num)
+
+    for _, item in ipairs(items) do
+        local num_digits = #tostring(item.lnum)
+        table.insert(
+            result,
+            string
+                .format(
+                    "%s%s ┃%s%d┃ %s",
+                    item.user_data.filename,
+                    string.rep(" ", max_filename_length - #item.user_data.filename),
+                    string.rep(" ", max_line_num - num_digits),
+                    item.lnum,
+                    item.text:match(".?%s*(.+)")
+                )
+                :sub(1, vim.o.columns - 12)
+        )
+    end
+
+    return result
+end
+
+local function highlight_qf_buffer(bufnr)
+    vim.api.nvim_buf_call(bufnr, function()
+        vim.cmd([[
+            syntax clear
+            syntax match Function /^\S\+/
+            syntax match Comment /┃\zs[^┃]*\ze┃/
+        ]])
+    end)
+end
+
 ---@param commit_range? string
 function M.render(commit_range)
     local qf_locations = get_qf_locations(commit_range)
@@ -116,15 +155,23 @@ function M.render(commit_range)
 
     for _, location in ipairs(qf_locations) do
         for _, line in ipairs(location.lines) do
-            table.insert(
-                flattened_qf_locations,
-                { filename = location.filename, bufnr = location.bufnr, lnum = line.line_num, text = line.text }
-            )
+            table.insert(flattened_qf_locations, {
+                filename = location.filename,
+                bufnr = location.bufnr,
+                lnum = line.line_num,
+                text = line.text,
+                user_data = { filename = location.filename },
+            })
         end
     end
 
-    vim.fn.setqflist(flattened_qf_locations)
+    vim.fn.setqflist({}, "r", {
+        title = "Trunks diff-qf",
+        items = flattened_qf_locations,
+        quickfixtextfunc = format_qf,
+    })
     vim.cmd.copen()
+    highlight_qf_buffer(vim.api.nvim_get_current_buf())
 end
 
 return M
