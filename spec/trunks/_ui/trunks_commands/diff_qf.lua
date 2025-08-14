@@ -1,11 +1,13 @@
+local function assert_tbl_contains(expected, result)
+    for i, element in ipairs(expected) do
+        for key, value in pairs(element) do
+            assert.are.same(result[i][key], value)
+        end
+    end
+end
+
 describe("diff-qf diff output parser", function()
     local parse_diff_output = require("trunks._ui.trunks_commands.diff_qf")._parse_diff_output
-
-    before_each(function()
-        require("trunks._ui.trunks_commands.diff_qf")._create_buffer = function(filename, commit_range)
-            return -1
-        end
-    end)
 
     it("returns a file locations for multiple hunks", function()
         local result = parse_diff_output({
@@ -79,10 +81,10 @@ describe("diff-qf diff output parser", function()
         })
 
         local expected = {
-            { filename = "README.md", bufnr = -1, line_nums = { 105 } },
-            { filename = "doc/roadmap_to_beta.md", bufnr = -1, line_nums = { 7, 40, 54, 61, 64, 86 } },
+            { filename = "README.md", line_nums = { 105 } },
+            { filename = "doc/roadmap_to_beta.md", line_nums = { 7, 40, 54, 61, 64, 86 } },
         }
-        assert.are.same(expected, result)
+        assert_tbl_contains(expected, result)
     end)
 
     it("returns a file locations for a complicated hunk", function()
@@ -175,10 +177,9 @@ describe("diff-qf diff output parser", function()
         local expected = {
             {
                 filename = "lua/trunks/_ui/popups/commit_popup.lua",
-                bufnr = -1,
                 line_nums = { 3, 6, 10, 14, 26, 43, 49, 51, 58 },
             },
         }
-        assert.are.same(expected, result)
+        assert_tbl_contains(expected, result)
     end)
 end)

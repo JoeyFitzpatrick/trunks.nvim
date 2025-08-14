@@ -10,7 +10,7 @@ local Command = require("trunks._core.command")
 ---@param filename? string
 ---@param commit_range? string
 ---@return integer -- bufnr of created buffer
-function M._create_buffer(filename, commit_range)
+local function create_buffer(filename, commit_range)
     if not filename then
         return -1
     end
@@ -44,7 +44,7 @@ function M._parse_diff_output(lines, commit_range)
         if vim.startswith(line, "diff") and i ~= 1 then
             table.insert(qf_locations, {
                 filename = state.filename,
-                bufnr = M._create_buffer(state.filename, commit_range),
+                bufnr = create_buffer(state.filename, commit_range),
                 line_nums = state.line_nums,
             })
             state = get_initial_state()
@@ -85,7 +85,7 @@ function M._parse_diff_output(lines, commit_range)
     if #state.line_nums > 0 then
         table.insert(qf_locations, {
             filename = state.filename,
-            bufnr = M._create_buffer(state.filename, commit_range),
+            bufnr = create_buffer(state.filename, commit_range),
             line_nums = state.line_nums,
         })
     end
