@@ -1,7 +1,11 @@
+---@class trunks.DiffQfLine
+---@field line_num integer
+---@field text string
+
 ---@class trunks.DiffQfHunk
 ---@field bufnr integer
 ---@field filename string
----@field line_nums integer[]
+---@field lines trunks.DiffQfLine[]
 
 local M = {}
 
@@ -27,10 +31,11 @@ end
 ---@return trunks.DiffQfHunk[]
 function M._parse_diff_output(lines, commit_range)
     local qf_locations = {}
+    local max_text_length = math.floor(vim.o.columns / 2.5)
     local function get_initial_state()
         return {
             filename = nil,
-            line_nums = {},
+            lines = {},
             start_line = nil,
             num_lines_since_start = 0,
             should_use_line = true,
@@ -45,10 +50,10 @@ function M._parse_diff_output(lines, commit_range)
             table.insert(qf_locations, {
                 filename = state.filename,
                 bufnr = create_buffer(state.filename, commit_range),
-                line_nums = state.line_nums,
+                lines = state.lines,
             })
             state = get_initial_state()
-        elseif vim.startswith(line, "---") or vim.startswith(line, "+++") then
+        elseif not state.start_line and (vim.startswith(line, "---") or vim.startswith(line, "+++")) then
             state.filename = line:sub(7) -- Everything after diff text, e.g. "--- a/"
         elseif vim.startswith(line, "@@") then
             state.start_line = tonumber(line:match("%+(%d+)"))
@@ -60,14 +65,17 @@ function M._parse_diff_output(lines, commit_range)
             -- Only add first changed line in each group of changed lines.
             -- A hunk can have multiple groups of changed lines.
             if state.should_use_line and is_changed_line then
-                table.insert(state.line_nums, state.num_lines_since_start + state.start_line)
+                table.insert(
+                    state.lines,
+                    { line_num = state.num_lines_since_start + state.start_line, text = line:sub(2, max_text_length) }
+                )
                 state.should_use_line = false
                 state.finalized_line_num = false
             elseif not is_changed_line then
                 state.should_use_line = true
 
-                if not state.finalized_line_num and not state.hunk_added_lines and #state.line_nums > 0 then
-                    state.line_nums[#state.line_nums] = state.line_nums[#state.line_nums] - 1
+                if not state.finalized_line_num and not state.hunk_added_lines and #state.lines > 0 then
+                    state.lines[#state.lines].line_num = state.lines[#state.lines].line_num - 1
                 end
                 state.finalized_line_num = true
                 state.hunk_added_lines = false
@@ -82,11 +90,11 @@ function M._parse_diff_output(lines, commit_range)
             end
         end
     end
-    if #state.line_nums > 0 then
+    if #state.lines > 0 then
         table.insert(qf_locations, {
             filename = state.filename,
             bufnr = create_buffer(state.filename, commit_range),
-            line_nums = state.line_nums,
+            lines = state.lines,
         })
     end
     return qf_locations
@@ -107,10 +115,10 @@ function M.render(commit_range)
     local flattened_qf_locations = {}
 
     for _, location in ipairs(qf_locations) do
-        for _, line_num in ipairs(location.line_nums) do
+        for _, line in ipairs(location.lines) do
             table.insert(
                 flattened_qf_locations,
-                { filename = location.filename, bufnr = location.bufnr, lnum = line_num }
+                { filename = location.filename, bufnr = location.bufnr, lnum = line.line_num, text = line.text }
             )
         end
     end

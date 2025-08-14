@@ -1,11 +1,3 @@
-local function assert_tbl_contains(expected, result)
-    for i, element in ipairs(expected) do
-        for key, value in pairs(element) do
-            assert.are.same(result[i][key], value)
-        end
-    end
-end
-
 describe("diff-qf diff output parser", function()
     local parse_diff_output = require("trunks._ui.trunks_commands.diff_qf")._parse_diff_output
 
@@ -84,7 +76,15 @@ describe("diff-qf diff output parser", function()
             { filename = "README.md", line_nums = { 105 } },
             { filename = "doc/roadmap_to_beta.md", line_nums = { 7, 40, 54, 61, 64, 86 } },
         }
-        assert_tbl_contains(expected, result)
+        for i, _ in ipairs(expected) do
+            assert.are.same(expected[i].filename, result[i].filename)
+            assert.are.same(
+                expected[i].line_nums,
+                vim.tbl_map(function(line)
+                    return line.line_num
+                end, result[i].lines)
+            )
+        end
     end)
 
     it("returns a file locations for a complicated hunk", function()
@@ -175,11 +175,30 @@ describe("diff-qf diff output parser", function()
         })
 
         local expected = {
-            {
-                filename = "lua/trunks/_ui/popups/commit_popup.lua",
-                line_nums = { 3, 6, 10, 14, 26, 43, 49, 51, 58 },
-            },
+            filename = "lua/trunks/_ui/popups/commit_popup.lua",
+            line_nums = { 3, 6, 10, 14, 26, 43, 49, 51, 58 },
         }
-        assert_tbl_contains(expected, result)
+        assert.are.same(expected.filename, result[1].filename)
+        assert.are.same(
+            expected.line_nums,
+            vim.tbl_map(function(line)
+                return line.line_num
+            end, result[1].lines)
+        )
+    end)
+
+    it("uses the correct filename for hunks that have lines that start with --- or +++", function()
+        local result = parse_diff_output({
+            "diff --git c/lua/trunks/_ui/popups/commit_popup.lua w/lua/trunks/_ui/popups/commit_popup.lua",
+            "index 8b6683f..e82e9f7 100644",
+            "--- c/filename.txt",
+            "+++ w/filename.txt",
+            "@@ -1,35 +1,61 @@",
+            " local M = {}",
+            "----@param bufnr integer",
+            "++++@param bufnr integer",
+        })
+
+        assert.are.equal("filename.txt", result[1].filename)
     end)
 end)
