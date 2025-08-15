@@ -7,7 +7,13 @@
 ---@field filename string
 ---@field lines trunks.DiffQfLine[]
 
+---@class trunks.DiffQfCommitRange
+---@field left string
+---@field right string
+
 local M = {}
+
+local WORKING_TREE = "working_tree"
 
 local Command = require("trunks._core.command")
 
@@ -146,6 +152,42 @@ local function highlight_qf_buffer(bufnr)
             syntax match Comment /┃\zs[^┃]*\ze┃/
         ]])
     end)
+end
+
+local function set_to_head_if_empty(str)
+    if not str or str == "" then
+        return "HEAD"
+    end
+    return str
+end
+
+--- This returns a table like `{ left = commit_a, right = commit_b }`.
+--- `left` is the commit used for the left side, and is considered the "home" commit.
+--- It can also be the working tree.
+--- `right` is the commit used for the split off of the `left` commit, and is to the right.
+---@param commit_range? string
+---@return trunks.DiffQfCommitRange
+function M._parse_commit_range(commit_range)
+    if not commit_range then
+        return { left = WORKING_TREE, right = "HEAD" }
+    end
+
+    local delimiter = ".."
+    local commit_range_marker = commit_range:find(delimiter, 1, true)
+    if not commit_range_marker then
+        delimiter = " "
+        commit_range_marker = commit_range:find(delimiter, 1, true)
+    end
+    if commit_range_marker then
+        local commits = vim.split(commit_range, delimiter, { plain = true })
+        local left = set_to_head_if_empty(commits[1])
+        local right = set_to_head_if_empty(commits[2])
+        return { left = left, right = right }
+    end
+
+    if commit_range:match("^%S+$") then
+        return { left = WORKING_TREE, right = commit_range }
+    end
 end
 
 ---@param commit_range? string
