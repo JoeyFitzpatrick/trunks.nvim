@@ -18,24 +18,62 @@ local WORKING_TREE = "working_tree"
 local Command = require("trunks._core.command")
 
 ---@param filename? string
----@param commit_range? string
----@return integer -- bufnr of created buffer
-local function create_buffer(filename, commit_range)
+---@param commit string
+---@return integer | nil -- bufnr of created buffer, or nil if using working tree
+local function create_buffer(filename, commit)
     if not filename then
         return -1
     end
-    if not commit_range then
-        commit_range = "HEAD"
+
+    if commit == WORKING_TREE then
+        return nil
     end
 
-    local bufnr = require("trunks._core.open_file").open_file_hidden(filename, commit_range, {})
+    local bufnr = require("trunks._core.open_file").open_file_hidden(filename, commit, {})
     return bufnr
 end
 
----@param lines string[]
+local function set_to_head_if_empty(str)
+    if not str or str == "" then
+        return "HEAD"
+    end
+    return str
+end
+
+--- This returns a table like `{ left = commit_a, right = commit_b }`.
+--- `left` is the commit used for the left side, and is considered the "home" commit.
+--- It can also be the working tree.
+--- `right` is the commit used for the split off of the `left` commit, and is to the right.
 ---@param commit_range? string
+---@return trunks.DiffQfCommitRange
+function M._parse_commit_range(commit_range)
+    if not commit_range then
+        return { left = WORKING_TREE, right = "HEAD" }
+    end
+
+    local delimiter = ".."
+    local commit_range_marker = commit_range:find(delimiter, 1, true)
+    if not commit_range_marker then
+        delimiter = " "
+        commit_range_marker = commit_range:find(delimiter, 1, true)
+    end
+    if commit_range_marker then
+        local commits = vim.split(commit_range, delimiter, { plain = true })
+        local left = set_to_head_if_empty(commits[1])
+        local right = set_to_head_if_empty(commits[2])
+        return { left = left, right = right }
+    end
+
+    if commit_range:match("^%S+$") then
+        return { left = WORKING_TREE, right = commit_range }
+    end
+end
+
+---@param lines string[]
+---@param raw_commit_range? string
 ---@return trunks.DiffQfHunk[]
-function M._parse_diff_output(lines, commit_range)
+function M._parse_diff_output(lines, raw_commit_range)
+    local commit_range = M._parse_commit_range(raw_commit_range)
     local qf_locations = {}
     local function get_initial_state()
         return {
@@ -54,7 +92,7 @@ function M._parse_diff_output(lines, commit_range)
         if vim.startswith(line, "diff") and i ~= 1 then
             table.insert(qf_locations, {
                 filename = state.filename,
-                bufnr = create_buffer(state.filename, commit_range),
+                bufnr = create_buffer(state.filename, commit_range.left),
                 lines = state.lines,
             })
             state = get_initial_state()
@@ -95,7 +133,7 @@ function M._parse_diff_output(lines, commit_range)
     if #state.lines > 0 then
         table.insert(qf_locations, {
             filename = state.filename,
-            bufnr = create_buffer(state.filename, commit_range),
+            bufnr = create_buffer(state.filename, commit_range.left),
             lines = state.lines,
         })
     end
@@ -152,42 +190,6 @@ local function highlight_qf_buffer(bufnr)
             syntax match Comment /┃\zs[^┃]*\ze┃/
         ]])
     end)
-end
-
-local function set_to_head_if_empty(str)
-    if not str or str == "" then
-        return "HEAD"
-    end
-    return str
-end
-
---- This returns a table like `{ left = commit_a, right = commit_b }`.
---- `left` is the commit used for the left side, and is considered the "home" commit.
---- It can also be the working tree.
---- `right` is the commit used for the split off of the `left` commit, and is to the right.
----@param commit_range? string
----@return trunks.DiffQfCommitRange
-function M._parse_commit_range(commit_range)
-    if not commit_range then
-        return { left = WORKING_TREE, right = "HEAD" }
-    end
-
-    local delimiter = ".."
-    local commit_range_marker = commit_range:find(delimiter, 1, true)
-    if not commit_range_marker then
-        delimiter = " "
-        commit_range_marker = commit_range:find(delimiter, 1, true)
-    end
-    if commit_range_marker then
-        local commits = vim.split(commit_range, delimiter, { plain = true })
-        local left = set_to_head_if_empty(commits[1])
-        local right = set_to_head_if_empty(commits[2])
-        return { left = left, right = right }
-    end
-
-    if commit_range:match("^%S+$") then
-        return { left = WORKING_TREE, right = commit_range }
-    end
 end
 
 ---@param commit_range? string
