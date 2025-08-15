@@ -96,7 +96,11 @@ function M._parse_diff_output(lines, raw_commit_range)
                 lines = state.lines,
             })
             state = get_initial_state()
-        elseif not state.start_line and (vim.startswith(line, "---") or vim.startswith(line, "+++")) then
+        elseif
+            not state.start_line
+            and not line:find("dev/null", 1, true) -- can't parse filename if it's dev/null
+            and (vim.startswith(line, "---") or vim.startswith(line, "+++")) -- filenames start with these chars
+        then
             state.filename = line:sub(7) -- Everything after diff text, e.g. "--- a/"
         elseif vim.startswith(line, "@@") then
             state.start_line = tonumber(line:match("%+(%d+)"))

@@ -59,7 +59,11 @@ local cmd_map = {
     end,
 
     ["diff-qf"] = function(cmd)
-        local commit_range = vim.split(cmd, " ")[2]
+        local _, args_start = cmd:find(" ", 1, true)
+        local commit_range = nil
+        if args_start then
+            commit_range = cmd:sub(args_start)
+        end
         local output, exit_code = require("trunks._ui.trunks_commands.diff_qf").render(commit_range)
         local error_text = output or ("Unable to display diff for " .. commit_range)
         handle_output(nil, error_text, exit_code)
