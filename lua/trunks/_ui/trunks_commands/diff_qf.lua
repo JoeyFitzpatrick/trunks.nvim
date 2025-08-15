@@ -18,18 +18,41 @@ local WORKING_TREE = "working_tree"
 local Command = require("trunks._core.command")
 
 ---@param filename? string
----@param commit string
+---@param commit_range trunks.DiffQfCommitRange
 ---@return integer | nil -- bufnr of created buffer, or nil if using working tree
-local function create_buffer(filename, commit)
+local function create_buffer(filename, commit_range)
     if not filename then
         return -1
     end
 
-    if commit == WORKING_TREE then
+    if commit_range.left == WORKING_TREE then
         return nil
     end
 
-    local bufnr = require("trunks._core.open_file").open_file_hidden(filename, commit, {})
+    local augroup = vim.api.nvim_create_augroup("TrunksDiffQfHandler", { clear = false })
+    local bufnr = require("trunks._core.open_file").open_file_hidden(filename, commit_range.left, {})
+    vim.b[bufnr].split_open = false
+
+    vim.api.nvim_create_autocmd({ "BufEnter" }, {
+        group = augroup,
+        buffer = bufnr,
+        callback = function()
+            if not vim.b[bufnr].split_open then
+                vim.cmd("only | copen | wincmd p")
+                vim.cmd("Trunks vdiff " .. commit_range.right)
+                vim.cmd("wincmd p")
+                vim.b[bufnr].split_open = true
+            else
+                local wins = vim.fn.win_findbuf(bufnr)
+                if #wins > 1 then
+                    local cursor_pos = vim.api.nvim_win_get_cursor(0)
+                    vim.api.nvim_win_close(0, true)
+                    vim.api.nvim_win_set_cursor(0, cursor_pos)
+                end
+            end
+        end,
+        desc = "Trunks: open/close diff-qf splits",
+    })
     return bufnr
 end
 
@@ -50,6 +73,8 @@ function M._parse_commit_range(commit_range)
     if not commit_range then
         return { left = WORKING_TREE, right = "HEAD" }
     end
+
+    commit_range = vim.trim(commit_range)
 
     local delimiter = ".."
     local commit_range_marker = commit_range:find(delimiter, 1, true)
@@ -92,7 +117,7 @@ function M._parse_diff_output(lines, raw_commit_range)
         if vim.startswith(line, "diff") and i ~= 1 then
             table.insert(qf_locations, {
                 filename = state.filename,
-                bufnr = create_buffer(state.filename, commit_range.left),
+                bufnr = create_buffer(state.filename, commit_range),
                 lines = state.lines,
             })
             state = get_initial_state()
@@ -137,7 +162,7 @@ function M._parse_diff_output(lines, raw_commit_range)
     if #state.lines > 0 then
         table.insert(qf_locations, {
             filename = state.filename,
-            bufnr = create_buffer(state.filename, commit_range.left),
+            bufnr = create_buffer(state.filename, commit_range),
             lines = state.lines,
         })
     end
