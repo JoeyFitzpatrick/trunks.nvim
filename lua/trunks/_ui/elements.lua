@@ -222,19 +222,19 @@ function M.new_buffer(opts)
     local bufnr = vim.api.nvim_create_buf(false, true)
     local win
 
-    if opts.hidden ~= true then
-        if opts.win_config then
-            local enter = true
-            if opts.enter == false then
-                enter = false
-            end
-            win = vim.api.nvim_open_win(bufnr, enter, opts.win_config)
-        else
-            win = vim.api.nvim_get_current_win()
-            local current_buf = vim.api.nvim_get_current_buf()
-            vim.api.nvim_win_set_buf(win, bufnr)
-            setup_last_non_trunks_buffer(current_buf, bufnr, win)
+    if opts.win_config then
+        local enter = true
+        if opts.enter == false then
+            enter = false
         end
+        win = vim.api.nvim_open_win(bufnr, enter, opts.win_config)
+    else
+        win = vim.api.nvim_get_current_win()
+        local current_buf = vim.api.nvim_get_current_buf()
+        if not opts.hidden then
+            vim.api.nvim_win_set_buf(win, bufnr)
+        end
+        setup_last_non_trunks_buffer(current_buf, bufnr, win)
     end
 
     if opts.filetype then

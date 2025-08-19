@@ -9,6 +9,8 @@
 
 local M = {}
 
+local register = require("trunks._core.register")
+
 local MAP_SYMBOL = "⟶"
 
 ---@param bufnr integer
@@ -101,7 +103,7 @@ local function display_keymap_help(mappings, ui_type, opts)
     local keymap_opts = { buffer = bufnr }
 
     vim.keymap.set("n", "q", function()
-        require("trunks._core.register").deregister_buffer(bufnr)
+        register.deregister_buffer(bufnr)
     end, keymap_opts)
 end
 
@@ -136,7 +138,7 @@ function M.get_keymaps(bufnr, ui_type, opts)
     end
 
     vim.keymap.set("n", "q", function()
-        require("trunks._core.register").deregister_buffer(bufnr)
+        register.deregister_buffer(bufnr)
     end, { buffer = bufnr })
 
     return mappings
@@ -144,9 +146,14 @@ end
 
 --- We often need specific "q" functionality, so here's a simple helper.
 ---@param bufnr integer
-function M.set_q_keymap(bufnr)
+---@param other_bufnrs integer[]
+---@param opts trunks.DeregisterOpts
+function M.set_q_keymap(bufnr, other_bufnrs, opts)
     vim.keymap.set("n", "q", function()
-        require("trunks._core.register").deregister_buffer(bufnr)
+        register.deregister_buffer(bufnr, opts)
+        for _, other_bufnr in ipairs(other_bufnrs) do
+            register.deregister_buffer(other_bufnr, opts)
+        end
     end, { desc = "Close current Trunks buffer", buffer = bufnr })
 end
 
@@ -156,8 +163,7 @@ end
 ---@return function
 function M.git_show_keymap_fn(bufnr, get_line, filename)
     if not filename then
-        local buffer_with_filename =
-            require("trunks._core.register").last_non_trunks_buffer_for_win[vim.api.nvim_get_current_win()]
+        local buffer_with_filename = register.last_non_trunks_buffer_for_win[vim.api.nvim_get_current_win()]
         if buffer_with_filename then
             filename = vim.api.nvim_buf_get_name(buffer_with_filename)
         end
