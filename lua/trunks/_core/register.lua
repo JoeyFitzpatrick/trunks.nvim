@@ -10,6 +10,7 @@
 
 ---@class trunks.DeregisterOpts
 ---@field delete_win_buffers? boolean
+---@field unload? boolean
 
 local M = {}
 
@@ -68,7 +69,12 @@ function M.deregister_buffer(bufnr, opts)
         if opts.delete_win_buffers ~= false then
             delete_trunks_buffers_for_win(vim.api.nvim_get_current_win())
         end
-        vim.api.nvim_buf_delete(bufnr, { force = true })
+        if opts.unload then
+            vim.bo[bufnr].buflisted = false
+            vim.api.nvim_buf_delete(bufnr, { unload = true })
+        else
+            vim.api.nvim_buf_delete(bufnr, { force = true })
+        end
     end
 end
 

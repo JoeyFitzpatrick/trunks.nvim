@@ -5,6 +5,7 @@
 ---@class trunks.DiffQfHunk
 ---@field bufnr integer
 ---@field filename string
+---@field buffer_name string
 ---@field lines trunks.DiffQfLine[]
 
 ---@class trunks.DiffQfCommitRange
@@ -19,24 +20,23 @@ local Command = require("trunks._core.command")
 
 ---@param filename? string
 ---@param commit_range trunks.DiffQfCommitRange
----@return integer | nil -- bufnr of created buffer, or nil if using working tree
-local function create_buffer(filename, commit_range)
+local function populate_file(filename, commit_range)
     if not filename then
-        return -1
-    end
-
-    if commit_range.left == WORKING_TREE then
         return nil
     end
 
+    if commit_range.left == WORKING_TREE then
+        return filename
+    end
+
     local augroup = vim.api.nvim_create_augroup("TrunksDiffQfHandler", { clear = false })
-    local bufnr = require("trunks._core.open_file").open_file_hidden(filename, commit_range.left, {})
-    vim.b[bufnr].split_open = false
+    local temp_filename, buffer_name = require("trunks._core.open_file").open_temp_file(filename, commit_range.left, {})
 
     vim.api.nvim_create_autocmd({ "BufEnter" }, {
         group = augroup,
-        buffer = bufnr,
-        callback = function()
+        pattern = temp_filename,
+        callback = function(args)
+            local bufnr = args.buf
             if not vim.b[bufnr].split_open then
                 vim.cmd("only | copen | wincmd p")
                 vim.cmd("Trunks vdiff " .. commit_range.right)
@@ -53,7 +53,8 @@ local function create_buffer(filename, commit_range)
         end,
         desc = "Trunks: open/close diff-qf splits",
     })
-    return bufnr
+
+    return temp_filename, buffer_name
 end
 
 local function set_to_head_if_empty(str)
@@ -115,9 +116,10 @@ function M._parse_diff_output(lines, raw_commit_range)
 
     for i, line in ipairs(lines) do
         if vim.startswith(line, "diff") and i ~= 1 then
+            local filename, buffer_name = populate_file(state.filename, commit_range)
             table.insert(qf_locations, {
-                filename = state.filename,
-                bufnr = create_buffer(state.filename, commit_range),
+                filename = filename,
+                buffer_name = buffer_name,
                 lines = state.lines,
             })
             state = get_initial_state()
@@ -160,9 +162,10 @@ function M._parse_diff_output(lines, raw_commit_range)
         end
     end
     if #state.lines > 0 then
+        local filename, buffer_name = populate_file(state.filename, commit_range)
         table.insert(qf_locations, {
-            filename = state.filename,
-            bufnr = create_buffer(state.filename, commit_range),
+            filename = filename,
+            buffer_name = buffer_name,
             lines = state.lines,
         })
     end
@@ -186,7 +189,7 @@ local function format_qf(info)
     local max_filename_length = 0
     local max_line_num = 0
     for _, item in ipairs(items) do
-        max_filename_length = math.max(max_filename_length, #item.user_data.filename)
+        max_filename_length = math.max(max_filename_length, #item.user_data.buffer_name)
         max_line_num = math.max(max_line_num, item.lnum)
     end
     max_line_num = #tostring(max_line_num)
@@ -198,8 +201,8 @@ local function format_qf(info)
             string
                 .format(
                     "%s%s ┃%s%d┃ %s",
-                    item.user_data.filename,
-                    string.rep(" ", max_filename_length - #item.user_data.filename),
+                    item.user_data.buffer_name,
+                    string.rep(" ", max_filename_length - #item.user_data.buffer_name),
                     string.rep(" ", max_line_num - num_digits),
                     item.lnum,
                     item.text:match(".?%s*(.+)")
@@ -230,10 +233,9 @@ function M.render(commit_range)
         for _, line in ipairs(location.lines) do
             table.insert(flattened_qf_locations, {
                 filename = location.filename,
-                bufnr = location.bufnr,
                 lnum = line.line_num,
                 text = line.text,
-                user_data = { filename = location.filename },
+                user_data = { buffer_name = location.buffer_name },
             })
         end
     end

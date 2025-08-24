@@ -23,11 +23,9 @@ function M.split_diff(cmd, split_type)
     local params = M._parse_split_diff_args(cmd)
 
     vim.cmd("diffthis")
-    local bufnr = vim.api.nvim_get_current_buf()
-    local split_bufnr =
-        require("trunks._core.open_file").open_file_in_split(params.filepath, params.commit, split_type, {})
+    vim.api.nvim_get_current_buf()
+    require("trunks._core.open_file").open_file_in_split(params.filepath, params.commit, split_type, {})
     vim.cmd("diffthis")
-    require("trunks._ui.keymaps.base").set_q_keymap(bufnr, { split_bufnr }, { delete_win_buffers = false })
 end
 
 return M

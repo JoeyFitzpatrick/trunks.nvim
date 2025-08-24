@@ -91,12 +91,61 @@ end
 ---@param filename string
 ---@param commit string
 ---@param opts trunks.OpenFileOpts
----@return integer -- bufnr of created buffer
-function M.open_file_hidden(filename, commit, opts)
-    delete_existing_buffer(get_filename(filename, commit))
-    local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
-    setup_git_file(bufnr, filename, commit, opts)
-    return bufnr
+---@return string, string -- filename of temp file, buffer name of temp file
+function M.open_temp_file(filename, commit, opts)
+    -- Not sure if we need this for temp files
+    -- delete_existing_buffer(get_filename(filename, commit))
+    local tempfile = vim.fn.tempname()
+
+    local lines, error_code = require("trunks._core.run_cmd").run_cmd(
+        string.format("show %s:%s", commit, require("trunks._core.texter").surround_with_quotes(filename))
+    )
+    if error_code ~= 0 then
+        lines = { "" }
+    end
+    vim.fn.writefile(lines, tempfile)
+
+    local buffer_name = get_filename(filename, commit)
+    vim.api.nvim_create_autocmd({ "BufEnter" }, {
+        group = vim.api.nvim_create_augroup("TrunksTempFileBufEnter", { clear = false }),
+        pattern = tempfile,
+        callback = function(args)
+            local bufnr = args.buf
+            if vim.b[bufnr].regenerate_lines then
+                require("_ui.utils.buffer_text").set(bufnr, lines)
+            end
+            vim.b[bufnr].regenerate_lines = false
+            if vim.b[bufnr].trunks_temp_file_opts_set then
+                return
+            end
+
+            vim.bo[bufnr].modifiable = false
+            vim.api.nvim_buf_set_name(bufnr, buffer_name)
+            vim.bo[bufnr].filetype = vim.filetype.match({ buf = bufnr }) or ""
+            vim.b[bufnr].original_filename = opts.original_filename or filename
+            vim.b[bufnr].commit = commit
+
+            vim.keymap.set("n", "q", function()
+                vim.print("in fn")
+                require("trunks._core.register").deregister_buffer(bufnr, { unload = true })
+            end, { buffer = bufnr })
+            vim.b[bufnr].trunks_temp_file_opts_set = true
+        end,
+        desc = "Trunks: open/close diff-qf splits",
+    })
+
+    vim.api.nvim_create_autocmd({ "BufUnload" }, {
+        group = vim.api.nvim_create_augroup("TrunksTempFileBufUnload", { clear = false }),
+        pattern = tempfile,
+        callback = function(args)
+            local bufnr = args.buf
+            vim.b[bufnr].trunks_temp_file_opts_set = false
+            vim.b[bufnr].regenerate_lines = true
+        end,
+        desc = "Trunks: reset temp file state",
+    })
+
+    return tempfile, buffer_name
 end
 
 return M
