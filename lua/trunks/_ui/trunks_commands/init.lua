@@ -60,12 +60,12 @@ local cmd_map = {
 
     ["diff-qf"] = function(cmd)
         local _, args_start = cmd:find(" ", 1, true)
-        local commit_range = nil
+        local commit = nil
         if args_start then
-            commit_range = cmd:sub(args_start)
+            commit = cmd:sub(args_start)
         end
-        local output, exit_code = require("trunks._ui.trunks_commands.diff_qf").render(commit_range)
-        local error_text = output or ("Unable to display diff for " .. commit_range)
+        local output, exit_code = require("trunks._ui.trunks_commands.diff_qf").render(commit)
+        local error_text = output or ("Unable to display diff for " .. commit)
         handle_output(nil, error_text, exit_code)
     end,
 

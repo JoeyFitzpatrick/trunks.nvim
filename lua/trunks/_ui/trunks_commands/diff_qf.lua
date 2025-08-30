@@ -5,7 +5,6 @@
 ---@class trunks.DiffQfHunk
 ---@field bufnr integer
 ---@field filename string
----@field buffer_name string
 ---@field lines trunks.DiffQfLine[]
 
 ---@class trunks.DiffQfCommitRange
@@ -14,32 +13,25 @@
 
 local M = {}
 
-local WORKING_TREE = "working_tree"
-
 local Command = require("trunks._core.command")
 
 ---@param filename? string
----@param commit_range trunks.DiffQfCommitRange
-local function populate_file(filename, commit_range)
+---@param commit string
+local function populate_file(filename, commit)
     if not filename then
         return nil
     end
 
-    if commit_range.left == WORKING_TREE then
-        return filename
-    end
-
     local augroup = vim.api.nvim_create_augroup("TrunksDiffQfHandler", { clear = false })
-    local temp_filename, buffer_name = require("trunks._core.open_file").open_temp_file(filename, commit_range.left, {})
-
-    vim.api.nvim_create_autocmd({ "BufEnter" }, {
+    vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
         group = augroup,
-        pattern = temp_filename,
+        pattern = filename,
+        once = true,
         callback = function(args)
             local bufnr = args.buf
             if not vim.b[bufnr].split_open then
                 vim.cmd("only | copen | wincmd p")
-                vim.cmd("Trunks vdiff " .. commit_range.right)
+                vim.cmd("Trunks vdiff " .. commit)
                 vim.cmd("wincmd p")
                 vim.b[bufnr].split_open = true
             else
@@ -54,52 +46,14 @@ local function populate_file(filename, commit_range)
         desc = "Trunks: open/close diff-qf splits",
     })
 
-    return temp_filename, buffer_name
-end
-
-local function set_to_head_if_empty(str)
-    if not str or str == "" then
-        return "HEAD"
-    end
-    return str
-end
-
---- This returns a table like `{ left = commit_a, right = commit_b }`.
---- `left` is the commit used for the left side, and is considered the "home" commit.
---- It can also be the working tree.
---- `right` is the commit used for the split off of the `left` commit, and is to the right.
----@param commit_range? string
----@return trunks.DiffQfCommitRange
-function M._parse_commit_range(commit_range)
-    if not commit_range then
-        return { left = WORKING_TREE, right = "HEAD" }
-    end
-
-    commit_range = vim.trim(commit_range)
-
-    local delimiter = ".."
-    local commit_range_marker = commit_range:find(delimiter, 1, true)
-    if not commit_range_marker then
-        delimiter = " "
-        commit_range_marker = commit_range:find(delimiter, 1, true)
-    end
-    if commit_range_marker then
-        local commits = vim.split(commit_range, delimiter, { plain = true })
-        local left = set_to_head_if_empty(commits[1])
-        local right = set_to_head_if_empty(commits[2])
-        return { left = left, right = right }
-    end
-
-    if commit_range:match("^%S+$") then
-        return { left = WORKING_TREE, right = commit_range }
-    end
+    return filename
 end
 
 ---@param lines string[]
----@param raw_commit_range? string
+---@param commit? string
 ---@return trunks.DiffQfHunk[]
-function M._parse_diff_output(lines, raw_commit_range)
-    local commit_range = M._parse_commit_range(raw_commit_range)
+function M._parse_diff_output(lines, commit)
+    commit = commit or "HEAD"
     local qf_locations = {}
     local function get_initial_state()
         return {
@@ -116,10 +70,9 @@ function M._parse_diff_output(lines, raw_commit_range)
 
     for i, line in ipairs(lines) do
         if vim.startswith(line, "diff") and i ~= 1 then
-            local filename, buffer_name = populate_file(state.filename, commit_range)
+            local filename = populate_file(state.filename, commit)
             table.insert(qf_locations, {
                 filename = filename,
-                buffer_name = buffer_name,
                 lines = state.lines,
             })
             state = get_initial_state()
@@ -162,23 +115,22 @@ function M._parse_diff_output(lines, raw_commit_range)
         end
     end
     if #state.lines > 0 then
-        local filename, buffer_name = populate_file(state.filename, commit_range)
+        local filename = populate_file(state.filename, commit)
         table.insert(qf_locations, {
             filename = filename,
-            buffer_name = buffer_name,
             lines = state.lines,
         })
     end
     return qf_locations
 end
 
----@param commit_range? string
-local function get_qf_locations(commit_range)
-    local cmd = commit_range and ("diff " .. commit_range) or "diff"
+---@param commit? string
+local function get_qf_locations(commit)
+    local cmd = commit and ("diff " .. commit) or "diff"
     local command_builder = Command.base_command(cmd)
     local diff_output = require("trunks._core.run_cmd").run_cmd(command_builder)
 
-    return M._parse_diff_output(diff_output, commit_range)
+    return M._parse_diff_output(diff_output, commit)
 end
 
 ---@return string[]
@@ -189,7 +141,7 @@ local function format_qf(info)
     local max_filename_length = 0
     local max_line_num = 0
     for _, item in ipairs(items) do
-        max_filename_length = math.max(max_filename_length, #item.user_data.buffer_name)
+        max_filename_length = math.max(max_filename_length, #item.user_data.filename)
         max_line_num = math.max(max_line_num, item.lnum)
     end
     max_line_num = #tostring(max_line_num)
@@ -201,8 +153,8 @@ local function format_qf(info)
             string
                 .format(
                     "%s%s ┃%s%d┃ %s",
-                    item.user_data.buffer_name,
-                    string.rep(" ", max_filename_length - #item.user_data.buffer_name),
+                    item.user_data.filename,
+                    string.rep(" ", max_filename_length - #item.user_data.filename),
                     string.rep(" ", max_line_num - num_digits),
                     item.lnum,
                     item.text:match(".?%s*(.+)")
@@ -224,9 +176,9 @@ local function highlight_qf_buffer(bufnr)
     end)
 end
 
----@param commit_range? string
-function M.render(commit_range)
-    local qf_locations = get_qf_locations(commit_range)
+---@param commit? string
+function M.render(commit)
+    local qf_locations = get_qf_locations(commit)
     local flattened_qf_locations = {}
 
     for _, location in ipairs(qf_locations) do
@@ -235,7 +187,7 @@ function M.render(commit_range)
                 filename = location.filename,
                 lnum = line.line_num,
                 text = line.text,
-                user_data = { buffer_name = location.buffer_name },
+                user_data = { filename = location.filename },
             })
         end
     end
