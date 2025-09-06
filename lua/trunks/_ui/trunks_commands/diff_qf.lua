@@ -15,45 +15,9 @@ local M = {}
 
 local Command = require("trunks._core.command")
 
----@param filename? string
----@param commit string
-local function populate_file(filename, commit)
-    if not filename then
-        return nil
-    end
-
-    local augroup = vim.api.nvim_create_augroup("TrunksDiffQfHandler", { clear = false })
-    vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
-        group = augroup,
-        pattern = filename,
-        once = true,
-        callback = function(args)
-            local bufnr = args.buf
-            if not vim.b[bufnr].split_open then
-                vim.cmd("only | copen | wincmd p")
-                vim.cmd("Trunks vdiff " .. commit)
-                vim.cmd("wincmd p")
-                vim.b[bufnr].split_open = true
-            else
-                local wins = vim.fn.win_findbuf(bufnr)
-                if #wins > 1 then
-                    local cursor_pos = vim.api.nvim_win_get_cursor(0)
-                    vim.api.nvim_win_close(0, true)
-                    vim.api.nvim_win_set_cursor(0, cursor_pos)
-                end
-            end
-        end,
-        desc = "Trunks: open/close diff-qf splits",
-    })
-
-    return filename
-end
-
 ---@param lines string[]
----@param commit? string
 ---@return trunks.DiffQfHunk[]
-function M._parse_diff_output(lines, commit)
-    commit = commit or "HEAD"
+function M._parse_diff_output(lines)
     local qf_locations = {}
     local function get_initial_state()
         return {
@@ -70,9 +34,8 @@ function M._parse_diff_output(lines, commit)
 
     for i, line in ipairs(lines) do
         if vim.startswith(line, "diff") and i ~= 1 then
-            local filename = populate_file(state.filename, commit)
             table.insert(qf_locations, {
-                filename = filename,
+                filename = state.filename,
                 lines = state.lines,
             })
             state = get_initial_state()
@@ -115,9 +78,8 @@ function M._parse_diff_output(lines, commit)
         end
     end
     if #state.lines > 0 then
-        local filename = populate_file(state.filename, commit)
         table.insert(qf_locations, {
-            filename = filename,
+            filename = state.filename,
             lines = state.lines,
         })
     end
@@ -130,7 +92,7 @@ local function get_qf_locations(commit)
     local command_builder = Command.base_command(cmd)
     local diff_output = require("trunks._core.run_cmd").run_cmd(command_builder)
 
-    return M._parse_diff_output(diff_output, commit)
+    return M._parse_diff_output(diff_output)
 end
 
 ---@return string[]
@@ -178,8 +140,13 @@ end
 
 ---@param commit? string
 function M.render(commit)
+    vim.cmd.tabnew()
+    local diff_qf_tab_id = vim.api.nvim_get_current_tabpage()
+
     local qf_locations = get_qf_locations(commit)
     local flattened_qf_locations = {}
+    local found_filenames = {}
+    local filenames = {}
 
     for _, location in ipairs(qf_locations) do
         for _, line in ipairs(location.lines) do
@@ -189,8 +156,36 @@ function M.render(commit)
                 text = line.text,
                 user_data = { filename = location.filename },
             })
+            if not found_filenames[location.filename] then
+                table.insert(filenames, location.filename)
+                found_filenames[location.filename] = true
+            end
         end
     end
+
+    vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+        pattern = filenames,
+        callback = function(args)
+            if vim.api.nvim_get_current_tabpage() ~= diff_qf_tab_id then
+                return
+            end
+            local bufnr = args.buf
+            if not vim.b[bufnr].split_open then
+                vim.b[bufnr].split_open = true
+                vim.cmd("only | copen | wincmd p")
+                vim.cmd("Trunks vdiff " .. commit)
+                vim.cmd("wincmd p")
+            else
+                local wins = vim.fn.win_findbuf(bufnr)
+                if #wins > 1 then
+                    local cursor_pos = vim.api.nvim_win_get_cursor(0)
+                    vim.api.nvim_win_close(0, true)
+                    vim.api.nvim_win_set_cursor(0, cursor_pos)
+                end
+            end
+        end,
+        desc = "Trunks: open/close diff-qf splits",
+    })
 
     vim.fn.setqflist({}, "r", {
         title = "Trunks diff-qf",

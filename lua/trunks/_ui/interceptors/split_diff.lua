@@ -20,12 +20,18 @@ end
 ---@param cmd string
 ---@param split_type "below" | "right"
 function M.split_diff(cmd, split_type)
+    local bufnr = vim.api.nvim_get_current_buf()
     local params = M._parse_split_diff_args(cmd)
 
     vim.cmd("diffthis")
-    vim.api.nvim_get_current_buf()
     require("trunks._core.open_file").open_file_in_split(params.filepath, params.commit, split_type, {})
     vim.cmd("diffthis")
+
+    vim.api.nvim_create_autocmd({ "BufHidden" }, {
+        buffer = bufnr,
+        command = "diffoff!",
+        desc = "Trunks: turn off diff mode for all windows in tab",
+    })
 end
 
 return M
