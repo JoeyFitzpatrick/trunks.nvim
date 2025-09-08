@@ -164,27 +164,54 @@ function M.render(commit)
     end
 
     vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+        group = vim.api.nvim_create_augroup("TrunksDiffQf", { clear = true }),
         pattern = filenames,
         callback = function(args)
             if vim.api.nvim_get_current_tabpage() ~= diff_qf_tab_id then
                 return
             end
             local bufnr = args.buf
-            if not vim.b[bufnr].split_open then
-                vim.b[bufnr].split_open = true
-                vim.cmd("only | copen | wincmd p")
-                vim.cmd("Trunks vdiff " .. commit)
-                vim.cmd("wincmd p")
+            local current_win = vim.api.nvim_get_current_win()
+            local split_win
+            local split_bufnr = vim.b[bufnr].split_bufnr
+            if split_bufnr then
+                split_win = vim.api.nvim_open_win(split_bufnr, false, { split = "right" })
             else
-                local wins = vim.fn.win_findbuf(bufnr)
-                if #wins > 1 then
-                    local cursor_pos = vim.api.nvim_win_get_cursor(0)
-                    vim.api.nvim_win_close(0, true)
-                    vim.api.nvim_win_set_cursor(0, cursor_pos)
+                if commit then
+                    vim.cmd("Trunks vdiff " .. commit)
+                else
+                    vim.cmd("Trunks vdiff")
+                end
+                vim.b[bufnr].split_bufnr = vim.api.nvim_get_current_buf()
+                split_win = vim.api.nvim_get_current_win()
+                vim.cmd("wincmd p")
+            end
+
+            -- Close any wins aside from splits and things like qflist
+            for _, win in ipairs(vim.api.nvim_tabpage_list_wins(diff_qf_tab_id)) do
+                local is_diff_win = win == current_win or win == split_win
+                local winnr = vim.api.nvim_win_get_number(win)
+                local win_type = vim.fn.win_gettype(winnr)
+                local is_special_win = win_type ~= nil and win_type ~= "" and win_type ~= "unknown"
+                if (not is_diff_win) and not is_special_win then
+                    vim.fn.win_execute(win, "diffoff", true)
+                    vim.api.nvim_win_close(win, false)
+                elseif is_diff_win then
+                    -- When vdiff buffers are hidden, they turn off diff mode, so we need to re enable it
+                    vim.fn.win_execute(win, "diffthis", true)
                 end
             end
         end,
         desc = "Trunks: open/close diff-qf splits",
+    })
+
+    vim.api.nvim_create_autocmd("TabClosed", {
+        callback = function(args)
+            local tab_num = tonumber(args.file)
+            if tab_num == diff_qf_tab_id then
+                vim.api.nvim_clear_autocmds({ group = "TrunksDiffQf" })
+            end
+        end,
     })
 
     vim.fn.setqflist({}, "r", {

@@ -25,12 +25,19 @@ function M.split_diff(cmd, split_type)
 
     vim.cmd("diffthis")
     require("trunks._core.open_file").open_file_in_split(params.filepath, params.commit, split_type, {})
+    local split_bufnr = vim.api.nvim_get_current_buf()
     vim.cmd("diffthis")
 
     vim.api.nvim_create_autocmd({ "BufHidden" }, {
         buffer = bufnr,
-        command = "diffoff!",
-        desc = "Trunks: turn off diff mode for all windows in tab",
+        command = "diffoff",
+        desc = "Trunks: turn off diff mode for file that split diff was based on",
+    })
+
+    vim.api.nvim_create_autocmd({ "BufHidden" }, {
+        buffer = split_bufnr,
+        command = "diffoff",
+        desc = "Trunks: turn off diff mode for split diff",
     })
 end
 

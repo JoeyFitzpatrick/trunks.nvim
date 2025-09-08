@@ -329,6 +329,17 @@ In a time-machine buffer, move to the previous revision for the given file. If a
 ### hdiff
 Like `:Trunks vdiff`, except horizontal instead of vertical. `:Trunks hdiff` opens a horizontal split and uses `vimdiff` to diff the current file against `HEAD`. You can pass a commit, e.g. `:Trunks hdiff abc123`, to diff the current file against the same file in the given commit. You can also pass a branch, e.g. `:Trunks hdiff some-branch`. See `:h vimdiff`.
 
+### diff-qf
+`:Trunks diff-qf` opens a tab that uses the quickfix list and native Vim diffing, to support viewing and navigating through diffs. When called without arguments, the working tree is diffed against HEAD. You can diff the working tree against any commit or branch by passing it as an argument, e.g. `:Trunks diff-qf abc123` or `:Trunks diff-qf my-other-branch`. 
+
+When `:Trunks diff-qf` is used, a few things happen:
+
+- A new tab opens
+- The quickfix list is populated with all of the locations where the working tree differs from the given commit (or HEAD)
+- Within this tab, moving to one of the locations from the quickfix list will open a split. The left side is the working tree, the right side is the same file at the given commit. The file and its split are diffed against eachother using `diffthis`.
+
+You can move between locations by selecting them from the quickfix list, or using `cnext` and `cprevious`, and the tab can be closed with `tabclose`.
+
 # UI Management (Tabs, Windows, Buffers)
 When Trunks opens a UI, this will typically either open a new buffer in the current window, or open a new window in a split. 
 In either case, the window can be closed with the `q` keymap, which will return you to the last buffer that was open.

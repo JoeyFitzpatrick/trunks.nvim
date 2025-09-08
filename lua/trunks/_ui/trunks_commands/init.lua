@@ -65,7 +65,7 @@ local cmd_map = {
             commit = cmd:sub(args_start)
         end
         local output, exit_code = require("trunks._ui.trunks_commands.diff_qf").render(commit)
-        local error_text = output or ("Unable to display diff for " .. commit)
+        local error_text = output or ("Unable to display diff for " .. (commit or "unknown commit"))
         handle_output(nil, error_text, exit_code)
     end,
 

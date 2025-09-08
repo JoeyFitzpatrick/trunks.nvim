@@ -40,11 +40,8 @@ A potential pitfall here is that we currently map from command to key, not key t
 ### Quickfix list integration
 Some ideas for quickfix list integrations that would be helpful:
 
-- Diffs could populate the quickfix list with all changes, so that one could navigate between the changes easily. Would be helpful for inspecting diffs and code review. This can work by calling `git diff`, parsing diff locations, filling out the quickfix list with these, and open the file and vdiff it each time it's opened. Could probably convert `:G difftool` to this, but we'd need a way to stage/unstage hunks/lines from these vidiff'ed files.
 - Fugitive has a `:Gclog` command that would be nice to copy.
 - A git grep integration would be nice.
-- Mergetool already has quickfix list integration.
-- Question: do we need a single command for all quickfix list stuff, like `:Trunks qf {subcommand}` or `:Trunks qf-{subcommand}`, or would ad-hoc commands be better, like `:G grep` just working? Leaning towards a single command to be explicit.
 
 ## Improvements
 
