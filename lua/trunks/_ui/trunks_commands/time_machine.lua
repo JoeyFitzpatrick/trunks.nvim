@@ -361,6 +361,10 @@ local function move_through_time_machine(bufnr, direction)
         -- Cache might not have values yet; wait a moment and retry
         vim.cmd("sleep 50m")
         time_machine_data = M.cache[filename][time_machine_index]
+
+        if not time_machine_data then
+            error("Unable to find commit for time-machine")
+        end
     end
 
     vim.b[bufnr].commit = time_machine_data.hash
