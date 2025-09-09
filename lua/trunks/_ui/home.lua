@@ -153,7 +153,7 @@ local function create_and_render_buffer(tab, indices)
     vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     ui_render(bufnr, { start_line = TAB_HEIGHT, win = win, ui_types = { "home", string.lower(tab) } })
     vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-    local line_to_set_cursor_to = TAB_HEIGHT + 3
+    local line_to_set_cursor_to = TAB_HEIGHT + 1
     if tab == "Status" then
         line_to_set_cursor_to = line_to_set_cursor_to + 2
     end
