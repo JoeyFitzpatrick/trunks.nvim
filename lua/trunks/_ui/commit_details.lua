@@ -94,7 +94,7 @@ end
 function M.get_line(bufnr, line_num)
     line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
     local line = vim.api.nvim_buf_get_lines(bufnr, line_num - 1, line_num, false)[1]
-    local filename = line:match("%S+", 1)
+    local filename = line:match("^.(%S+)", 1)
     if not filename then
         return nil
     end
