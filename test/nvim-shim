@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Set up isolated XDG directories for testing
+export XDG_CONFIG_HOME="$(pwd)/test/xdg/config"
+export XDG_STATE_HOME="$(pwd)/test/xdg/local/state"
+export XDG_DATA_HOME="$(pwd)/test/xdg/local/share"
+
+# Create directories if they don't exist
+mkdir -p "${XDG_DATA_HOME}/nvim/site/pack/testing/start"
+mkdir -p "${XDG_CONFIG_HOME}/nvim"
+mkdir -p "${XDG_STATE_HOME}/nvim"
+
+# Create symlink to plugin for testing
+ln -sf "$(pwd)" "${XDG_DATA_HOME}/nvim/site/pack/testing/start/trunks.nvim"
+
+# Run nvim with loadplugins enabled and execute the test file
+nvim --clean --cmd 'set loadplugins' -l "$@"
+exit_code=$?
+
+# Clean up symlink
+rm -f "${XDG_DATA_HOME}/nvim/site/pack/testing/start/trunks.nvim"
+
+exit $exit_code

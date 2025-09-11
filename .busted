@@ -1,13 +1,20 @@
 return {
-  _all = {
-    coverage = false,
-    lpath = "lua/?.lua;lua/?/init.lua;spec/?.lua",
-    lua = "nlua",
-  },
-  default = {
-    verbose = true,
-  },
-  tests = {
-    verbose = true,
-  },
+    _all = {
+        coverage = false,
+        lpath = "lua/?.lua;lua/?/init.lua;spec/?.lua",
+        lua = "nlua",
+    },
+    default = {
+        verbose = true,
+    },
+    tests = {
+        verbose = true,
+    },
+    unit = {
+        ROOT = { "./spec/" },
+    },
+    integration = {
+        lua = "./test/nvim-shim",
+        ROOT = { "./test/integration/" },
+    },
 }
