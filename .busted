@@ -11,10 +11,10 @@ return {
         verbose = true,
     },
     unit = {
-        ROOT = { "./spec/" },
+        ROOT = { "./spec/unit/" },
     },
     integration = {
-        lua = "./test/nvim-shim",
-        ROOT = { "./test/integration/" },
+        lua = "./spec/nvim-shim",
+        ROOT = { "./spec/integration/" },
     },
 }

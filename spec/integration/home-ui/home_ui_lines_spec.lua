@@ -1,13 +1,13 @@
 local test_repo = "test-repo"
 local jobopts = { rpc = true, width = 80, height = 24 }
 
-describe("Status tab in home UI", function()
+describe("Tabs in home UI", function()
     vim.fn.system({ "mkdir", test_repo })
     vim.fn.system({ "git", "init", test_repo })
     vim.api.nvim_set_current_dir(test_repo)
     local nvim = vim.fn.jobstart({ "nvim", "--embed", "--headless" }, jobopts)
 
-    it("Opens the status tab", function()
+    it("opens the tabs", function()
         finally(function()
             vim.fn.jobstop(nvim)
             vim.api.nvim_set_current_dir("..")

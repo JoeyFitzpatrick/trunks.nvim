@@ -1,7 +1,7 @@
 #!/bin/sh
 echo "Running tests with busted..."
 
-if ! busted; then
+if ! busted --run unit; then
   echo "Tests failed. Push aborted."
   exit 1
 fi

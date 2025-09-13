@@ -1,9 +1,9 @@
 #!/bin/sh
 
 # Set up isolated XDG directories for testing
-export XDG_CONFIG_HOME="$(pwd)/test/xdg/config"
-export XDG_STATE_HOME="$(pwd)/test/xdg/local/state"
-export XDG_DATA_HOME="$(pwd)/test/xdg/local/share"
+export XDG_CONFIG_HOME="$(pwd)/spec/xdg/config"
+export XDG_STATE_HOME="$(pwd)/spec/xdg/local/state"
+export XDG_DATA_HOME="$(pwd)/spec/xdg/local/share"
 
 # Create directories if they don't exist
 mkdir -p "${XDG_DATA_HOME}/nvim/site/pack/testing/start"
