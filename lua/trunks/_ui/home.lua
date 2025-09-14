@@ -142,7 +142,7 @@ local tab_render_map = {
 ---@param indices trunks.TabHighlightIndices[]
 local function create_and_render_buffer(tab, indices)
     local bufnr, win = require("trunks._ui.elements").new_buffer({})
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, tabs_text)
+    require("trunks._ui.utils.buffer_text").set(bufnr, tabs_text)
     local ui_render = tab_render_map[tab]
     require("trunks._core.register").register_buffer(bufnr, {
         render_fn = function()
@@ -150,9 +150,9 @@ local function create_and_render_buffer(tab, indices)
         end,
     })
 
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+    vim.bo[bufnr].modifiable = true
     ui_render(bufnr, { start_line = TAB_HEIGHT, win = win, ui_types = { "home", string.lower(tab) } })
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+    vim.bo[bufnr].modifiable = false
     local line_to_set_cursor_to = TAB_HEIGHT + 1
     if tab == "Status" then
         line_to_set_cursor_to = line_to_set_cursor_to + 2

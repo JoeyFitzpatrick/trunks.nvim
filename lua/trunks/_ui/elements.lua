@@ -249,10 +249,10 @@ function M.new_buffer(opts)
             if opts.lines then
                 vim.bo[bufnr].modifiable = true
                 vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, opts.lines(bufnr))
-                vim.bo[bufnr].modifiable = false
             end
         end
     end
+    vim.bo[bufnr].modifiable = false
 
     local register = require("trunks._core.register")
     register.register_buffer(bufnr, { win = win })
