@@ -107,6 +107,13 @@ function M.get_line(bufnr, start_line, line_num)
     return { filename = filename, safe_filename = "'" .. filename .. "'", status = get_status(line) }
 end
 
+local function remove_untracked_file(filename)
+    require("trunks._core.run_cmd").run_hidden_cmd("git clean -f " .. filename, { rerender = true })
+
+    -- File/dir can still exist in some edge cases, for example, if it's an empty dir with a .git folder.
+    -- In this case, currently we no-op, but documenting here for future reference.
+end
+
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 function M.set_keymaps(bufnr, opts)
@@ -220,13 +227,12 @@ function M.set_keymaps(bufnr, opts)
                         local filename = line_data.safe_filename
                         local status = line_data.status
                         local status_checks = require("trunks._core.git")
-                        local cmd
                         if status_checks.is_untracked(status) then
-                            cmd = "git clean -f " .. filename
+                            remove_untracked_file(filename)
                         else
-                            cmd = "git reset -- " .. filename .. " && git restore -- " .. filename
+                            local cmd = "git reset -- " .. filename .. " && git restore -- " .. filename
+                            require("trunks._core.run_cmd").run_hidden_cmd(cmd, { rerender = true })
                         end
-                        require("trunks._core.run_cmd").run_hidden_cmd(cmd, { rerender = true })
                     end,
                 },
                 {
@@ -240,14 +246,13 @@ function M.set_keymaps(bufnr, opts)
                         local filename = line_data.safe_filename
                         local status = line_data.status
                         local status_checks = require("trunks._core.git")
-                        local cmd
                         if status_checks.is_untracked(status) then
-                            cmd = "git clean -f " .. filename
+                            remove_untracked_file(filename)
                         else
                             -- Worth noting that lazygit does git -c core.hooksPath=/dev/null checkout -- filename
-                            cmd = "git restore -- " .. filename
+                            local cmd = "git restore -- " .. filename
+                            require("trunks._core.run_cmd").run_hidden_cmd(cmd, { rerender = true })
                         end
-                        require("trunks._core.run_cmd").run_hidden_cmd(cmd, { rerender = true })
                     end,
                 },
                 {
