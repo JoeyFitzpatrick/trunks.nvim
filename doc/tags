@@ -6,9 +6,6 @@ trunks-installation	trunks.txt	/*trunks-installation*
 trunks-keymaps-for-raw-git-output	trunks.txt	/*trunks-keymaps-for-raw-git-output*
 trunks-miscellaneous-command-changes	trunks.txt	/*trunks-miscellaneous-command-changes*
 trunks-miscellaneous-command-changes-git-switch	trunks.txt	/*trunks-miscellaneous-command-changes-git-switch*
-trunks-new-breaking	news.txt	/*trunks-new-breaking*
-trunks-new-features	news.txt	/*trunks-new-features*
-trunks-news.txt	news.txt	/*trunks-news.txt*
 trunks-optional-dependencies	trunks.txt	/*trunks-optional-dependencies*
 trunks-plug-mappings	trunks.txt	/*trunks-plug-mappings*
 trunks-special-commands	trunks.txt	/*trunks-special-commands*

@@ -1,36 +1,36 @@
-*trunks.txt*            For Neovim >= 0.11.0           Last change: 2025 June 10
+*trunks.txt*        For Neovim >= 0.11.0        Last change: 2025 September 29
 
 ==============================================================================
-Table of Contents                                     *trunks-table-of-contents*
+Table of Contents                                   *trunks-table-of-contents*
 
-1. Installation                                            |trunks-installation|
-2. Configuration                                          |trunks-configuration|
-3. Usage                                                          |trunks-usage|
-4. Keymaps for Raw Git Output                |trunks-keymaps-for-raw-git-output|
-5. Special Commands                                    |trunks-special-commands|
-  - Difftool                                  |trunks-special-commands-difftool|
-  - Branch                                      |trunks-special-commands-branch|
-  - Log                                            |trunks-special-commands-log|
-  - Commit                                      |trunks-special-commands-commit|
-  - Blame                                        |trunks-special-commands-blame|
-  - Stash List                              |trunks-special-commands-stash-list|
-  - Show                                          |trunks-special-commands-show|
-  - Help Commands                        |trunks-special-commands-help-commands|
-6. Miscellaneous Command Changes          |trunks-miscellaneous-command-changes|
-  - Git Switch                 |trunks-miscellaneous-command-changes-git-switch|
-7. Custom Commands                                      |trunks-custom-commands|
+1. Installation                                          |trunks-installation|
+2. Configuration                                        |trunks-configuration|
+3. Usage                                                        |trunks-usage|
+4. Keymaps for Raw Git Output              |trunks-keymaps-for-raw-git-output|
+5. Special Commands                                  |trunks-special-commands|
+  - Difftool                                |trunks-special-commands-difftool|
+  - Branch                                    |trunks-special-commands-branch|
+  - Log                                          |trunks-special-commands-log|
+  - Commit                                    |trunks-special-commands-commit|
+  - Blame                                      |trunks-special-commands-blame|
+  - Stash List                            |trunks-special-commands-stash-list|
+  - Show                                        |trunks-special-commands-show|
+  - Help Commands                      |trunks-special-commands-help-commands|
+6. Miscellaneous Command Changes        |trunks-miscellaneous-command-changes|
+  - Git Switch               |trunks-miscellaneous-command-changes-git-switch|
+7. Custom Commands                                    |trunks-custom-commands|
 8. UI Management (Tabs, Windows, Buffers)|trunks-ui-management-(tabs,-windows,-buffers)|
-9. Plug mappings                                          |trunks-plug-mappings|
-10. Optional Dependencies                         |trunks-optional-dependencies|
-11. Development and Contributing           |trunks-development-and-contributing|
-12. Tests                                                         |trunks-tests|
-  - Initialization                                 |trunks-tests-initialization|
-  - Running                                               |trunks-tests-running|
-13. Tracking Updates                                   |trunks-tracking-updates|
-14. Credits                                                     |trunks-credits|
+9. Plug mappings                                        |trunks-plug-mappings|
+10. Optional Dependencies                       |trunks-optional-dependencies|
+11. Development and Contributing         |trunks-development-and-contributing|
+12. Tests                                                       |trunks-tests|
+  - Initialization                               |trunks-tests-initialization|
+  - Running                                             |trunks-tests-running|
+13. Tracking Updates                                 |trunks-tracking-updates|
+14. Credits                                                   |trunks-credits|
 
 ==============================================================================
-1. Installation                                            *trunks-installation*
+1. Installation                                          *trunks-installation*
 
 - lazy.nvim <https://github.com/folke/lazy.nvim>
 
@@ -43,12 +43,12 @@ Table of Contents                                     *trunks-table-of-contents*
 <
 
 Note: lazy loading is handled internally, so it is not required to lazy load
-Trunks. With that being said, if you want to lazy load Trunks, you should be able
-to lazy load it however you normally lazy load plugins.
+Trunks. With that being said, if you want to lazy load Trunks, you should be
+able to lazy load it however you normally lazy load plugins.
 
 
 ==============================================================================
-2. Configuration                                          *trunks-configuration*
+2. Configuration                                        *trunks-configuration*
 
 (These are default values)
 
@@ -97,6 +97,7 @@ to lazy load it however you normally lazy load plugins.
                         pull = "p",
                         push = "<leader>p",
                         rename = "rn", -- Rename branch under cursor
+                        spinoff = "S", -- Create new branch off of current, then reset current to upstream
                         switch = "s", -- Switch to branch under cursor
                     },
                 },
@@ -113,6 +114,7 @@ to lazy load it however you normally lazy load plugins.
                         commit_amend_reuse_message = "A",
                         commit_dry_run = "d",
                         commit_no_verify = "n",
+                        commit_instant_fixup = "F", -- Run :Trunks commit-instant-fixup
                     },
                 },
                 diff = {
@@ -135,6 +137,7 @@ to lazy load it however you normally lazy load plugins.
                         checkout = "c", -- Checkout commmit under cursor
                         commit_details = "<enter>",
                         diff_commit_against_head = "d",
+                        commit_drop = "D",
                         pull = "p",
                         push = "<leader>p",
                         rebase = "rb", -- Interactive rebase from current commit to commit under cursor
@@ -156,6 +159,7 @@ to lazy load it however you normally lazy load plugins.
                     keymaps = {
                         checkout = "c",
                         commit_details = "<enter>",
+                        recover = "r",
                         show = "s",
                     },
                 },
@@ -189,6 +193,27 @@ to lazy load it however you normally lazy load plugins.
                         stash_popup = "S",
                     },
                 },
+                worktree = {
+                    keymaps = {
+                        create = "c", -- Create new worktree
+                        delete = "d", -- Delete worktree
+                        switch = "s", -- Switch to worktree
+                    },
+                },
+                time_machine = {
+                    auto_display_on = true,
+                    keymaps = {
+                        commit_details = "<enter>",
+                        diff_against_previous_commit = "d", -- Diff file against previous commit
+                        diff_against_head = "D", -- Diff file against HEAD
+                    },
+                },
+                time_machine_file = {
+                    keymaps = {
+                        next = "<C-n>", -- Navigate to next revision for file
+                        previous = "<C-p>", -- Navigate to previous revision for file
+                    },
+                },
                 -- End of default configuration
             }
         end
@@ -197,7 +222,7 @@ to lazy load it however you normally lazy load plugins.
 
 
 ==============================================================================
-3. Usage                                                          *trunks-usage*
+3. Usage                                                        *trunks-usage*
 
 1. To use this plugin, simply call git commands from command mode, using the `:G` command. Many commands will simply call the git command in terminal mode, with some improvements:
 
@@ -217,7 +242,7 @@ won’t expand the `%` character, it will just be `%`.
 
 
 ==============================================================================
-4. Keymaps for Raw Git Output                *trunks-keymaps-for-raw-git-output*
+4. Keymaps for Raw Git Output              *trunks-keymaps-for-raw-git-output*
 
 When a command outputs raw git output (for example, `:G log -p`), a keymap is
 created to show details for the item under the cursor. By default, this is
@@ -241,7 +266,7 @@ There are other UIs for which these "open file" keymaps are added as well.
 
 
 ==============================================================================
-5. Special Commands                                    *trunks-special-commands*
+5. Special Commands                                  *trunks-special-commands*
 
 Some git commands that are often used, or are normally cumbersome to use, are
 handled differently than just running the command in terminal mode. This
@@ -275,34 +300,34 @@ want to (un)stage single lines at a time, you can use `vs`, to visually select
 a line and immediately (un)stage it.
 
 
-DIFFTOOL                                      *trunks-special-commands-difftool*
+DIFFTOOL                                    *trunks-special-commands-difftool*
 
-Passing commit(s) to Trunks’s `difftool` command, e.g. `:G difftool abc123` or
-`:G difftool abc123..def456`, will open a UI that allows for seeing the diff
+Passing commit(s) to Trunks’s `difftool` command, e.g. `:G difftool abc123`
+or `:G difftool abc123..def456`, will open a UI that allows for seeing the diff
 introduced by a commit, or the diff between two commits. Note that if a commit
 range is given, e.g. `abc123..def456`, using the open-file keymaps will use
 the latter commit. So in this example, using `oh` to open a file in a
 horizontal split would use commit `def456`.
 
 
-BRANCH                                          *trunks-special-commands-branch*
+BRANCH                                        *trunks-special-commands-branch*
 
 `:G` commands that display a list of branches, such as `:G branch`, `:G branch
 --all`, `:G branch --merged`, and so on, bring up a branch UI, from which
 keymaps can be used to view commits, rename branches, merge branches, etc. The
-|trunks-default-configuration-section| shows trunksy keymap, as does pressing `g?`
-in the branch UI.
+|trunks-default-configuration-section| shows every keymap, as does pressing
+`g?` in the branch UI.
 
 G branch commands that do not display a list of branches, such as `:G branch
 --delete`, run the command in terminal mode, as if it were a non-special
 command.
 
 
-LOG                                                *trunks-special-commands-log*
+LOG                                              *trunks-special-commands-log*
 
 `:G log` commands will typically open a UI. The
-|trunks-default-configuration-section| shows trunksy keymap, as does pressing `g?`
-in the log UI.
+|trunks-default-configuration-section| shows every keymap, as does pressing
+`g?` in the log UI.
 
 When using the `:G log` command without arguments, a default `--pretty`
 <https://git-scm.com/docs/pretty-formats> format option is passed to the `log`
@@ -339,7 +364,7 @@ your visually selected text as the search term., e.g. `:G log -S` while text
 is visually selected.
 
 
-COMMIT                                          *trunks-special-commands-commit*
+COMMIT                                        *trunks-special-commands-commit*
 
 `:G commit` will open an editor to create the commit message when that message
 is not passed to the command, e.g. `git commit` (no message, opens the editor)
@@ -351,29 +376,29 @@ commit message. If the commit message editor doesn’t need to open, the
 command will just run in terminal mode like most other commands.
 
 
-BLAME                                            *trunks-special-commands-blame*
+BLAME                                          *trunks-special-commands-blame*
 
 Like vim-fugitive, running `:G blame` will open a blame window to the left,
 that uses |scrollbind| to sync with with the opened file. From there, many of
 the keymaps for the commit UI also work in the blame UI. The
-|trunks-default-configuration-section| shows trunksy keymap, as does pressing `g?`
-in the blame UI.
+|trunks-default-configuration-section| shows every keymap, as does pressing
+`g?` in the blame UI.
 
 
-STASH LIST                                  *trunks-special-commands-stash-list*
+STASH LIST                                *trunks-special-commands-stash-list*
 
 Running `:G stash list` will open a UI, in which you can view, pop, apply, and
 drop stashes. Other stash commands, like `:G stash show`, run in terminal mode
 like most other commands.
 
 
-SHOW                                              *trunks-special-commands-show*
+SHOW                                            *trunks-special-commands-show*
 
 Running `:G show` commands will just open their output in the current window.
 You can close this with `q` like other Trunks buffers.
 
 
-HELP COMMANDS                            *trunks-special-commands-help-commands*
+HELP COMMANDS                          *trunks-special-commands-help-commands*
 
 Running a git help command, such as `:G commit -h` or `:G log --help`, will
 open that help file in the current window. This way, you can use your normal
@@ -382,12 +407,12 @@ it by pressing `q` to return to your last buffer.
 
 
 ==============================================================================
-6. Miscellaneous Command Changes          *trunks-miscellaneous-command-changes*
+6. Miscellaneous Command Changes        *trunks-miscellaneous-command-changes*
 
 Some git commands are changed for convenience.
 
 
-GIT SWITCH                     *trunks-miscellaneous-command-changes-git-switch*
+GIT SWITCH                   *trunks-miscellaneous-command-changes-git-switch*
 
 When running `:G switch origin/some-branch`, with no command options like
 `--create`, `origin/` is removed from the command, in order to make
@@ -401,28 +426,90 @@ If you pass any options to the command, like `:G switch origin/some-branch
 
 
 ==============================================================================
-7. Custom Commands                                      *trunks-custom-commands*
+7. Custom Commands                                    *trunks-custom-commands*
 
 Trunks provides some commands that are not valid git commands. Instead of the
 `:G` command, these custom commands are under the `:Trunks` command, and `:G`
 is reserved for valid git commands.
 
 
+COMMIT-DROP ~
+
+`:Trunks commit-drop {commit}` can be used to drop an arbitrary commit. Under
+the hood, it’s an interactive rebase that drops the commit, so this is a
+destructive command that should be used with caution.
+
+
+COMMIT-INSTANT-FIXUP ~
+
+`:Trunks commit-instant-fixup {commit}` will apply your staged changes to the
+given commit. This is useful for applying changes to a past commit in order to
+maintain a logic commit history (think atomic commits). This is a rebase under
+the hood, so use with caution.
+
+If no commit is given, a list of commits (e.g. `git log` output) is shown, so
+that a commit can be chosen to fixup.
+
+
+TIME-MACHINE ~
+
+`:Trunks time-machine <optional filename>` creates a time-machine buffer for
+the given file, or the current buffer if a file is not given. This displays a
+list of commits that changed the file. Putting the cursor on a given commit
+will display the diff for that file at that commit. There is a keymap to open
+the file at the given commit, plus other keymaps that can be viewed with `g?`.
+
+Once you have opened a file at a revision, there are keymaps to move to the
+next/previous revision, as well as open diff splits.
+
+
+TIME-MACHINE-NEXT ~
+
+In a time-machine buffer, move to the next most recent revision for the given
+file. If a diff split is open, re-generate that diff.
+
+
+TIME-MACHINE-PREVIOUS ~
+
+In a time-machine buffer, move to the previous revision for the given file. If
+a diff split is open, re-generate that diff. If this is run on a regular
+buffer, open a time-machine buffer at the previous revision for the current
+buffer.
+
+
 VDIFF ~
 
-`:Trunks vdiff` opens a vertical split and uses `vimdiff` to diff the current file
-against `HEAD`. You can pass a commit, e.g. `:Trunks vdiff abc123`, to diff the
-current file against the same file in the given commit. You can also pass a
-branch, e.g. `:Trunks vdiff some-branch`. See |vimdiff|.
+`:Trunks vdiff` opens a vertical split and uses `vimdiff` to diff the current
+file against `HEAD`. You can pass a commit, e.g. `:Trunks vdiff abc123`, to
+diff the current file against the same file in the given commit. You can also
+pass a branch, e.g. `:Trunks vdiff some-branch`. See |vimdiff|.
 
 
 HDIFF ~
 
-Like `:Trunks vdiff`, except horizontal instead of vertical. `:G Hdiff` opens a
-horizontal split and uses `vimdiff` to diff the current file against `HEAD`.
-You can pass a commit, e.g. `:G Hdiff abc123`, to diff the current file
-against the same file in the given commit. You can also pass a branch,
-e.g. `:G Hdiff some-branch`. See |vimdiff|.
+Like `:Trunks vdiff`, except horizontal instead of vertical. `:Trunks hdiff`
+opens a horizontal split and uses `vimdiff` to diff the current file against
+`HEAD`. You can pass a commit, e.g. `:Trunks hdiff abc123`, to diff the
+current file against the same file in the given commit. You can also pass a
+branch, e.g. `:Trunks hdiff some-branch`. See |vimdiff|.
+
+
+DIFF-QF ~
+
+`:Trunks diff-qf` opens a tab that uses the quickfix list and native Vim
+diffing, to support viewing and navigating through diffs. When called without
+arguments, the working tree is diffed against HEAD. You can diff the working
+tree against any commit or branch by passing it as an argument, e.g. `:Trunks
+diff-qf abc123` or `:Trunks diff-qf my-other-branch`.
+
+When `:Trunks diff-qf` is used, a few things happen:
+
+- A new tab opens
+- The quickfix list is populated with all of the locations where the working tree differs from the given commit (or HEAD)
+- Within this tab, moving to one of the locations from the quickfix list will open a split. The left side is the working tree, the right side is the same file at the given commit. The file and its split are diffed against eachother using `diffthis`.
+
+You can move between locations by selecting them from the quickfix list, or
+using `cnext` and `cprevious`, and the tab can be closed with `tabclose`.
 
 
 ==============================================================================
@@ -453,7 +540,7 @@ To toggle the auto-display, enter the toggle keymap, which by default is
 
 
 ==============================================================================
-9. Plug mappings                                          *trunks-plug-mappings*
+9. Plug mappings                                        *trunks-plug-mappings*
 
 Trunks provides some plug mappings, so you can conveniently create your own
 mappings for some actions if you want.
@@ -461,12 +548,13 @@ mappings for some actions if you want.
 
 MERGE CONFLICT MAPPINGS ~
 
-Trunks doesn’t have an integrated merge conflict resolution solution currently,
-so in the meantime, we have these mappings: (Trunks-resolve-base): when the
-cursor is on a merge conflict, keep the "base" code (Trunks-resolve-ours): when
-the cursor is on a merge conflict, keep the "ours" code (Trunks-resolve-theirs):
-when the cursor is on a merge conflict, keep the "theirs" code
-(Trunks-resolve-all): when the cursor is on a merge conflict, keep all code
+Trunks doesn’t have an integrated merge conflict resolution solution
+currently, so in the meantime, we have these mappings: (Trunks-resolve-base):
+when the cursor is on a merge conflict, keep the "base" code
+(Trunks-resolve-ours): when the cursor is on a merge conflict, keep the "ours"
+code (Trunks-resolve-theirs): when the cursor is on a merge conflict, keep the
+"theirs" code (Trunks-resolve-all): when the cursor is on a merge conflict,
+keep all code
 
 To use such a mapping, you can do something like this:
 
@@ -477,16 +565,16 @@ To use such a mapping, you can do something like this:
 
 
 ==============================================================================
-10. Optional Dependencies                         *trunks-optional-dependencies*
+10. Optional Dependencies                       *trunks-optional-dependencies*
 
 It is recommended, though not required, to use a tool that improves the output
 of git commands. Some recommendations: delta
-<https://github.com/dandavison/delta>used in the demos/examples diff-so-fancy
+<https://github.com/dandavison/delta>: used in the demos/examples diff-so-fancy
 <https://github.com/so-fancy/diff-so-fancy>
 
 
 ==============================================================================
-11. Development and Contributing           *trunks-development-and-contributing*
+11. Development and Contributing         *trunks-development-and-contributing*
 
 I welcome users of any experience level to contribute to Trunks and improve the
 project. If you’d like to contribute by writing code, please run
@@ -502,10 +590,10 @@ are also good ways to contribute.
 
 
 ==============================================================================
-12. Tests                                                         *trunks-tests*
+12. Tests                                                       *trunks-tests*
 
 
-INITIALIZATION                                     *trunks-tests-initialization*
+INITIALIZATION                                   *trunks-tests-initialization*
 
 Run this line once before calling any `busted` command
 
@@ -514,7 +602,7 @@ Run this line once before calling any `busted` command
 <
 
 
-RUNNING                                                   *trunks-tests-running*
+RUNNING                                                 *trunks-tests-running*
 
 Run all tests
 
@@ -544,13 +632,13 @@ We might not have any tagged tests, but to make one, set up as test like this:
 
 
 ==============================================================================
-13. Tracking Updates                                   *trunks-tracking-updates*
+13. Tracking Updates                                 *trunks-tracking-updates*
 
 See doc/news.txt <doc/news.txt> for updates.
 
 
 ==============================================================================
-14. Credits                                                     *trunks-credits*
+14. Credits                                                   *trunks-credits*
 
 Thank you to Samuel Williams and the maintainers of nvim-unception
 <https://github.com/samjwill/nvim-unception>. Some code from that plugin was
