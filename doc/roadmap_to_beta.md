@@ -5,15 +5,6 @@ While the project is in alpha, we will not use versioning. Once all of the impro
 
 ## Features
 
-### Undo
-Not well thought out, but the idea is that we could undo some operations:
-* undo a merge commit (just reset to the commit before the merge probably)
-* undo `git restore`
-* undo deleting a branch
-* re-stash changes that were popped off the stash list
-
-That kind of stuff. Not sure what's feasible, but it would be nice to be able to have this feature, especially for things that aren't covered by `reflog`, such as undoing `git restore`.
-
 ### Git restore hunk/lines/file from previous commit
 In a file from a previous commit, be able to:
 * visually select lines to restore
@@ -23,19 +14,7 @@ In a git patch, be able to do the above, as well as:
 * restore a single hunk
 
 ### Allow users to create custom command mappings
-Users should be able to create their own keymaps for different UIs. This can be done in a couple of ways:
-1. In the config, allow specifying a map/function combination. For instance:
-```lua
-    commit = {
-        keymaps = {
-            p = function()
-                -- Trunks lua API used here?
-            end
-        }
-    }
-```
-A potential pitfall here is that we currently map from command to key, not key to map. So we'd either need to invert existing keymaps, or support current mappings but allow new ones to be inverted.
-2. Create autocmds for different UIs, so that keymaps could be created for a given UI as part of its autocmd. Not a huge fan of this approach, but there might be other reasons to create these autocmds anyways.
+Create autocmds for different UIs, so that keymaps could be created for a given UI as part of its autocmd. Not a huge fan of this approach, but there might be other reasons to create these autocmds anyways.
 
 ### Quickfix list integration
 Some ideas for quickfix list integrations that would be helpful:
@@ -79,7 +58,3 @@ In git, many commands take a `--quiet` flag that surpresses informational messag
 
 ### Reblame handles files not in commit
 When reblaming a file that has a different name at a given commit, a pretty ugly error is shown. We should handle that more gracefully by either figuring out the old file name, or if that's not possible, show a better error.
-
-### Worktree UI improvements
-There are some weird things that happen with worktrees and our strategy to respect the current buffer as the git dir. When changing to a different worktree and running a git command, the git command behaves as though we’re still in the previous dir. Additionally, changing back to the original worktree doesn’t seem to change back to the correct branch.
-We definitely need a way to make worktrees not use the “respect buffer dir” logic, and we also need to see what’s going on with the branch changes not persisting.
