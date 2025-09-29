@@ -20,11 +20,6 @@ jobs:
           neovim: true
           version: stable
 
-      - name: Create API Documentation
-        run: |
-          nvim --version
-          make api_documentation
-
       - name: Create User Documentation
         uses: kdheepak/panvimdoc@main
         with:
