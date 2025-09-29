@@ -7,7 +7,7 @@ local user = "JoeyFitzpatrick"
 description = {
     homepage = "https://github.com/" .. user .. "/" .. package,
     labels = { "neovim", "neovim-plugin" },
-    license = "MIT",
+    license = "Apache",
     summary = "A fluid git wrapper for Neovim",
 }
 

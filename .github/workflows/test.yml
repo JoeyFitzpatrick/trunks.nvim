@@ -33,6 +33,8 @@ jobs:
           luaVersion: "luajit-openresty"
 
       - uses: leafo/gh-actions-luarocks@v4
+        with:
+          luarocksVersion: "3.12.0"
 
       - uses: rhysd/action-setup-vim@v1
         with:
