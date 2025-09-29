@@ -154,13 +154,6 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     stash_popup = "S",
                 },
             },
-            worktree = {
-                keymaps = {
-                    create = "c", -- Create new worktree
-                    delete = "d", -- Delete worktree
-                    switch = "s", -- Switch to worktree
-                },
-            },
             time_machine = {
                 auto_display_on = true,
                 keymaps = {

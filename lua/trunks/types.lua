@@ -22,7 +22,6 @@
 ---@field stash? trunks.StashConfiguration
 ---@field stash_popup? trunks.StashPopupConfiguration
 ---@field status? trunks.StatusConfiguration
----@field worktree? trunks.WorktreeConfiguration
 ---@field time_machine? trunks.TimeMachineConfiguration
 ---@field time_machine_file? trunks.TimeMachineFileConfiguration
 
@@ -74,9 +73,6 @@
 ---@class trunks.StatusConfiguration
 ---@field keymaps? trunks.StatusKeymaps
 ---@field auto_display_on? boolean
-
----@class trunks.WorktreeConfiguration
----@field keymaps? trunks.WorktreeKeymaps
 
 ---@class trunks.TimeMachineConfiguration
 ---@field auto_display_on? boolean
@@ -179,11 +175,6 @@
 ---@field stage? string
 ---@field stage_all? string
 ---@field stash_popup? string
-
----@class trunks.WorktreeKeymaps
----@field create? string
----@field delete? string
----@field switch? string
 
 ---@class trunks.TimeMachineKeymaps
 ---@field commit_details? string

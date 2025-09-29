@@ -111,11 +111,6 @@ M.long_descriptions = {
         stage_all = "Stage all files",
         stash_popup = "Open git stash options",
     },
-    worktree = {
-        create = "Create new worktree",
-        delete = "Delete worktree",
-        switch = "Switch to worktree",
-    },
     ---@type trunks.TimeMachineKeymaps
     time_machine = {
         commit_details = "Show commit details",

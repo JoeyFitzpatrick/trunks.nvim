@@ -106,14 +106,4 @@ M.stash = { trigger_redraw = true }
 M.switch = { trigger_redraw = true }
 M.whatchanged = { insert = true }
 
-M.worktree = {
-    trigger_redraw = function(cmd)
-        local worktree_subcommand = cmd[3]
-        if not worktree_subcommand or worktree_subcommand == "list" then
-            return false
-        end
-        return true
-    end,
-}
-
 return M

@@ -42,14 +42,10 @@ local cmd_ui_map = {
     end,
 }
 
--- Keeping these out of the UI map, so that commands like "worktree add" or "stash list" don't render UI
+-- Keeping these out of the UI map, so that commands like "stash list" don't render UI
 local stash_render = function()
     local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = os.tmpname() .. "/TrunksStash" })
     return require("trunks._ui.home_options.stash").render(bufnr, { ui_types = { "stash" } })
-end
-
-local worktree_render = function(command_builder)
-    require("trunks._ui.interceptors.worktree").render(command_builder)
 end
 
 local standard_output_commands = {
@@ -132,9 +128,6 @@ function M.get_ui(command_builder)
     end
     if cmd:match("^stash%s*$") then
         return stash_render
-    end
-    if cmd:match("^worktree%s*$") then
-        return worktree_render
     end
     if vim.startswith(cmd, "branch") then
         -- If this is nil, fall back to terminal mode
