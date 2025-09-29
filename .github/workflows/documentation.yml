@@ -23,8 +23,8 @@ jobs:
       - name: Create User Documentation
         uses: kdheepak/panvimdoc@main
         with:
-          vimdoc: ever
-          pandoc: doc/ever.md
+          vimdoc: trunks
+          pandoc: doc/trunks.md
           version: "Neovim >= 0.11.0"
           demojify: true
           treesitter: true

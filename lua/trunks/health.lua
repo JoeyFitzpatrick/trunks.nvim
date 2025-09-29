@@ -73,7 +73,7 @@ configuration.initialize_data()
 
 function M.check()
     if vlog and vlog.debug then
-        vlog.debug("Running ever health check.")
+        vlog.debug("Running trunks health check.")
     end
     vim.health.start("Configuration")
     local errors = validate_config(configuration.DATA, require("trunks._core.default_configuration"))
