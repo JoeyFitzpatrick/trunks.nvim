@@ -1,4 +1,4 @@
-*trunks.txt*        For Neovim >= 0.11.0        Last change: 2025 September 29
+*trunks.txt*        For Neovim >= 0.11.0        Last change: 2025 September 30
 
 ==============================================================================
 Table of Contents                                   *trunks-table-of-contents*
@@ -184,7 +184,6 @@ able to lazy load it however you normally lazy load plugins.
                         commit_popup = "c",
                         diff_file = "D",
                         edit_file = "<enter>", -- Close status UI and navigate to file under cursor
-                        enter_staging_area = "<leader>s", -- In staging area you can (un)stage hunks or lines
                         pull = "p",
                         push = "<leader>p",
                         restore = "d", -- Display a popup with options for `git restore`
@@ -274,23 +273,9 @@ like normal `<C-i>` and `<C-o>` You can view keymaps by pressing `g?`
 
 Using the `:G` command renders a home ui, that will display some status info.
 This includes the git status of all changed files, a diff split to display
-these changes, and some keymaps to manipulate these files, such as
-staging/unstaging them. Use `h` and `l` to then display the UI for `git
-branch`, `git log`, and `git stash`, all of which are further detailed below.
-
-
-STAGING AREA ~
-
-By default, pressing `<leader>s` in the status tab of the home UI will open the
-staging area. This is the same as running `:G difftool` with no arguments. The
-main features here are seeing what changes are staged, what changes are
-unstaged, navigating between hunks, (un)staging visually selected lines, and
-(un)staging hunks.
-
-Note that you can select lines with either visual mode or linewise-visual mode,
-and use the "stage" keymap (`s` by default) to (un)stage selected lines. If you
-want to (un)stage single lines at a time, you can use `vs`, to visually select
-a line and immediately (un)stage it.
+these changes, and some keymaps to manipulate these files. Use `h` and `l` to
+then display the UI for `git branch`, `git log`, and `git stash`, all of which
+are further detailed below.
 
 
 DIFFTOOL                                    *trunks-special-commands-difftool*
