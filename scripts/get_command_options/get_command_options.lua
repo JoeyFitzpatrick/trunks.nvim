@@ -90,18 +90,13 @@ M.get_command_options = function(cmds)
     cmds = cmds or vim.fn.systemlist("git --list-cmds=" .. table.concat(cmd_types, ","))
     for _, cmd in ipairs(cmds) do
         local help_text
-        if cmd == "log" then
-            local log_help = require("scripts.get_command_options.log_help").log_help
-            help_text = log_help
-        else
-            local help_text_obj = vim.system({ "git", cmd, "-h" }):wait()
-            help_text = help_text_obj.stdout
-            if not help_text or help_text:len() == 0 then
-                help_text = help_text_obj.stderr
-            end
-            if not help_text then
-                error("Could not get help text for command: " .. cmd)
-            end
+        local help_text_obj = vim.system({ "git", cmd, "-h" }):wait()
+        help_text = help_text_obj.stdout
+        if not help_text or help_text:len() == 0 then
+            help_text = help_text_obj.stderr
+        end
+        if not help_text then
+            error("Could not get help text for command: " .. cmd)
         end
         local parsed_options = M._parse_options_from_help_text(help_text, cmd)
         parsed_commands[cmd] = parsed_options
