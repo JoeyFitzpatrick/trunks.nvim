@@ -168,7 +168,6 @@
 ---@field commit_popup? string
 ---@field diff_file? string
 ---@field edit_file? string
----@field enter_staging_area? string
 ---@field pull? string
 ---@field push? string
 ---@field restore? string

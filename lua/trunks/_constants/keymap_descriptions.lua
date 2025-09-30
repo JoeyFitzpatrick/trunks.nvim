@@ -103,7 +103,6 @@ M.long_descriptions = {
         commit_popup = "Open git commit options",
         diff_file = "Diff file",
         edit_file = "Edit file",
-        enter_staging_area = "Enter staging area (stage hunks/lines)",
         pull = PULL_DESCRIPTION,
         push = PUSH_DESCRIPTION,
         restore = "Open git restore options, or restore visually selected lines",

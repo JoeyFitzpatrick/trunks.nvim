@@ -205,10 +205,6 @@ function M.set_keymaps(bufnr, opts)
         vim.api.nvim_exec2("e " .. line_data.filename, {})
     end, keymap_opts)
 
-    set("n", keymaps.enter_staging_area, function()
-        vim.cmd("G difftool")
-    end, keymap_opts)
-
     set("n", keymaps.restore, function()
         -- We need to pass in line_num, otherwise it uses cursor position from popup
         local line_num = vim.api.nvim_win_get_cursor(0)[1]

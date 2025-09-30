@@ -145,7 +145,6 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     commit_popup = "c",
                     diff_file = "D",
                     edit_file = "<enter>", -- Close status UI and navigate to file under cursor
-                    enter_staging_area = "<leader>s", -- In staging area you can (un)stage hunks or lines
                     pull = "p",
                     push = "<leader>p",
                     restore = "d", -- Display a popup with options for `git restore`
@@ -221,16 +220,8 @@ Note that for any command that brings up a UI:
 * You can view keymaps by pressing `g?`
 
 Using the `:G` command renders a home ui, that will display some status info. This includes the git status of all changed files,
-a diff split to display these changes, and some keymaps to manipulate these files, such as staging/unstaging them.
+a diff split to display these changes, and some keymaps to manipulate these files.
 Use `h` and `l` to then display the UI for  `git branch`, `git log`, and `git stash`, all of which are further detailed below.
-
-### Staging Area
-By default, pressing `<leader>s` in the status tab of the home UI will open the staging area.
-This is the same as running `:G difftool` with no arguments. The main features here are seeing what changes are staged,
-what changes are unstaged, navigating between hunks, (un)staging visually selected lines, and (un)staging hunks.
-
-Note that you can select lines with either visual mode or linewise-visual mode, and use the "stage" keymap (`s` by default)
-to (un)stage selected lines. If you want to (un)stage single lines at a time, you can use `vs`, to visually select a line and immediately (un)stage it.
 
 ## Difftool
 Passing commit(s) to Trunks's `difftool` command, e.g. `:G difftool abc123` or `:G difftool abc123..def456`,

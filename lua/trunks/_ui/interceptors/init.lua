@@ -32,14 +32,6 @@ local cmd_ui_map = {
     reflog = function(command_builder)
         require("trunks._ui.interceptors.reflog").render(command_builder)
     end,
-    staging_area = function()
-        local bufnr = require("trunks._ui.interceptors.staging_area").render()
-        require("trunks._core.register").register_buffer(bufnr, {
-            render_fn = function()
-                require("trunks._ui.home_options.status").set_lines(bufnr, {})
-            end,
-        })
-    end,
 }
 
 -- Keeping these out of the UI map, so that commands like "stash list" don't render UI
@@ -123,9 +115,6 @@ function M.get_ui(command_builder)
         end
     end
 
-    if cmd:match("^difftool%s*$") then
-        return cmd_ui_map.staging_area
-    end
     if cmd:match("^stash%s*$") then
         return stash_render
     end

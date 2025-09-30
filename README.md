@@ -172,7 +172,6 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     commit_popup = "c",
                     diff_file = "D",
                     edit_file = "<enter>", -- Close status UI and navigate to file under cursor
-                    enter_staging_area = "<leader>s", -- In staging area you can (un)stage hunks or lines
                     pull = "p",
                     push = "<leader>p",
                     restore = "d", -- Display a popup with options for `git restore`
