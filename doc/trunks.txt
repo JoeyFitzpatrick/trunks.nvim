@@ -1,4 +1,4 @@
-*trunks.txt*        For Neovim >= 0.11.0        Last change: 2025 September 30
+*trunks.txt*         For Neovim >= 0.11.0         Last change: 2025 October 01
 
 ==============================================================================
 Table of Contents                                   *trunks-table-of-contents*
