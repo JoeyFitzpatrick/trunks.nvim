@@ -17,10 +17,9 @@ test_dependencies = {
     "nlua >= 0.2, < 1.0",
 }
 
--- Reference: https://github.com/luarocks/luarocks/wiki/test#test-types
+-- Reference: https://github.com/luarocks/luarocks/blob/main/docs/luarocks_test.md
 test = {
     type = "busted",
-    flags = { "--helper", "spec/minimal_init.lua" },
 }
 
 source = {

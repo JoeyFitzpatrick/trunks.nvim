@@ -3,7 +3,7 @@ local jobopts = { rpc = true, width = 80, height = 24 }
 
 describe("Tabs in home UI", function()
     vim.fn.system({ "mkdir", test_repo })
-    vim.fn.system({ "git", "init", test_repo })
+    vim.fn.system({ "git", "init", "-b", "main", test_repo })
     vim.api.nvim_set_current_dir(test_repo)
     local nvim = vim.fn.jobstart({ "nvim", "--embed", "--headless" }, jobopts)
 
@@ -14,7 +14,14 @@ describe("Tabs in home UI", function()
             vim.fn.system({ "rm", "-rf", test_repo })
         end)
 
+        -- Add plugin to runtime path
+        local plugin_path = vim.fn.fnamemodify(vim.fn.getcwd(), ":h")
+        vim.rpcrequest(nvim, "nvim_command", "set rtp+=" .. plugin_path)
+        vim.rpcrequest(nvim, "nvim_command", "runtime plugin/trunks.lua")
+
         vim.rpcrequest(nvim, "nvim_command", "!touch test.txt")
+        vim.fn.system("git config user.name 'Test User'")
+        vim.fn.system("git config user.email 'test@example.com'")
         vim.fn.system("git add test.txt")
         vim.fn.system("git commit -m 'initial commit' --no-verify")
         vim.rpcrequest(nvim, "nvim_command", "G")
