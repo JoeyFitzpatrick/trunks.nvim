@@ -1,7 +1,7 @@
 local M = {}
 
 -- Setup base commands
-local cmd_types = { "list-mainporcelain", "list-ancillarymanipulators", "list-ancillaryinterrogators" }
+local cmd_types = { "list-mainporcelain", "list-ancillarymanipulators", "list-ancillaryinterrogators", "alias" }
 M.commands = vim.fn.systemlist("git --list-cmds=" .. table.concat(cmd_types, ","))
 table.sort(M.commands)
 
