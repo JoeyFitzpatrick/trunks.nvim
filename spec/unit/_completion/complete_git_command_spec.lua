@@ -11,14 +11,14 @@ describe("complete_git_command", function()
         end
     end)
 
-    it("should display command options for regular commands", function()
-        local result = complete_git_command("commit ", "G commit ", "G")
-        assert.are.equal(true, vim.tbl_contains(result, "--no-verify"))
+    it("should display commands when first command isn't completed", function()
+        local result = complete_git_command("co", "co", "G")
+        assert.are.equal(true, vim.tbl_contains(result, "commit"))
     end)
 
     it("should display command options when arglead begins with '-' ", function()
         local result = complete_git_command("-", "G switch -", "G")
-        assert.are.equal(true, vim.tbl_contains(result, "--create"))
+        assert.are.equal(true, vim.tbl_contains(result, "--create="))
     end)
 
     it("should display branch completion for some commands", function()
