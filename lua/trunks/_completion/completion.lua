@@ -1,5 +1,10 @@
 local M = {}
 
+-- Setup base commands
+local cmd_types = { "list-mainporcelain", "list-ancillarymanipulators", "list-ancillaryinterrogators" }
+M.commands = vim.fn.systemlist("git --list-cmds=" .. table.concat(cmd_types, ","))
+table.sort(M.commands)
+
 ---@param cmdline string
 ---@return string | nil
 local function get_subcommand(cmdline)
@@ -75,7 +80,7 @@ M.complete_command = function(arglead, cmdline, command_type)
     end
     if space_count == 1 then
         if command_type == "G" then
-            return require("trunks._constants.porcelain_commands")
+            return M.commands
         elseif command_type == "Trunks" then
             return require("trunks._constants.trunks_command_options").commands
         end
@@ -133,7 +138,7 @@ M.complete_trunks_command = function(arglead, cmdline)
         space_count = space_count + 1
     end
     if space_count == 1 then
-        return require("trunks._constants.porcelain_commands")
+        return M.commands
     end
     if space_count > 1 then
         -- Check that we have a valid git subcommand
