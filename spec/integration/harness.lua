@@ -99,4 +99,28 @@ function M.get_commit(index)
     return { long_hash = most_recent_hash, short_hash = most_recent_hash:sub(1, 7), message = message }
 end
 
+--- Creates a child instance of nvim so that we can run Trunks inside it for integration tests.
+--- Handles some stuff like adding Trunks to the runtimpath, setting up git config options, etc.
+---@return integer, string -- The child nvim instance and name of the created repo
+function M.setup_child_nvim()
+    local test_repo = "test-repo"
+    local jobopts = { rpc = true, width = 80, height = 24 }
+
+    vim.fn.system({ "mkdir", test_repo })
+    vim.fn.system({ "git", "init", "-b", "main", test_repo })
+    vim.api.nvim_set_current_dir(test_repo)
+    local nvim = vim.fn.jobstart({ "nvim", "--embed", "--headless" }, jobopts)
+
+    -- Add plugin to runtime path
+    local plugin_path = vim.fn.fnamemodify(vim.fn.getcwd(), ":h")
+    vim.rpcrequest(nvim, "nvim_command", "set rtp+=" .. plugin_path)
+    vim.rpcrequest(nvim, "nvim_command", "runtime plugin/trunks.lua")
+
+    -- We need a username and email, otherwise some commands (like git commit) will fail in CI,
+    -- because CI doesn't have those set up the way a local machine probably would.
+    vim.fn.system("git config user.name 'Test User'")
+    vim.fn.system("git config user.email 'test@example.com'")
+    return nvim, test_repo
+end
+
 return M
