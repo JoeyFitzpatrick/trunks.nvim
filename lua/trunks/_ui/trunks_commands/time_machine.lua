@@ -362,8 +362,17 @@ local function move_through_time_machine(bufnr, direction)
         vim.cmd("sleep 50m")
         time_machine_data = M.cache[filename][time_machine_index]
 
+        -- Out of bounds checks
         if not time_machine_data then
-            error("Unable to find commit for time-machine")
+            if direction == "previous" and time_machine_index > #M.cache[filename] then
+                vim.notify("Can't run time-machine-previous, already at earliest revision", vim.log.levels.INFO)
+                return
+            elseif direction == "next" and time_machine_index == 0 then
+                vim.notify("Can't run time-machine-next, already at most recent revision", vim.log.levels.INFO)
+                return
+            else
+                error("Unable to find commits for time-machine")
+            end
         end
     end
 
