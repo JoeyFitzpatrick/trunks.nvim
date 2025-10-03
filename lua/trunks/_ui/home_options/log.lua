@@ -214,19 +214,17 @@ local function set_keymaps(bufnr, get_line, opts)
     end, keymap_opts)
 
     set("n", keymaps.commit_drop, function()
-        require("trunks._core.async").run_async(function()
-            local ok, line_data = pcall(get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
-            if
-                require("trunks._ui.utils.confirm").confirm_choice(
-                    "Are you sure you want to drop commit " .. line_data.hash .. "?"
-                )
-            then
-                vim.cmd("Trunks commit-drop " .. line_data.hash)
-            end
-        end)
+        local ok, line_data = pcall(get_line, bufnr)
+        if not ok or not line_data then
+            return
+        end
+        if
+            require("trunks._ui.utils.confirm").confirm_choice(
+                "Are you sure you want to drop commit " .. line_data.hash .. "?"
+            )
+        then
+            vim.cmd("Trunks commit-drop " .. line_data.hash)
+        end
     end, keymap_opts)
 
     set("n", keymaps.rebase, function()

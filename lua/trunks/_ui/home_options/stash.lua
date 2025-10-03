@@ -67,19 +67,17 @@ local function set_keymaps(bufnr)
     end, keymap_opts)
 
     set("n", keymaps.drop, function()
-        require("trunks._core.async").run_async(function()
-            local ok, line_data = pcall(get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
-            if
-                require("trunks._ui.utils.confirm").confirm_choice(
-                    "Are you sure you want to drop " .. line_data.stash_index .. "?"
-                )
-            then
-                vim.cmd("G stash drop " .. line_data.stash_index)
-            end
-        end)
+        local ok, line_data = pcall(get_line, bufnr)
+        if not ok or not line_data then
+            return
+        end
+        if
+            require("trunks._ui.utils.confirm").confirm_choice(
+                "Are you sure you want to drop " .. line_data.stash_index .. "?"
+            )
+        then
+            vim.cmd("G stash drop " .. line_data.stash_index)
+        end
     end, keymap_opts)
 
     set("n", keymaps.pop, function()

@@ -1,7 +1,6 @@
 local M = {}
 
 local utils = require("trunks._ui.trunks_commands.utils")
-local async = require("trunks._core.async")
 local run_cmd = require("trunks._core.run_cmd").run_cmd
 
 ---@param hash string | nil
@@ -33,28 +32,26 @@ end
 
 ---@param hash string | nil
 function M.commit_instant_fixup(hash)
-    async.run_async(function()
-        if not require("trunks._core.git").is_anything_staged() then
-            local should_stage_all =
-                require("trunks._ui.utils.confirm").confirm_choice("No changes are staged. Stage all changes?")
-            if should_stage_all then
-                run_cmd("stage --all")
-            end
+    if not require("trunks._core.git").is_anything_staged() then
+        local should_stage_all =
+            require("trunks._ui.utils.confirm").confirm_choice("No changes are staged. Stage all changes?")
+        if should_stage_all then
+            run_cmd("stage --all")
         end
+    end
 
-        -- If after running stage --all, if there are still no staged changes
-        -- (maybe there were no changes to begin with), just return
-        if not require("trunks._core.git").is_anything_staged() then
-            return "Unable to fixup commit with no changes.", 1
-        end
+    -- If after running stage --all, if there are still no staged changes
+    -- (maybe there were no changes to begin with), just return
+    if not require("trunks._core.git").is_anything_staged() then
+        return "Unable to fixup commit with no changes.", 1
+    end
 
-        if not hash or not utils.validate_hash(hash) then
-            choose_instant_fixup_commit()
-            return
-        end
+    if not hash or not utils.validate_hash(hash) then
+        choose_instant_fixup_commit()
+        return
+    end
 
-        run_instant_fixup(hash)
-    end)
+    run_instant_fixup(hash)
 end
 
 return M
