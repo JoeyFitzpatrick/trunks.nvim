@@ -37,6 +37,7 @@ local function setup_git_file(bufnr, filename, commit, opts)
     if error_code ~= 0 then
         lines = { "" }
     end
+    vim.bo[bufnr].modifiable = true
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
     vim.bo[bufnr].modifiable = false
 
