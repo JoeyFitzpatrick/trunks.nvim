@@ -288,6 +288,9 @@ If you pass any options to the command, like `:G switch origin/some-branch --cre
 # Custom Commands
 Trunks provides some commands that are not valid git commands. Instead of the `:G` command, these custom commands are under the `:Trunks` command, and `:G` is reserved for valid git commands.
 
+### browse
+`:Trunks browse` opens a tab in your web browser at the remote URL of the current file. When used in visual mode, it opens the tab with the line numbers added, assuming the host in question supports this.
+
 ### commit-drop
 `:Trunks commit-drop {commit}` can be used to drop an arbitrary commit. Under the hood, it's an interactive rebase that drops the commit, so this is a destructive command that should be used with caution.
 

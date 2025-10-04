@@ -1,6 +1,7 @@
 local M = {}
 
 M.options = {
+    ["browse"] = {},
     ["commit-drop"] = {},
     ["commit-instant-fixup"] = {},
     ["diff-qf"] = {},

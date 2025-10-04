@@ -40,8 +40,11 @@ local function handle_output(ok_text, error_text, error_code)
     vim.notify(error_text, vim.log.levels.ERROR)
 end
 
----@type table<string, fun(cmd: string)>
+---@type table<string, fun(cmd: string, input_args?: vim.api.keyset.create_user_command.command_args)>
 local cmd_map = {
+    ["browse"] = function(cmd, input_args)
+        require("trunks._ui.trunks_commands.browse").browse(cmd, input_args)
+    end,
     ["commit-drop"] = function(cmd)
         local hash = vim.split(cmd, " ")[2]
         local output, exit_code = commit_drop(hash)
@@ -105,7 +108,7 @@ function M.run_trunks_cmd(input_args)
         vim.notify(require("trunks._core.texter").surround_with_quotes(trunks_command) .. " is not a Trunks command")
     end
 
-    trunks_command_fn(cmd)
+    trunks_command_fn(cmd, input_args)
 end
 
 return M
