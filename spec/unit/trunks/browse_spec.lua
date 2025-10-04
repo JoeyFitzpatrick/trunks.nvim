@@ -38,4 +38,28 @@ describe("Trunks browse URL generation", function()
         local result = browse._generate_url({ range = 0, line1 = 0, line2 = 0 })
         assert.is_nil(result)
     end)
+
+    it("generates a GitLab URL", function()
+        mock_generate_browse_params({
+            remote_url = "https://gitlab.com/username/repo-name",
+            filepath = "test.txt",
+            hash = "abc123",
+        })
+
+        local result = browse._generate_url({ range = 0, line1 = 0, line2 = 0 })
+        local expected = "https://gitlab.com/username/repo-name/-/blob/abc123/test.txt"
+        assert.are.equal(result, expected)
+    end)
+
+    it("generates a Bitbucket URL", function()
+        mock_generate_browse_params({
+            remote_url = "https://bitbucket.org/username/repo-name",
+            filepath = "test.txt",
+            hash = "abc123",
+        })
+
+        local result = browse._generate_url({ range = 0, line1 = 0, line2 = 0 })
+        local expected = "https://bitbucket.org/username/repo-name/src/abc123/test.txt"
+        assert.are.equal(result, expected)
+    end)
 end)

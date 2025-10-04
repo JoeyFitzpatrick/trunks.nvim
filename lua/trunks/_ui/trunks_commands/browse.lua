@@ -12,6 +12,10 @@ local M = {}
 -- setup adapters for common git sources
 -- github uses {remote}/blob/{hash}/{filepath}
 -- github also allows line numbers, with {remote}/blob/{hash}/{filepath}#L{integer}
+-- gitlab uses {remote}/-/blob/{hash}/{filepath}
+-- gitlab also allows line numbers, with {remote}/-/blob/{hash}/{filepath}#L{integer}
+-- bitbucket uses {remote}/src/{hash}/{filepath}
+-- bitbucket also allows line numbers, with {remote}/src/{hash}/{filepath}#{integer}
 
 ---@param params Trunks.BrowseParams
 ---@return string
@@ -22,6 +26,32 @@ function M._get_github_url(params)
     end
     if params.start_line then
         return url .. string.format("#L%d", params.start_line)
+    end
+    return url
+end
+
+---@param params Trunks.BrowseParams
+---@return string
+function M._get_gitlab_url(params)
+    local url = string.format("%s/-/blob/%s/%s", params.remote_url, params.hash, params.filepath)
+    if params.start_line and params.end_line and params.end_line > params.start_line then
+        return url .. string.format("#L%d-%d", params.start_line, params.end_line)
+    end
+    if params.start_line then
+        return url .. string.format("#L%d", params.start_line)
+    end
+    return url
+end
+
+---@param params Trunks.BrowseParams
+---@return string
+function M._get_bitbucket_url(params)
+    local url = string.format("%s/src/%s/%s", params.remote_url, params.hash, params.filepath)
+    if params.start_line and params.end_line and params.end_line > params.start_line then
+        return url .. string.format("#lines-%d:%d", params.start_line, params.end_line)
+    end
+    if params.start_line then
+        return url .. string.format("#lines-%d", params.start_line)
     end
     return url
 end
@@ -70,6 +100,10 @@ function M._generate_url(input_args)
     local url
     if params.remote_url:find("https://github.com", 1, true) then
         url = M._get_github_url(params)
+    elseif params.remote_url:find("https://gitlab.com", 1, true) then
+        url = M._get_gitlab_url(params)
+    elseif params.remote_url:find("https://bitbucket.org", 1, true) then
+        url = M._get_bitbucket_url(params)
     else
         vim.notify("Trunks: browse doesn't support " .. params.remote_url, vim.log.levels.ERROR)
     end
@@ -84,7 +118,9 @@ function M.browse(_, input_args)
     end
 
     local url = M._generate_url(input_args)
-    vim.print(url)
+    if url then
+        vim.ui.open(url)
+    end
 end
 
 return M
