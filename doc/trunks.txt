@@ -280,12 +280,16 @@ are further detailed below.
 
 DIFFTOOL                                    *trunks-special-commands-difftool*
 
-Passing commit(s) to Trunks’s `difftool` command, e.g. `:G difftool abc123`
-or `:G difftool abc123..def456`, will open a UI that allows for seeing the diff
-introduced by a commit, or the diff between two commits. Note that if a commit
-range is given, e.g. `abc123..def456`, using the open-file keymaps will use
-the latter commit. So in this example, using `oh` to open a file in a
-horizontal split would use commit `def456`.
+Trunks’s `difftool` command, e.g. `:G difftool abc123` or `:G difftool
+abc123..def456`, will open a UI that allows for seeing the diff introduced by a
+commit, or the diff between two commits. Note that if a commit range is given,
+e.g. `abc123..def456`, using the open-file keymaps will use the latter commit.
+So in this example, using `oh` to open a file in a horizontal split would use
+commit `def456`.
+
+When used without arguments, `difftool` uses `HEAD` as the commit to diff
+against, e.g. `:G difftool` is the same as `:G difftool HEAD`. This is useful
+for diffing the working tree against HEAD.
 
 
 BRANCH                                        *trunks-special-commands-branch*
