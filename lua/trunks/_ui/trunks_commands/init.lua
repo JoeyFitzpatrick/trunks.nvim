@@ -23,23 +23,6 @@ local function commit_drop(hash)
     return require("trunks._core.run_cmd").run_cmd(command_builder, { rerender = true })
 end
 
----@param ok_text string | nil
----@param error_text string[] | string
----@param error_code integer | nil
-local function handle_output(ok_text, error_text, error_code)
-    local is_ok = error_code == nil or error_code == 0
-    if is_ok then
-        if ok_text then
-            vim.notify(ok_text, vim.log.levels.INFO)
-        end
-        return
-    end
-    if type(error_text) == "table" then
-        error_text = table.concat(error_text, "\n")
-    end
-    vim.notify(error_text, vim.log.levels.ERROR)
-end
-
 ---@type table<string, fun(cmd: string, input_args?: vim.api.keyset.create_user_command.command_args)>
 local cmd_map = {
     ["browse"] = function(cmd, input_args)
@@ -50,15 +33,12 @@ local cmd_map = {
         local output, exit_code = commit_drop(hash)
         hash = hash:sub(1, utils.MIN_HASH_LENGTH)
         local error_text = output or ("Unable to commit drop " .. hash)
-        handle_output("Dropped commit " .. hash .. " and rebased.", error_text, exit_code)
+        utils.handle_output("Dropped commit " .. hash .. " and rebased.", error_text, exit_code)
     end,
 
     ["commit-instant-fixup"] = function(cmd)
         local hash = vim.split(cmd, " ")[2]
-        local output, exit_code = require("trunks._ui.trunks_commands.commit_instant_fixup").commit_instant_fixup(hash)
-        hash = hash:sub(1, utils.MIN_HASH_LENGTH)
-        local error_text = output or ("Unable to fixup commit " .. hash)
-        handle_output("Applied fixup to commit " .. hash .. " and rebased.", error_text, exit_code)
+        require("trunks._ui.trunks_commands.commit_instant_fixup").commit_instant_fixup(hash)
     end,
 
     ["diff-qf"] = function(cmd)
@@ -69,14 +49,14 @@ local cmd_map = {
         end
         local output, exit_code = require("trunks._ui.trunks_commands.diff_qf").render(commit)
         local error_text = output or ("Unable to display diff for " .. (commit or "unknown commit"))
-        handle_output(nil, error_text, exit_code)
+        utils.handle_output(nil, error_text, exit_code)
     end,
 
     ["time-machine"] = function(cmd)
         local filename = vim.split(cmd, " ")[2]
         local output, exit_code = require("trunks._ui.trunks_commands.time_machine").render(filename)
         local error_text = output or "Unable to run time-machine"
-        handle_output(nil, error_text, exit_code)
+        utils.handle_output(nil, error_text, exit_code)
     end,
 
     ["time-machine-next"] = function()
