@@ -224,9 +224,9 @@ a diff split to display these changes, and some keymaps to manipulate these file
 Use `h` and `l` to then display the UI for  `git branch`, `git log`, and `git stash`, all of which are further detailed below.
 
 ## Difftool
-Passing commit(s) to Trunks's `difftool` command, e.g. `:G difftool abc123` or `:G difftool abc123..def456`,
-will open a UI that allows for seeing the diff introduced by a commit, or the diff between two commits. Note that if a commit range is given, e.g. `abc123..def456`,
-using the open-file keymaps will use the latter commit. So in this example, using `oh` to open a file in a horizontal split would use commit `def456`.
+Trunks's `difftool` command, e.g. `:G difftool abc123` or `:G difftool abc123..def456`, will open a UI that allows for seeing the diff introduced by a commit, or the diff between two commits. Note that if a commit range is given, e.g. `abc123..def456`, using the open-file keymaps will use the latter commit. So in this example, using `oh` to open a file in a horizontal split would use commit `def456`.
+
+When used without arguments, `difftool` uses `HEAD` as the commit to diff against, e.g. `:G difftool` is the same as `:G difftool HEAD`. This is useful for diffing the working tree against HEAD.
 
 ## Branch
 `:G` commands that display a list of branches, such as `:G branch`, `:G branch --all`, `:G branch --merged`,
