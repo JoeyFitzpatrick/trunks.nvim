@@ -100,6 +100,9 @@ end
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
+    -- If there's already a buffer named TrunksStash, just don't set a name
+    pcall(vim.api.nvim_buf_set_name, bufnr, "TrunksStash")
+
     set_lines(bufnr, opts)
     require("trunks._ui.auto_display").create_auto_display(bufnr, "stash", {
         generate_cmd = function()

@@ -168,6 +168,7 @@ local function create_and_render_buffer(tab, indices)
 
     set("n", "q", function()
         require("trunks._core.register").deregister_buffer(bufnr)
+        vim.cmd("tabclose")
     end, { buffer = bufnr })
 
     set("n", keymaps.next, function()
@@ -186,6 +187,7 @@ local function create_and_render_buffer(tab, indices)
 end
 
 function M.open()
+    vim.cmd("tabnew")
     tabs:set_current(1) -- TODO: move this into on-close autocmd once we have that
     create_and_render_buffer(tabs.current_option, tabs.current_tab_indices)
 end

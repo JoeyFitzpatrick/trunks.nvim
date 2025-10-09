@@ -275,6 +275,9 @@ end
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
+    -- If there's already a buffer named TrunksLog, just don't set a name
+    pcall(vim.api.nvim_buf_set_name, bufnr, "TrunksLog")
+
     vim.api.nvim_set_option_value("wrap", false, { win = 0 })
     local set_lines_result = M.set_lines(bufnr, opts)
     if set_lines_result.use_native_keymaps then

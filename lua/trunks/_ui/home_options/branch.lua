@@ -267,6 +267,9 @@ end
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
+    -- If there's already a buffer named TrunksBranch, just don't set a name
+    pcall(vim.api.nvim_buf_set_name, bufnr, "TrunksBranch")
+
     set_lines(bufnr, opts)
     set_keymaps(bufnr, opts)
 end

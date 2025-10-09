@@ -372,6 +372,10 @@ function M.render(bufnr, opts)
     if not vim.api.nvim_buf_is_valid(bufnr) then
         return
     end
+
+    -- If there's already a buffer named TrunksStatus, just don't set a name
+    pcall(vim.api.nvim_buf_set_name, bufnr, "TrunksStatus")
+
     if not opts.start_line then
         opts.start_line = 1
     else
