@@ -144,9 +144,17 @@ local function create_and_render_buffer(tab, indices)
     local bufnr, win = require("trunks._ui.elements").new_buffer({})
     require("trunks._ui.utils.buffer_text").set(bufnr, tabs_text)
     local ui_render = tab_render_map[tab]
+    local set = require("trunks._ui.keymaps.set").safe_set_keymap
+
     require("trunks._core.register").register_buffer(bufnr, {
         render_fn = function()
             ui_render(bufnr, { start_line = TAB_HEIGHT, ui_types = { "home", string.lower(tab) } })
+
+            -- In home UI, we want "q" to close tabs, so we have to re-set this after rerender
+            set("n", "q", function()
+                require("trunks._core.register").deregister_buffer(bufnr)
+                vim.cmd("tabclose")
+            end, { buffer = bufnr })
         end,
     })
 
@@ -164,7 +172,6 @@ local function create_and_render_buffer(tab, indices)
     if not keymaps then
         return
     end
-    local set = require("trunks._ui.keymaps.set").safe_set_keymap
 
     set("n", "q", function()
         require("trunks._core.register").deregister_buffer(bufnr)
