@@ -9,14 +9,6 @@ local run_cmd = require("trunks._core.run_cmd")
 
 local M = {}
 
--- setup adapters for common git sources
--- github uses {remote}/blob/{hash}/{filepath}
--- github also allows line numbers, with {remote}/blob/{hash}/{filepath}#L{integer}
--- gitlab uses {remote}/-/blob/{hash}/{filepath}
--- gitlab also allows line numbers, with {remote}/-/blob/{hash}/{filepath}#L{integer}
--- bitbucket uses {remote}/src/{hash}/{filepath}
--- bitbucket also allows line numbers, with {remote}/src/{hash}/{filepath}#{integer}
-
 ---@param params Trunks.BrowseParams
 ---@return string
 function M._get_github_url(params)
@@ -58,7 +50,12 @@ end
 
 ---@return Trunks.BrowseParams, (string | nil) -- generated params or error
 function M._generate_browse_params()
-    local remote_url, remote_url_exit_code = run_cmd.run_cmd("config --get remote.origin.url")
+    local remote_url_lines, remote_url_exit_code = run_cmd.run_cmd("config --get remote.origin.url")
+    local remote_url = remote_url_lines[1]
+    if vim.endswith(remote_url, ".git") then
+        remote_url = remote_url:sub(1, #remote_url - 4)
+    end
+
     local hash, hash_exit_code = run_cmd.run_cmd("rev-parse HEAD")
     local filepath = vim.fn.fnamemodify(vim.fn.expand("%"), ":~:.")
 
@@ -75,7 +72,7 @@ function M._generate_browse_params()
     end
 
     return {
-        remote_url = remote_url[1],
+        remote_url = remote_url,
         hash = hash[1],
         filepath = filepath,
     }
