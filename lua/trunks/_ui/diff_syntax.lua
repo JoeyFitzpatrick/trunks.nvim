@@ -43,7 +43,8 @@ local function parse_diff_hunks(bufnr)
         local filename = extract_filename(line)
         if filename then
             current_filename = filename
-            current_filetype = vim.filetype.match({ filename = filename })
+            current_filetype = vim.filetype.match({ buf = 0, filename = filename })
+            vim.print(string.format("current filename: %s, filetype: %s", current_filename, current_filetype or "nil"))
         end
 
         -- Check if this is a hunk header (@@)
@@ -123,6 +124,19 @@ local function strip_diff_markers_from_buffer(bufnr)
     return line_types
 end
 
+---Get the treesitter language name for a filetype
+---@param filetype string
+---@return string
+local function get_ts_lang(filetype)
+    -- Map filetypes to their treesitter parser names
+    -- Some filetypes have different names than their parsers
+    local filetype_to_parser = {
+        typescriptreact = "tsx",
+        javascriptreact = "jsx",
+    }
+    return filetype_to_parser[filetype] or filetype
+end
+
 ---Apply treesitter highlighting to a diff hunk
 ---@param bufnr integer
 ---@param hunk trunks.DiffHunk
@@ -133,8 +147,9 @@ local function highlight_hunk(bufnr, hunk)
     end
 
     local code_text = table.concat(lines, "\n")
+    local ts_lang = get_ts_lang(hunk.filetype)
 
-    local ok, parser = pcall(vim.treesitter.get_string_parser, code_text, hunk.filetype)
+    local ok, parser = pcall(vim.treesitter.get_string_parser, code_text, ts_lang)
     if not ok or not parser then
         return
     end
@@ -149,7 +164,7 @@ local function highlight_hunk(bufnr, hunk)
         return
     end
 
-    local ok_query, query = pcall(vim.treesitter.query.get, hunk.filetype, "highlights")
+    local ok_query, query = pcall(vim.treesitter.query.get, ts_lang, "highlights")
     if not ok_query or not query then
         return
     end
@@ -165,7 +180,7 @@ local function highlight_hunk(bufnr, hunk)
         local buf_start_row = hunk.start_line + start_row
         local buf_end_row = hunk.start_line + end_row
 
-        local hl_group = "@" .. capture_name .. "." .. hunk.filetype
+        local hl_group = "@" .. capture_name .. "." .. ts_lang
 
         -- Apply highlight with priority higher than diff line backgrounds
         pcall(vim.api.nvim_buf_set_extmark, bufnr, ns, buf_start_row, start_col, {
