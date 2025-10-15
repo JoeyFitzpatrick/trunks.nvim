@@ -202,6 +202,12 @@ function M.set_keymaps(bufnr, opts)
         local current_buffer = vim.api.nvim_get_current_buf()
         -- Deregister current buffer so it doesn't hang around
         require("trunks._core.register").deregister_buffer(current_buffer)
+
+        -- Home UI opens in new tab. If we're in a separate tab, close it.
+        local num_tabs = #vim.api.nvim_list_tabpages()
+        if num_tabs > 1 then
+            vim.cmd("tabclose")
+        end
         vim.api.nvim_exec2("e " .. line_data.filename, {})
     end, keymap_opts)
 
