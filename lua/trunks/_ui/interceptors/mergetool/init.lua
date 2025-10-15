@@ -56,7 +56,8 @@ local function populate_and_open_quickfix()
 end
 
 local function get_local_conflict_lines()
-    local start_line = vim.fn.search("^<<<<<<< HEAD", "bcnW")
+    -- Search for conflict start marker (supports both regular merge and git stash)
+    local start_line = vim.fn.search("^<<<<<<< ", "bcnW")
     local end_line = vim.fn.search("^>>>>>>> ", "nW")
 
     if start_line == 0 or end_line == 0 then
@@ -79,7 +80,7 @@ local function replace_conflict(strategy)
         conflict_lines,
         strategy
     )
-    local start_line = vim.fn.search("^<<<<<<< HEAD", "bcnW")
+    local start_line = vim.fn.search("^<<<<<<< ", "bcnW")
     local end_line = vim.fn.search("^>>>>>>> ", "nW")
 
     vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, resolved_lines)

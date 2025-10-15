@@ -10,7 +10,7 @@ function M.resolve_merge_conflict(lines, strategy)
     local theirs_content = {}
 
     for _, line in ipairs(lines) do
-        if line:match("^<<<<<<< HEAD") then
+        if line:match("^<<<<<<< ") then
             section = "ours"
         elseif line:match("^||||||| ") then
             section = "base"
