@@ -58,7 +58,9 @@ function M._get_graph_line(bufnr, line_num)
     return { hash = hash }
 end
 
-local DEFAULT_LOG_FORMAT = "--pretty='format:%h %<(25)%cr %<(25)%an %<(25)%s'"
+-- The extra space after %an is to help the highlight regex.
+-- This way, there are always two spaces between the author name and commit message.
+local DEFAULT_LOG_FORMAT = "--pretty='format:%h %<(25)%cr %<(25)%an  %<(25)%s'"
 M.NATIVE_OUTPUT_OPTIONS = {
     "-p",
     "-L",
