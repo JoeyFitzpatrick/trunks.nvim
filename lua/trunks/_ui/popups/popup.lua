@@ -76,9 +76,10 @@ end
 
 ---@param opts trunks.RenderPopupOpts
 function M.render_popup(opts)
-    local bufnr = require("trunks._ui.elements").new_buffer({
+    local elements = require("trunks._ui.elements")
+    local bufnr = elements.new_buffer({
         buffer_name = opts.buffer_name,
-        win_config = { split = "below" },
+        hidden = true,
         lines = function(new_bufnr)
             if opts.ui_type then
                 return get_popup_lines(new_bufnr, opts.ui_type, opts.title)
@@ -88,6 +89,19 @@ function M.render_popup(opts)
             return {}
         end,
     })
+
+    local width = math.floor(vim.o.columns * 0.9)
+    local height = math.floor(vim.o.lines * 0.4)
+    local col = math.floor((vim.o.columns - width) / 2)
+    local row = vim.o.lines - height - 2
+    elements.float(bufnr, {
+        height = height,
+        width = width,
+        col = col,
+        row = row,
+        border = "solid",
+    })
+
     set_popup_settings()
     highlight(bufnr)
     set_keymaps(bufnr)
@@ -163,15 +177,6 @@ function M.set_popup_lines(bufnr, columns)
     table.insert(rows, 1, title_row)
     require("trunks._ui.utils.buffer_text").set(bufnr, rows)
     return rows
-end
-
----@param bufnr integer
----@param columns trunks.PopupColumn[]
-function M.render(bufnr, columns)
-    M.set_popup_lines(bufnr, columns)
-    set_popup_settings()
-    highlight(bufnr)
-    set_keymaps(bufnr)
 end
 
 return M

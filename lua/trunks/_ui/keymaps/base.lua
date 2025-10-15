@@ -108,7 +108,7 @@ local function display_keymap_help(mappings, ui_type, opts)
 end
 
 --- Get ui-specific keymaps, and set up keymap help float
----@param bufnr integer
+---@param bufnr integer | nil
 ---@param ui_type string
 ---@param opts trunks.GetKeymapsOpts
 ---@return table<string, string>
@@ -127,6 +127,11 @@ function M.get_keymaps(bufnr, ui_type, opts)
     end
     if opts.diff_keymaps then
         mappings = vim.tbl_extend("force", mappings, require("trunks._core.configuration").DATA["diff"].keymaps)
+    end
+
+    -- If all we need is the mappings and not to set keymaps, just return them here
+    if not bufnr then
+        return mappings
     end
 
     if not opts.popup then

@@ -2,7 +2,7 @@ local M = {}
 
 local popup = require("trunks._ui.popups.popup")
 
----@param bufnr integer
+---@param bufnr integer | nil
 ---@param ui_type string
 ---@return { basic: trunks.PopupMapping[], edit: trunks.PopupMapping[] }
 local function get_keymaps_with_descriptions(bufnr, ui_type)
@@ -46,15 +46,21 @@ end
 
 ---@return integer -- bufnr
 function M.render()
-    local bufnr = require("trunks._ui.elements").new_buffer({
-        buffer_name = "TrunksCommitPopup",
-        win_config = { split = "below" },
-    })
+    local maps = get_keymaps_with_descriptions(nil, "commit_popup")
 
-    local maps = get_keymaps_with_descriptions(bufnr, "commit_popup")
-    popup.render(bufnr, {
-        { title = "Commit", rows = maps.basic },
-        { title = "Edit", rows = maps.edit },
+    -- Flatten mappings for render_popup
+    local mappings = {}
+    for _, mapping in ipairs(maps.basic) do
+        table.insert(mappings, mapping)
+    end
+    for _, mapping in ipairs(maps.edit) do
+        table.insert(mappings, mapping)
+    end
+
+    local bufnr = popup.render_popup({
+        title = "Commit",
+        buffer_name = "TrunksCommitPopup",
+        mappings = mappings,
     })
     return bufnr
 end
