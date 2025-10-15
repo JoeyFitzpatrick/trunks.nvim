@@ -44,7 +44,6 @@ local function parse_diff_hunks(bufnr)
         if filename then
             current_filename = filename
             current_filetype = vim.filetype.match({ buf = 0, filename = filename })
-            vim.print(string.format("current filename: %s, filetype: %s", current_filename, current_filetype or "nil"))
         end
 
         -- Check if this is a hunk header (@@)
@@ -234,7 +233,6 @@ function M.apply_syntax(bufnr)
         return
     end
 
-    -- Strip diff markers and get line types
     local line_types = strip_diff_markers_from_buffer(bufnr)
 
     apply_diff_line_highlighting(bufnr, line_types)
