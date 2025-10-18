@@ -49,9 +49,7 @@ local function setup_git_file(bufnr, filename, commit, opts)
     vim.b[bufnr].original_filename = opts.original_filename or filename
     vim.b[bufnr].commit = commit
 
-    vim.keymap.set("n", "q", function()
-        require("trunks._core.register").deregister_buffer(bufnr)
-    end, { buffer = bufnr })
+    require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
 end
 
 ---@param filename string

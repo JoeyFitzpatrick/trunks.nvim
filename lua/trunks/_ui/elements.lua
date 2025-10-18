@@ -220,6 +220,7 @@ end
 ---@return integer, integer -- buffer id, window id
 function M.new_buffer(opts)
     local bufnr = vim.api.nvim_create_buf(false, true)
+    require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
     local win
 
     if opts.win_config then
@@ -256,10 +257,6 @@ function M.new_buffer(opts)
 
     local register = require("trunks._core.register")
     register.register_buffer(bufnr, { win = win })
-
-    vim.keymap.set("n", "q", function()
-        register.deregister_buffer(bufnr)
-    end, { buffer = bufnr })
 
     return bufnr, win
 end

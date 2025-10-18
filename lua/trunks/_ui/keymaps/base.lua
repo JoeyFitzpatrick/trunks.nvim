@@ -142,24 +142,9 @@ function M.get_keymaps(bufnr, ui_type, opts)
         end, { buffer = bufnr })
     end
 
-    vim.keymap.set("n", "q", function()
-        register.deregister_buffer(bufnr)
-    end, { buffer = bufnr })
+    require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
 
     return mappings
-end
-
---- We often need specific "q" functionality, so here's a simple helper.
----@param bufnr integer
----@param other_bufnrs integer[]
----@param opts trunks.DeregisterOpts
-function M.set_q_keymap(bufnr, other_bufnrs, opts)
-    vim.keymap.set("n", "q", function()
-        register.deregister_buffer(bufnr, opts)
-        for _, other_bufnr in ipairs(other_bufnrs) do
-            register.deregister_buffer(other_bufnr, opts)
-        end
-    end, { desc = "Close current Trunks buffer", buffer = bufnr })
 end
 
 ---@param bufnr integer

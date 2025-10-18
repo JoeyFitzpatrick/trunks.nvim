@@ -149,12 +149,6 @@ local function create_and_render_buffer(tab, indices)
     require("trunks._core.register").register_buffer(bufnr, {
         render_fn = function()
             ui_render(bufnr, { start_line = TAB_HEIGHT, ui_types = { "home", string.lower(tab) } })
-
-            -- In home UI, we want "q" to close tabs, so we have to re-set this after rerender
-            set("n", "q", function()
-                require("trunks._core.register").deregister_buffer(bufnr)
-                vim.cmd("tabclose")
-            end, { buffer = bufnr })
         end,
     })
 
@@ -173,11 +167,6 @@ local function create_and_render_buffer(tab, indices)
         return
     end
 
-    set("n", "q", function()
-        require("trunks._core.register").deregister_buffer(bufnr)
-        vim.cmd("tabclose")
-    end, { buffer = bufnr })
-
     set("n", keymaps.next, function()
         local old_bufnr = bufnr
         require("trunks._core.register").deregister_buffer(old_bufnr)
@@ -195,6 +184,7 @@ end
 
 function M.open()
     vim.cmd("tabnew")
+    vim.t.trunks_should_close_tab_on_buf_close = true
     tabs:set_current(1) -- TODO: move this into on-close autocmd once we have that
     create_and_render_buffer(tabs.current_option, tabs.current_tab_indices)
 end

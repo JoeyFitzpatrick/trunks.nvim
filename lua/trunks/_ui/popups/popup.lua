@@ -68,12 +68,6 @@ local function set_popup_settings()
     vim.wo.relativenumber = false
 end
 
-local function set_keymaps(bufnr)
-    vim.keymap.set("n", "q", function()
-        require("trunks._core.register").deregister_buffer(bufnr)
-    end, { buffer = bufnr, noremap = true, nowait = true })
-end
-
 ---@param opts trunks.RenderPopupOpts
 function M.render_popup(opts)
     local elements = require("trunks._ui.elements")
@@ -104,7 +98,6 @@ function M.render_popup(opts)
 
     set_popup_settings()
     highlight(bufnr)
-    set_keymaps(bufnr)
     return bufnr
 end
 

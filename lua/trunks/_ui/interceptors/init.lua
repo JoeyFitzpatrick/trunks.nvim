@@ -15,9 +15,8 @@ local cmd_ui_map = {
         -- Setting the filetype to man add nice highlighting.
         -- It also makes the "q" keymap exit neovim if this is the last buffer, so we need to set it again
         vim.bo["filetype"] = "man"
-        vim.keymap.set("n", "q", function()
-            require("trunks._core.register").deregister_buffer(0)
-        end, { buffer = 0 })
+
+        require("trunks._ui.keymaps.set").set_q_keymap(0)
     end,
     log = function(command_builder)
         local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = os.tmpname() .. "/TrunksLog" })
@@ -90,9 +89,7 @@ local function branch_interceptor(command_builder)
                 { command_builder = branch_command_builder, ui_types = { "branch" } }
             )
             -- By default branch UI "q" map will go back to last buffer, but in a split we just want to close it
-            require("trunks._ui.keymaps.set").safe_set_keymap("n", "q", function()
-                require("trunks._core.register").deregister_buffer(bufnr)
-            end, { buffer = bufnr })
+            require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
         end
     end
     return nil

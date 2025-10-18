@@ -14,4 +14,10 @@ function M.safe_set_keymap(mode, lhs, rhs, opts)
     vim.keymap.set(mode, lhs, rhs, opts)
 end
 
+function M.set_q_keymap(bufnr)
+    vim.keymap.set("n", "q", function()
+        require("trunks._core.register").deregister_buffer(bufnr, { close_tab = true })
+    end, { buffer = bufnr })
+end
+
 return M

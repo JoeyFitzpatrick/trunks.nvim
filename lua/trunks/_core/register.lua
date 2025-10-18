@@ -11,6 +11,8 @@
 ---@class trunks.DeregisterOpts
 ---@field delete_win_buffers? boolean
 ---@field unload? boolean
+---@field close_tab? boolean
+---@field force_close_tab? boolean
 
 local M = {}
 
@@ -66,6 +68,7 @@ function M.deregister_buffer(bufnr, opts)
     M.buffers[bufnr] = nil
     if vim.api.nvim_buf_is_valid(bufnr) then
         navigate_to_last_non_trunks_buffer(bufnr)
+
         if opts.delete_win_buffers ~= false then
             delete_trunks_buffers_for_win(vim.api.nvim_get_current_win())
         end
@@ -74,6 +77,16 @@ function M.deregister_buffer(bufnr, opts)
             vim.api.nvim_buf_delete(bufnr, { unload = true })
         else
             vim.api.nvim_buf_delete(bufnr, { force = true })
+        end
+
+        local should_force_close_tab = opts.force_close_tab or #vim.api.nvim_tabpage_list_wins(0) <= 1
+        local is_trunks_tab = vim.t.trunks_should_close_tab_on_buf_close
+        local num_tabs = #vim.api.nvim_list_tabpages()
+
+        if opts.close_tab and is_trunks_tab and should_force_close_tab and num_tabs > 1 then
+            vim.cmd("tabclose")
+        else
+            vim.print(opts.close_tab, vim.t.trunks_should_close_tab_on_buf_close, #vim.api.nvim_tabpage_list_wins(0))
         end
     end
 end
