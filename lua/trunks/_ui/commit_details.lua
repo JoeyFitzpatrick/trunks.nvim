@@ -113,7 +113,7 @@ local function set_keymaps(bufnr, commit)
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
 
     set("n", "q", function()
-        require("trunks._core.register").deregister_buffer(bufnr, { close_tab = true, force_close_tab = true })
+        require("trunks._core.register").deregister_buffer(bufnr, { close_tab = true })
     end, { buffer = bufnr })
 
     set("n", keymaps.open_in_current_window, function()

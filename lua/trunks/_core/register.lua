@@ -12,7 +12,6 @@
 ---@field delete_win_buffers? boolean
 ---@field unload? boolean
 ---@field close_tab? boolean
----@field force_close_tab? boolean
 
 local M = {}
 
@@ -79,14 +78,22 @@ function M.deregister_buffer(bufnr, opts)
             vim.api.nvim_buf_delete(bufnr, { force = true })
         end
 
-        local should_force_close_tab = opts.force_close_tab or #vim.api.nvim_tabpage_list_wins(0) <= 1
+        local buffers_for_tab = vim.fn.tabpagebuflist()
+        local non_normal_buffer_types = { "nofile", "terminal" }
+        local normal_buffers = vim.tbl_filter(function(buf)
+            return not vim.tbl_contains(non_normal_buffer_types, vim.bo[buf].buftype)
+        end, buffers_for_tab)
+
+        local on_last_buffer = #normal_buffers <= 1
         local is_trunks_tab = vim.t.trunks_should_close_tab_on_buf_close
         local num_tabs = #vim.api.nvim_list_tabpages()
 
-        if opts.close_tab and is_trunks_tab and should_force_close_tab and num_tabs > 1 then
+        if opts.close_tab and is_trunks_tab and on_last_buffer and num_tabs > 1 then
             vim.cmd("tabclose")
         else
-            vim.print(opts.close_tab, vim.t.trunks_should_close_tab_on_buf_close, #vim.api.nvim_tabpage_list_wins(0))
+            for _, buf in ipairs(normal_buffers) do
+                vim.print(vim.bo[buf].buftype)
+            end
         end
     end
 end
