@@ -102,25 +102,45 @@ local function get_line_info(line)
     end
 end
 
----Remove diff markers from buffer and track line types
+---Transform function for streaming: strips diff markers from each line
+---@param line string
+---@return string
+function M.transform_line(line)
+    local _, content = get_line_info(line)
+    return content
+end
+
+---Highlight function for streaming: applies diff line backgrounds as lines come in
 ---@param bufnr integer
----@return table<integer, "added"|"removed"|"context"|"other"> -- Map of line_idx to line type
-local function strip_diff_markers_from_buffer(bufnr)
-    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    local new_lines = {}
-    local line_types = {}
+---@param line string The original line (before transform)
+---@param line_num integer 0-indexed line number
+function M.highlight_line(bufnr, line, line_num)
+    local line_type = get_line_info(line)
+    local ns = vim.api.nvim_create_namespace("trunks_diff_lines")
 
-    for i, line in ipairs(lines) do
-        local line_type, content = get_line_info(line)
-        table.insert(new_lines, content)
-        line_types[i - 1] = line_type -- Store as 0-indexed
+    -- Get the actual line content after transformation to calculate length
+    local actual_line = vim.api.nvim_buf_get_lines(bufnr, line_num, line_num + 1, false)[1] or ""
+
+    if line_type == "added" then
+        pcall(vim.api.nvim_buf_set_extmark, bufnr, ns, line_num, 0, {
+            end_col = #actual_line,
+            hl_group = "DiffAdd",
+            priority = 100,
+        })
+    elseif line_type == "removed" then
+        pcall(vim.api.nvim_buf_set_extmark, bufnr, ns, line_num, 0, {
+            end_col = #actual_line,
+            hl_group = "DiffDelete",
+            priority = 100,
+        })
+    elseif line:match("^@@") then
+        -- Hunk header
+        pcall(vim.api.nvim_buf_set_extmark, bufnr, ns, line_num, 0, {
+            end_col = #actual_line,
+            hl_group = "DiffChange",
+            priority = 150,
+        })
     end
-
-    vim.bo[bufnr].modifiable = true
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
-    vim.bo[bufnr].modifiable = false
-
-    return line_types
 end
 
 ---Get the treesitter language name for a filetype
@@ -191,51 +211,14 @@ local function highlight_hunk(bufnr, hunk)
     end
 end
 
----Apply diff line background highlighting
+---Apply treesitter syntax highlighting to diff hunks (called on stream exit)
+---This should be called after lines have been streamed and diff line highlighting applied
 ---@param bufnr integer
----@param line_types table<integer, "added"|"removed"|"context"|"other">
-local function apply_diff_line_highlighting(bufnr, line_types)
-    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    local ns = vim.api.nvim_create_namespace("trunks_diff_lines")
-
-    for i, line in ipairs(lines) do
-        local line_idx = i - 1
-        local line_type = line_types[line_idx]
-
-        if line_type == "added" then
-            -- Green background for added lines
-            pcall(vim.api.nvim_buf_set_extmark, bufnr, ns, line_idx, 0, {
-                end_col = #line,
-                hl_group = "DiffAdd",
-                priority = 100,
-            })
-        elseif line_type == "removed" then
-            -- Red background for removed lines
-            pcall(vim.api.nvim_buf_set_extmark, bufnr, ns, line_idx, 0, {
-                end_col = #line,
-                hl_group = "DiffDelete",
-                priority = 100,
-            })
-        elseif line:match("^@@") then
-            -- Hunk header - highlight this
-            pcall(vim.api.nvim_buf_set_extmark, bufnr, ns, line_idx, 0, {
-                end_col = #line,
-                hl_group = "DiffChange",
-                priority = 150, -- Highest priority
-            })
-        end
-    end
-end
-
----@param bufnr integer
-function M.apply_syntax(bufnr)
+function M.apply_treesitter_syntax(bufnr)
     if not vim.api.nvim_buf_is_valid(bufnr) then
         return
     end
 
-    local line_types = strip_diff_markers_from_buffer(bufnr)
-
-    apply_diff_line_highlighting(bufnr, line_types)
     local hunks = parse_diff_hunks(bufnr)
 
     for _, hunk in ipairs(hunks) do

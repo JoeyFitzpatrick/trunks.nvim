@@ -34,13 +34,16 @@ function M.stream_lines(bufnr, cmd, opts)
 
         vim.bo[bufnr].modifiable = true
         local lines_to_add = {}
+        local original_lines = {} -- Store original lines for highlighting
 
         for _, line in ipairs(line_buffer) do
+            local transformed_line = line
             if opts.transform_line then
-                line = opts.transform_line(line)
+                transformed_line = opts.transform_line(line)
             end
-            if not (opts.filter_empty_lines and line == "") then
-                table.insert(lines_to_add, line)
+            if not (opts.filter_empty_lines and transformed_line == "") then
+                table.insert(lines_to_add, transformed_line)
+                table.insert(original_lines, line) -- Keep original for highlight_line
             end
         end
 
@@ -48,8 +51,9 @@ function M.stream_lines(bufnr, cmd, opts)
             vim.api.nvim_buf_set_lines(bufnr, line_num, line_num + #lines_to_add, false, lines_to_add)
 
             if opts.highlight_line then
-                for i, line in ipairs(lines_to_add) do
-                    pcall(opts.highlight_line, bufnr, line, line_num + i - 1)
+                for i, orig_line in ipairs(original_lines) do
+                    -- Pass the original line (before transform) to highlight_line
+                    pcall(opts.highlight_line, bufnr, orig_line, line_num + i - 1)
                 end
             end
 
