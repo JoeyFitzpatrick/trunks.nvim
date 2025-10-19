@@ -65,36 +65,32 @@ function M.deregister_buffer(bufnr, opts)
     end
     opts = opts or {}
     M.buffers[bufnr] = nil
-    if vim.api.nvim_buf_is_valid(bufnr) then
-        navigate_to_last_non_trunks_buffer(bufnr)
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+        return
+    end
 
-        if opts.delete_win_buffers ~= false then
-            delete_trunks_buffers_for_win(vim.api.nvim_get_current_win())
-        end
-        if opts.unload then
-            vim.bo[bufnr].buflisted = false
-            vim.api.nvim_buf_delete(bufnr, { unload = true })
-        else
-            vim.api.nvim_buf_delete(bufnr, { force = true })
-        end
+    navigate_to_last_non_trunks_buffer(bufnr)
 
-        local buffers_for_tab = vim.fn.tabpagebuflist()
-        local non_normal_buffer_types = { "nofile", "terminal" }
-        local normal_buffers = vim.tbl_filter(function(buf)
-            return not vim.tbl_contains(non_normal_buffer_types, vim.bo[buf].buftype)
-        end, buffers_for_tab)
+    local visible_windows = vim.tbl_filter(function(win)
+        return not vim.api.nvim_win_get_config(win).hide
+    end, vim.api.nvim_tabpage_list_wins(0))
 
-        local on_last_buffer = #normal_buffers <= 1
-        local is_trunks_tab = vim.t.trunks_should_close_tab_on_buf_close
-        local num_tabs = #vim.api.nvim_list_tabpages()
+    local on_last_window = #visible_windows <= 1
+    local is_trunks_tab = vim.t.trunks_should_close_tab_on_buf_close
+    local num_tabs = #vim.api.nvim_list_tabpages()
 
-        if opts.close_tab and is_trunks_tab and on_last_buffer and num_tabs > 1 then
-            vim.cmd("tabclose")
-        else
-            for _, buf in ipairs(normal_buffers) do
-                vim.print(vim.bo[buf].buftype)
-            end
-        end
+    if opts.close_tab and is_trunks_tab and on_last_window and num_tabs > 1 then
+        vim.cmd("tabclose")
+    end
+
+    if opts.delete_win_buffers ~= false then
+        delete_trunks_buffers_for_win(vim.api.nvim_get_current_win())
+    end
+    if opts.unload then
+        vim.bo[bufnr].buflisted = false
+        vim.api.nvim_buf_delete(bufnr, { unload = true })
+    else
+        vim.api.nvim_buf_delete(bufnr, { force = true })
     end
 end
 
