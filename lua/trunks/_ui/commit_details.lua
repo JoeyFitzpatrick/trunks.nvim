@@ -116,6 +116,25 @@ local function set_keymaps(bufnr, commit)
         require("trunks._core.register").deregister_buffer(bufnr, { close_tab = true })
     end, { buffer = bufnr })
 
+    set("n", keymaps.restore_file, function()
+        local ok, line_data = pcall(M.get_line, bufnr)
+        if not ok or not line_data then
+            return
+        end
+        local output, exit_code =
+            require("trunks._core.run_cmd").run_cmd(string.format("restore -s %s %s", commit, line_data.safe_filename))
+        if exit_code == 0 then
+            vim.notify(string.format("Restored %s from %s", line_data.filename, commit), vim.log.levels.INFO)
+        else
+            vim.notify(
+                string.format(
+                    output[1] or string.format("Unable to restore %s from %s", line_data.filename, commit),
+                    vim.log.levels.ERROR
+                )
+            )
+        end
+    end, { buffer = bufnr })
+
     set("n", keymaps.open_in_current_window, function()
         local ok, line_data = pcall(M.get_line, bufnr)
         if not ok or not line_data then

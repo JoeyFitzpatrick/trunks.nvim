@@ -44,6 +44,7 @@ return {
     commit_details = {
         auto_display_on = true,
         keymaps = {
+            restore_file = "R",
             show_all_changes = "<enter>",
         },
     },

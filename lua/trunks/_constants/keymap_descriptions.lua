@@ -37,6 +37,7 @@ M.long_descriptions = {
     },
     ---@type trunks.CommitDetailsKeymaps
     commit_details = {
+        restore_file = "Restore file at this commit",
         show_all_changes = "Show all changes from this commit in a single buffer",
     },
     ---@type trunks.CommitPopupKeymaps
