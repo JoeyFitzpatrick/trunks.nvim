@@ -164,6 +164,12 @@ able to lazy load it however you normally lazy load plugins.
                         show = "s",
                     },
                 },
+                restore_popup = {
+                    keymaps = {
+                        restore_from_commit = "c", -- Restore file from the given commit
+                        restore_from_commit_before = "b", -- Restore file from commit before given commit
+                    },
+                },
                 stash = {
                     auto_display_on = true,
                     keymaps = {
