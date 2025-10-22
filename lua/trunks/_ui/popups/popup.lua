@@ -12,6 +12,7 @@
 ---@field title string
 ---@field buffer_name string
 ---@field mappings? trunks.PopupMapping[]
+---@field columns? trunks.PopupColumn[]
 
 local M = {}
 
@@ -79,6 +80,8 @@ function M.render_popup(opts)
                 return get_popup_lines(new_bufnr, opts.ui_type, opts.title)
             elseif opts.mappings then
                 return get_popup_lines(new_bufnr, opts.mappings, opts.title)
+            elseif opts.columns then
+                return M.set_popup_lines(new_bufnr, opts.columns)
             end
             return {}
         end,

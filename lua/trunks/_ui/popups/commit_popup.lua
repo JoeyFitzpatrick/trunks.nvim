@@ -58,9 +58,11 @@ function M.render()
     end
 
     local bufnr = popup.render_popup({
-        title = "Commit",
         buffer_name = "TrunksCommitPopup",
-        mappings = mappings,
+        columns = {
+            { title = "Commit", rows = maps.basic },
+            { title = "Trunks commands", rows = maps.edit },
+        },
     })
     return bufnr
 end

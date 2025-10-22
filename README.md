@@ -92,7 +92,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
             commit_details = {
                 auto_display_on = true,
                 keymaps = {
-                    restore_file = "C",
+                    restore_file = "R",
                     show_all_changes = "<enter>",
                 },
             },
