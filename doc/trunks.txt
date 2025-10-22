@@ -104,7 +104,7 @@ able to lazy load it however you normally lazy load plugins.
                 commit_details = {
                     auto_display_on = true,
                     keymaps = {
-                        restore_file = "R",
+                        restore_popup = "R",
                         show_all_changes = "<enter>",
                     },
                 },

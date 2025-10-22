@@ -44,7 +44,7 @@ return {
     commit_details = {
         auto_display_on = true,
         keymaps = {
-            restore_file = "R",
+            restore_popup = "R",
             show_all_changes = "<enter>",
         },
     },
@@ -102,6 +102,12 @@ return {
             commit_details = "<enter>",
             recover = "r",
             show = "s",
+        },
+    },
+    restore_popup = {
+        keymaps = {
+            restore_from_commit = "c", -- Restore file from the given commit
+            restore_from_commit_before = "b", -- Restore file from commit before given commit
         },
     },
     stash = {

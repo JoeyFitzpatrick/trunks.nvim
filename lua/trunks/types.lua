@@ -19,6 +19,7 @@
 ---@field log? trunks.LogConfiguration
 ---@field open_files? trunks.OpenFilesConfiguration
 ---@field reflog? trunks.ReflogConfiguration
+---@field restore_popup? trunks.RestorePopupConfiguration
 ---@field stash? trunks.StashConfiguration
 ---@field stash_popup? trunks.StashPopupConfiguration
 ---@field status? trunks.StatusConfiguration
@@ -109,7 +110,7 @@
 ---@field switch? string
 
 ---@class trunks.CommitDetailsKeymaps
----@field restore_file? string
+---@field restore_popup? string
 ---@field show_all_changes? string
 
 ---@class trunks.CommitPopupKeymaps
@@ -154,6 +155,13 @@
 ---@field commit_details? string
 ---@field recover? string
 ---@field show? string
+
+---@class trunks.RestorePopupConfiguration
+---@field keymaps? trunks.RestorePopupKeymaps
+
+---@class trunks.RestorePopupKeymaps
+---@field restore_from_commit? string
+---@field restore_from_commit_before? string
 
 ---@class trunks.StashKeymaps
 ---@field apply? string

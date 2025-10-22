@@ -37,7 +37,7 @@ M.long_descriptions = {
     },
     ---@type trunks.CommitDetailsKeymaps
     commit_details = {
-        restore_file = "Restore file at this commit",
+        restore_popup = "Restore file at this commit",
         show_all_changes = "Show all changes from this commit in a single buffer",
     },
     ---@type trunks.CommitPopupKeymaps
@@ -86,6 +86,11 @@ M.long_descriptions = {
         commit_details = "Show commit in Trunks commit details UI",
         recover = "Recover this commit by making a branch from it",
         show = "Show commit details (native diff)",
+    },
+    ---@type trunks.RestorePopupKeymaps
+    restore_popup = {
+        restore_from_commit = "Restore file from this commit",
+        restore_from_commit_before = "Restore file from commit before this one",
     },
     ---@type trunks.StashKeymaps
     stash = {
