@@ -37,6 +37,7 @@ M.run_cmd = function(cmd, opts)
     exit_code = vim.v.shell_error
     if opts.rerender then
         require("trunks._core.register").rerender_buffers()
+        vim.cmd.checktime()
     end
     return output, exit_code
 end
@@ -78,6 +79,7 @@ M.run_hidden_cmd = function(cmd, opts)
     end
     if opts.rerender then
         require("trunks._core.register").rerender_buffers()
+        vim.cmd.checktime()
     end
     return "success", error_code
 end

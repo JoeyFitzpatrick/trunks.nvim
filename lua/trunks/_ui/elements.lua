@@ -154,6 +154,19 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
     return channel_id
 end
 
+---@param bufnr integer
+---@param strategy trunks.Strategy
+local function set_terminal_autocmds(bufnr, strategy)
+    if strategy.trigger_redraw then
+        local augroup = vim.api.nvim_create_augroup("TrunksTerminalReloadBuffers", { clear = true })
+        vim.api.nvim_create_autocmd({ "BufLeave" }, {
+            buffer = bufnr,
+            group = augroup,
+            command = "checktime",
+        })
+    end
+end
+
 ---@param cmd string
 ---@param strategy? trunks.Strategy
 ---@return integer, integer -- terminal channel id, buffer id
@@ -163,10 +176,12 @@ function M.terminal(cmd, strategy)
     -- Buffer local variable that makes any editors opened from this terminal,
     -- such as the commit editor, use the current nvim instance instead of a nested one.
     vim.b[bufnr].trunks_use_nested_nvim = true
+
     local base_cmd = split_cmd[2]
     local base_strategy = require("trunks._constants.command_strategies").default
     local derived_strategy = require("trunks._constants.command_strategies")[base_cmd] or {}
     strategy = vim.tbl_extend("force", base_strategy, derived_strategy, strategy or {})
+
     local channel_id = open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
     local should_enter_insert = parse_bool_or_function(split_cmd, strategy.insert)
     if should_enter_insert then
@@ -175,6 +190,7 @@ function M.terminal(cmd, strategy)
         vim.cmd("stopinsert")
     end
     require("trunks._ui.keymaps.base").set_keymaps(bufnr, { terminal_channel_id = channel_id })
+    set_terminal_autocmds(bufnr, strategy)
     return channel_id, bufnr
 end
 
