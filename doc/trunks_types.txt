@@ -30,7 +30,6 @@ Fields ~
 *trunks.BlameConfiguration*
 
 Fields ~
-    {default_cmd_args} `(optional)` `(string[])`
     {keymaps} `(optional)` `(trunks.BlameKeymaps)`
 
 ------------------------------------------------------------------------------

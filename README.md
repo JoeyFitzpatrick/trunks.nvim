@@ -67,7 +67,6 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                 },
             },
             blame = {
-                default_cmd_args = { " --date=format-local:'%Y/%m/%d %I:%M %p'" },
                 keymaps = {
                     checkout = "c",
                     commit_details = "<enter>",

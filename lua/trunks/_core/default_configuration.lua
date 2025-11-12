@@ -19,7 +19,6 @@ return {
         },
     },
     blame = {
-        default_cmd_args = { " --date=format-local:'%Y/%m/%d %I:%M %p'" },
         keymaps = {
             checkout = "c",
             commit_details = "<enter>",

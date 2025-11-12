@@ -27,7 +27,6 @@
 ---@field time_machine_file? trunks.TimeMachineFileConfiguration
 
 ---@class trunks.BlameConfiguration
----@field default_cmd_args? string[]
 ---@field keymaps? trunks.BlameKeymaps
 
 ---@class trunks.HomeConfiguration

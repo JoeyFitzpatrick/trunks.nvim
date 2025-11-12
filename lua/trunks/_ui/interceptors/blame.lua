@@ -1,3 +1,4 @@
+local run_cmd = require("trunks._core.run_cmd")
 local M = {}
 
 local FILENAME_PREFIX = require("trunks._constants.constants").FILENAME_PREFIX
@@ -70,13 +71,13 @@ local function set_keymaps(bufnr, filename)
         require("trunks._ui.elements").new_buffer({
             filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 }),
             lines = function()
-                local output =
-                    require("trunks._core.run_cmd").run_cmd(string.format("show %s:%s", line_data.hash, filepath))
+                local output = run_cmd.run_cmd(string.format("show %s:%s", line_data.hash, filepath))
                 return output
             end,
             buffer_name = os.tmpname() .. "/" .. FILENAME_PREFIX .. filepath,
         })
-        vim.cmd(string.format("G blame %s -- %s", line_data.hash, filepath))
+        local cmd = string.format("G blame %s -- %s", line_data.hash, filepath)
+        vim.cmd(cmd)
         -- we don't want to set the cursor outside the new buffer's line count
         local new_cursor_line = math.min(current_cursor_line, vim.api.nvim_buf_line_count(0))
         vim.api.nvim_win_set_cursor(0, { new_cursor_line, 0 })
@@ -128,7 +129,7 @@ end
 ---@param command_builder trunks.Command
 ---@return "success" | "error"
 function M.set_lines(bufnr, command_builder)
-    local output, error_code = require("trunks._core.run_cmd").run_cmd(command_builder, {})
+    local output, error_code = run_cmd.run_cmd(command_builder, {})
     if error_code ~= 0 then
         vim.notify(output[1], vim.log.levels.ERROR)
         vim.api.nvim_win_close(0, true)
@@ -196,8 +197,15 @@ end
 ---@param filename string
 ---@return trunks.Command
 local function get_blame_command(command_builder, filename)
-    -- Add default blame args from config
-    command_builder:add_args(table.concat(require("trunks._core.configuration").DATA.blame.default_cmd_args, " "))
+    -- We need to stick the date format between "git blame" and whatever else is in the command
+    local blame_cmd = "blame"
+    local date_format_option = "--date=format-local:'%Y/%m/%d %I:%M %p'"
+    local rest_of_command = command_builder.base:sub(7)
+    if rest_of_command then
+        rest_of_command = " " .. rest_of_command
+    end
+
+    command_builder.base = string.format("%s %s%s", blame_cmd, date_format_option, rest_of_command)
 
     -- Add filename if not already given
     if not command_builder.base:match("%-%- %S+") then
