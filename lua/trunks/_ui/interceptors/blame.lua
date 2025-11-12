@@ -7,14 +7,14 @@ local BLAME_WINDOWS = {}
 
 ---@param bufnr integer
 ---@param line_num? integer
----@return { hash: string } | nil
+---@return { hash: string, filename: string | nil } | nil
 local function get_line(bufnr, line_num)
     line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
     local line = vim.api.nvim_buf_get_lines(bufnr, line_num - 1, line_num, false)[1]
     if line == "" then
         return nil
     end
-    return { hash = line:match("%w+") }
+    return { hash = line:match("%w+"), filename = line:match("TrunksFilename:(%S+)") }
 end
 
 ---@param bufnr integer
@@ -65,9 +65,10 @@ local function set_keymaps(bufnr, filename)
         if not ok or not line_data then
             return
         end
+
         local current_cursor_line = vim.api.nvim_win_get_cursor(0)[1]
         vim.api.nvim_buf_delete(bufnr, { force = true })
-        local filepath = get_filepath()
+        local filepath = line_data.filename or get_filepath()
         require("trunks._ui.elements").new_buffer({
             filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 }),
             lines = function()
@@ -135,15 +136,24 @@ function M.set_lines(bufnr, command_builder)
         vim.api.nvim_win_close(0, true)
         return "error"
     end
+
     local lines = {}
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     for _, line in ipairs(output) do
-        -- remove the filename when it is shown, e.g. when using -C flag
+        -- Extract the filename to use for reblame. This way, renames are tracked across reblames.
+        local filename = line:match("^%S*%s+([^%(]+)")
         local line_without_filename = line:gsub("^(%S*)%s+[^%(]*%(", "%1 (")
+
+        if filename then
+            filename = filename:match("^%s*(.-)%s*$") -- trim whitespace
+            if filename ~= "" then
+                line_without_filename = line_without_filename .. " TrunksFilename:" .. filename
+            end
+        end
+
         table.insert(lines, line_without_filename)
     end
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+    require("trunks._ui.utils.buffer_text").set(bufnr, lines)
+
     set_blame_win_width(bufnr)
     for i, line in ipairs(lines) do
         highlight_line(bufnr, line, i - 1)
