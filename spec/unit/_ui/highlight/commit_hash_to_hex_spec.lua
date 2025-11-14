@@ -19,7 +19,7 @@ describe("commit_hash_to_hex", function()
 
     it("should generate a hex from a commit with all numbers", function()
         local expected = {
-            hex = "#123456",
+            hex = "#369DFF",
             stripped_hash = "123456",
         }
         assert.are.same(expected, commit_hash_to_hex("123456", 1))
@@ -35,7 +35,7 @@ describe("commit_hash_to_hex", function()
 
     it("should generate a hex from a commit with all zeroes", function()
         local expected = {
-            hex = "#000000",
+            hex = "#555555",
             stripped_hash = "000000",
         }
         assert.are.same(expected, commit_hash_to_hex("000000", 1))
