@@ -4,12 +4,12 @@ local function highlight(bufnr)
     for i, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 2, -1, false)) do
         i = i + 2
         local hash_start, hash_end = line:find("%x+")
-        require("trunks._ui.highlight").highlight_line(bufnr, "Identifier", i - 1, hash_start, hash_end)
+        require("trunks._ui.highlight").highlight_line(bufnr, "Directory", i - 1, hash_start, hash_end)
         if not hash_start or not hash_end then
             return
         end
         local ref_start, ref_end = line:find(".+}", hash_end + 1)
-        require("trunks._ui.highlight").highlight_line(bufnr, "Keyword", i - 1, ref_start, ref_end)
+        require("trunks._ui.highlight").highlight_line(bufnr, "Number", i - 1, ref_start, ref_end)
     end
 end
 
