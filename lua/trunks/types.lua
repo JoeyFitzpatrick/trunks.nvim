@@ -109,6 +109,7 @@
 ---@field switch? string
 
 ---@class trunks.CommitDetailsKeymaps
+---@field edit_file? string
 ---@field restore_popup? string
 ---@field show_all_changes? string
 

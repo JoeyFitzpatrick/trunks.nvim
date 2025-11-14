@@ -37,6 +37,7 @@ M.long_descriptions = {
     },
     ---@type trunks.CommitDetailsKeymaps
     commit_details = {
+        edit_file = "Edit this file in working tree",
         restore_popup = "Restore file at this commit",
         show_all_changes = "Show all changes from this commit in a single buffer",
     },

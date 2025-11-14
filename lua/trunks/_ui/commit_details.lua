@@ -114,6 +114,19 @@ local function set_keymaps(bufnr, commit)
 
     require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
 
+    set("n", keymaps.edit_file, function()
+        local ok, line_data = pcall(M.get_line, bufnr)
+        if not ok or not line_data then
+            return
+        end
+        if vim.uv.fs_stat(line_data.filename) then
+            require("trunks._core.register").deregister_buffer(bufnr, {})
+            vim.cmd.edit(line_data.filename)
+        else
+            vim.notify("File does not exist: " .. line_data.filename, vim.log.levels.ERROR)
+        end
+    end, { buffer = bufnr })
+
     set("n", keymaps.restore_popup, function()
         local ok, line_data = pcall(M.get_line, bufnr)
         if not ok or not line_data then

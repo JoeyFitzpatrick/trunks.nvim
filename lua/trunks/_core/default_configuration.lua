@@ -43,6 +43,7 @@ return {
     commit_details = {
         auto_display_on = true,
         keymaps = {
+            edit_file = "e",
             restore_popup = "R",
             show_all_changes = "<enter>",
         },

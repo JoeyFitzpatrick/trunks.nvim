@@ -64,6 +64,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
             commit_details = {
                 auto_display_on = true,
                 keymaps = {
+                    edit_file = "e",
                     restore_popup = "R",
                     show_all_changes = "<enter>",
                 },
