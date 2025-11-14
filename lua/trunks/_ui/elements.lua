@@ -34,76 +34,6 @@ local function parse_bool_or_function(cmd, parse_fn)
     return parse_fn
 end
 
---- Get the number of lines to trim in terminal output.
---- Empty lines at the end of the terminal output, and lines that begin with `[Process exited`, should be trimmed.
----@param lines string[]
----@return integer
-M._get_num_lines_to_trim = function(lines)
-    local num_lines_to_trim = 0
-    for i = #lines, 1, -1 do
-        if lines[i] == "" or lines[i]:find("[Process exited", 1, true) ~= nil then
-            num_lines_to_trim = num_lines_to_trim + 1
-        else
-            break
-        end
-    end
-    return num_lines_to_trim
-end
-
-local function output_is_empty(bufnr)
-    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    local empty_lines = vim.tbl_filter(function(line)
-        return line == ""
-    end, lines)
-    return #lines == #empty_lines
-end
-
----@param cmd string
----@param bufnr integer
----@param win integer
----@param strategy trunks.Strategy
----@return integer -- The channel id of the terminal.
-local function open_dynamic_terminal(cmd, bufnr, win, strategy)
-    local height = 2
-    local max_height = math.floor(vim.o.lines * 0.5)
-    vim.api.nvim_win_set_height(win, height)
-    local channel_id = vim.fn.jobstart(cmd, {
-        term = true,
-        on_stdout = function()
-            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local empty_lines = vim.tbl_filter(function(line)
-                return line == ""
-            end, lines)
-            if #lines - #empty_lines + 1 > height then
-                height = #lines - #empty_lines + 1
-            end
-            vim.api.nvim_win_set_height(win, math.min(height, max_height))
-        end,
-        on_exit = function()
-            if parse_bool_or_function(vim.split(cmd, " "), strategy.trigger_redraw) then
-                require("trunks._core.register").rerender_buffers()
-            end
-            local trim_terminal_output = function()
-                local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-                local num_lines_to_trim = M._get_num_lines_to_trim(lines)
-                vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-                vim.api.nvim_buf_set_lines(bufnr, -num_lines_to_trim, -1, false, {})
-                if output_is_empty(bufnr) then
-                    vim.api.nvim_buf_delete(bufnr, { force = true })
-                end
-                vim.api.nvim_win_set_height(win, math.min(#lines - (num_lines_to_trim - 1), max_height))
-                vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-            end
-            -- Sometimes this function runs before "[Process exited 0]" is in the buffer, and it doesn't get removed.
-            -- A small pause here ensures that it gets cleaned up consistently. We might need to adjust the time though.
-            vim.defer_fn(function()
-                pcall(trim_terminal_output)
-            end, 100)
-        end,
-    })
-    return channel_id
-end
-
 ---@param cmd string
 ---@param split_cmd string[]
 ---@param bufnr integer
@@ -133,9 +63,6 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         end
     elseif display_strategy == strategies.FULL then
         vim.api.nvim_win_set_buf(0, bufnr)
-    elseif display_strategy == strategies.DYNAMIC then
-        win = vim.api.nvim_open_win(bufnr, true, { split = "below" })
-        return open_dynamic_terminal(cmd, bufnr, win, strategy)
     else
         error("Unable to determine display strategy", vim.log.levels.ERROR)
     end

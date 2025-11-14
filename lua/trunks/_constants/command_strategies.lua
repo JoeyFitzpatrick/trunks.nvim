@@ -1,4 +1,4 @@
----@alias trunks.DisplayStrategy "above" | "below" | "right" | "left" | "full" | "dynamic"
+---@alias trunks.DisplayStrategy "above" | "below" | "right" | "left" | "full"
 ---@alias trunks.DisplayStrategyParser fun(cmd: string[]): trunks.DisplayStrategy
 ---@alias trunks.DisplayStrategyBoolParser fun(cmd: string[]): boolean
 
@@ -13,10 +13,11 @@ local M = {}
 
 ---@param cmd string[]
 ---@return boolean
-local function is_interactive_command(cmd)
+local function is_full_screen_command(cmd)
     local full_screen_options = {
         "-i",
         "--interactive",
+        "-p",
     }
     return require("trunks._core.tabler").tbls_overlap(cmd, full_screen_options)
 end
@@ -28,7 +29,6 @@ M.STRATEGIES = {
     RIGHT = "right",
     LEFT = "left",
     FULL = "full",
-    DYNAMIC = "dynamic",
 }
 
 M.default = {
@@ -40,12 +40,12 @@ M.default = {
 ---@type trunks.Strategy
 M.add = {
     display_strategy = function(cmd)
-        if is_interactive_command(cmd) then
-            return M.STRATEGIES.ABOVE
+        if is_full_screen_command(cmd) then
+            return M.STRATEGIES.FULL
         end
-        return M.STRATEGIES.DYNAMIC
+        return M.STRATEGIES.BELOW
     end,
-    insert = is_interactive_command,
+    insert = is_full_screen_command,
     trigger_redraw = true,
 }
 
@@ -82,7 +82,7 @@ M.commit = {
 
 M.config = { insert = true }
 M.diff = { display_strategy = M.STRATEGIES.RIGHT, insert = false }
-M.fetch = { display_strategy = M.STRATEGIES.DYNAMIC, trigger_redraw = true }
+M.fetch = { display_strategy = M.STRATEGIES.BELOW, trigger_redraw = true }
 M.merge = { insert = true, trigger_redraw = true }
 
 M.notes = {
@@ -94,10 +94,9 @@ M.notes = {
     end,
 }
 
-M.pull = { display_strategy = M.STRATEGIES.DYNAMIC, trigger_redraw = true }
-M.push = { display_strategy = M.STRATEGIES.DYNAMIC, trigger_redraw = true }
+M.pull = { trigger_redraw = true }
+M.push = { trigger_redraw = true }
 M.rebase = { insert = true, trigger_redraw = true }
-M.repack = { display_strategy = M.STRATEGIES.DYNAMIC }
 M.reset = { trigger_redraw = true }
 M.revert = { trigger_redraw = true }
 M.show = { display_strategy = M.STRATEGIES.FULL, insert = true }
