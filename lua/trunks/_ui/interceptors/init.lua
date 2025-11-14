@@ -8,6 +8,9 @@ local cmd_ui_map = {
     difftool = function(command_builder)
         require("trunks._ui.interceptors.difftool").render(command_builder)
     end,
+    grep = function(command_builder)
+        require("trunks._ui.interceptors.grep").render(command_builder)
+    end,
     help = function(command_builder)
         -- col -b is needed to remove bad characters from --help output
         command_builder:add_args("| col -b")

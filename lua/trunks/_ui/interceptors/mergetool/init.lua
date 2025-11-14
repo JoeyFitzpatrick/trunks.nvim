@@ -37,7 +37,6 @@ local function populate_and_open_quickfix()
     -- Clear the current quickfix list
     vim.fn.setqflist({}, "r")
 
-    -- Prepare the entries for the quickfix list
     local qf_entries = {}
     for _, item in ipairs(get_all_conflict_lines()) do
         local filename, lnum, text = item:match("([^:]+):(%d+): (.+)")
@@ -48,10 +47,7 @@ local function populate_and_open_quickfix()
         })
     end
 
-    -- Set the quickfix list with the new entries
     vim.fn.setqflist(qf_entries, "r")
-
-    -- Open the quickfix window
     vim.cmd("copen")
 end
 

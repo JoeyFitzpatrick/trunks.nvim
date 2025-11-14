@@ -16,12 +16,6 @@ In a git patch, be able to do the above, as well as:
 ### Allow users to create custom command mappings
 Create autocmds for different UIs, so that keymaps could be created for a given UI as part of its autocmd. Not a huge fan of this approach, but there might be other reasons to create these autocmds anyways.
 
-### Quickfix list integration
-Some ideas for quickfix list integrations that would be helpful:
-
-- Fugitive has a `:Gclog` command that would be nice to copy.
-- A git grep integration would be nice.
-
 ## Improvements
 
 ### Git pull can't rebase multiple branches
