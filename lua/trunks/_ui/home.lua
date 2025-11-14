@@ -169,22 +169,21 @@ local function create_and_render_buffer(tab, indices)
 
     set("n", keymaps.next, function()
         local old_bufnr = bufnr
-        require("trunks._core.register").deregister_buffer(old_bufnr)
         tabs:cycle_tab("forward")
         create_and_render_buffer(tabs.current_option, tabs.current_tab_indices)
+        require("trunks._core.register").deregister_buffer(old_bufnr, { delete_win_buffers = false })
     end, { buffer = bufnr })
 
     set("n", keymaps.previous, function()
         local old_bufnr = bufnr
-        require("trunks._core.register").deregister_buffer(old_bufnr)
         tabs:cycle_tab("back")
         create_and_render_buffer(tabs.current_option, tabs.current_tab_indices)
+        require("trunks._core.register").deregister_buffer(old_bufnr, { delete_win_buffers = false })
     end, { buffer = bufnr })
 end
 
 function M.open()
     vim.cmd("tabnew")
-    vim.t.trunks_should_close_tab_on_buf_close = true
     tabs:set_current(1) -- TODO: move this into on-close autocmd once we have that
     create_and_render_buffer(tabs.current_option, tabs.current_tab_indices)
 end

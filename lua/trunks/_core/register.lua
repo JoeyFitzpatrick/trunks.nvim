@@ -10,8 +10,6 @@
 
 ---@class trunks.DeregisterOpts
 ---@field delete_win_buffers? boolean
----@field unload? boolean
----@field close_tab? boolean
 
 local M = {}
 
@@ -34,20 +32,6 @@ function M.register_buffer(bufnr, opts)
     M.buffers[bufnr] = opts
 end
 
----@param bufnr integer
-local function navigate_to_last_non_trunks_buffer(bufnr)
-    local win = vim.fn.bufwinid(bufnr)
-    local no_win_found = win == -1
-    if no_win_found then
-        return
-    end
-    local buf_to_navigate_to = M.last_non_trunks_buffer_for_win[win]
-    if not buf_to_navigate_to or not vim.api.nvim_buf_is_valid(buf_to_navigate_to) then
-        return
-    end
-    vim.api.nvim_win_set_buf(win, M.last_non_trunks_buffer_for_win[win])
-end
-
 ---@param win integer
 local function delete_trunks_buffers_for_win(win)
     for bufnr, opts in pairs(M.buffers) do
@@ -63,35 +47,18 @@ function M.deregister_buffer(bufnr, opts)
     if not bufnr then
         return
     end
+
     opts = opts or {}
     M.buffers[bufnr] = nil
     if not vim.api.nvim_buf_is_valid(bufnr) then
         return
     end
 
-    navigate_to_last_non_trunks_buffer(bufnr)
-
-    local visible_windows = vim.tbl_filter(function(win)
-        return not vim.api.nvim_win_get_config(win).hide
-    end, vim.api.nvim_tabpage_list_wins(0))
-
-    local on_last_window = #visible_windows <= 1
-    local is_trunks_tab = vim.t.trunks_should_close_tab_on_buf_close
-    local num_tabs = #vim.api.nvim_list_tabpages()
-
-    if opts.close_tab and is_trunks_tab and on_last_window and num_tabs > 1 then
-        vim.cmd("tabclose")
-    end
-
     if opts.delete_win_buffers ~= false then
         delete_trunks_buffers_for_win(vim.api.nvim_get_current_win())
     end
-    if opts.unload then
-        vim.bo[bufnr].buflisted = false
-        vim.api.nvim_buf_delete(bufnr, { unload = true })
-    else
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
+
+    vim.api.nvim_buf_delete(bufnr, { force = true })
 end
 
 ---@param bufnr? integer optional buffer to rerender first

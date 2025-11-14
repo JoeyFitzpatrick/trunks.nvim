@@ -23,14 +23,18 @@ local function clear_state(state, ui_type, display_auto_display)
     end
 end
 
-local function set_diff_buffer_autocmds(diff_bufnr, original_bufnr, ui_type)
+---@param diff_bufnr integer
+---@param original_bufnr integer
+---@param win integer
+---@param ui_type string
+local function set_diff_buffer_autocmds(diff_bufnr, original_bufnr, win, ui_type)
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
         desc = "Stop insert mode on buf enter",
         buffer = diff_bufnr,
         command = "stopinsert",
         group = vim.api.nvim_create_augroup(string.format("Trunks%sStopInsert", ui_type), { clear = false }),
     })
-    vim.api.nvim_create_autocmd("BufHidden", {
+    vim.api.nvim_create_autocmd("BufUnload", {
         desc = "Close open diffs and clean up diff variables",
         buffer = original_bufnr,
         callback = function()
@@ -38,9 +42,23 @@ local function set_diff_buffer_autocmds(diff_bufnr, original_bufnr, ui_type)
             if buf then
                 clear_state(buf.state, ui_type)
             end
-            require("trunks._core.register").deregister_buffer(diff_bufnr)
+            require("trunks._core.register").deregister_buffer(diff_bufnr, { delete_win_buffers = false })
         end,
         group = vim.api.nvim_create_augroup(string.format("Trunks%sCloseAutoDisplay", ui_type), { clear = true }),
+    })
+    vim.api.nvim_create_autocmd("BufHidden", {
+        desc = "Close open diffs and clean up diff variables",
+        buffer = original_bufnr,
+        callback = function()
+            vim.schedule(function()
+                local diff_bufnr_win = vim.fn.bufwinid(diff_bufnr)
+                if not vim.api.nvim_win_is_valid(win) or not vim.api.nvim_win_is_valid(diff_bufnr_win) then
+                    return
+                end
+                vim.api.nvim_win_close(diff_bufnr_win, true)
+            end)
+        end,
+        group = vim.api.nvim_create_augroup(string.format("Trunks%sHideAutoDisplay", ui_type), { clear = true }),
     })
 end
 
@@ -88,7 +106,7 @@ local function render_auto_display(bufnr, ui_type, auto_display_opts)
     local win = vim.api.nvim_get_current_win()
     state.diff_channel_id, state.diff_bufnr =
         require("trunks._ui.elements").terminal(diff_cmd, auto_display_opts.strategy)
-    set_diff_buffer_autocmds(state.diff_bufnr, bufnr, ui_type)
+    set_diff_buffer_autocmds(state.diff_bufnr, bufnr, win, ui_type)
     set_diff_buffer_keymaps(state.diff_bufnr, bufnr)
     vim.api.nvim_set_current_win(win)
 end

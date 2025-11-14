@@ -112,9 +112,7 @@ local function set_keymaps(bufnr, commit)
     )
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
 
-    set("n", "q", function()
-        require("trunks._core.register").deregister_buffer(bufnr, { close_tab = true })
-    end, { buffer = bufnr })
+    require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
 
     set("n", keymaps.restore_popup, function()
         local ok, line_data = pcall(M.get_line, bufnr)
