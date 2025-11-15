@@ -1,21 +1,4 @@
---- Make manipulating Lua text easier.
----
----@module 'trunks._core.texter'
----
-
 local M = {}
-
---- Check if `character` is "regular" text but not alphanumeric.
----
---- Examples would be Asian characters, Arabic, emojis, etc.
----
----@param character string Some single-value to check.
----@return boolean # If found return `true`.
----
-function M.is_unicode(character)
-    local code_point = character:byte()
-    return code_point > 127
-end
 
 --- Surround `text` with quotes
 ---@param text string The text to surround with quotes

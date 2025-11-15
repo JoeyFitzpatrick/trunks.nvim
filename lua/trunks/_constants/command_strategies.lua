@@ -11,6 +11,15 @@
 
 local M = {}
 
+local function tbls_overlap(t1, t2)
+    for _, item in ipairs(t2) do
+        if vim.tbl_contains(t1, item) then
+            return true
+        end
+    end
+    return false
+end
+
 ---@param cmd string[]
 ---@return boolean
 local function is_full_screen_command(cmd)
@@ -19,7 +28,7 @@ local function is_full_screen_command(cmd)
         "--interactive",
         "-p",
     }
-    return require("trunks._core.tabler").tbls_overlap(cmd, full_screen_options)
+    return tbls_overlap(cmd, full_screen_options)
 end
 
 ---@param cmd string[]
@@ -94,7 +103,7 @@ M.commit = {
             "-m",
             "-z",
         }
-        return not require("trunks._core.tabler").tbls_overlap(cmd, should_not_enter_insert_options)
+        return not tbls_overlap(cmd, should_not_enter_insert_options)
     end,
     trigger_redraw = true,
 }
@@ -109,7 +118,7 @@ M.notes = {
     insert = function(cmd)
         local should_not_enter_insert_options =
             { "--message", "-m", "copy", "get-ref", "list", "merge", "prune", "remove", "show" }
-        return not require("trunks._core.tabler").tbls_overlap(cmd, should_not_enter_insert_options)
+        return not tbls_overlap(cmd, should_not_enter_insert_options)
     end,
 }
 
