@@ -20,6 +20,7 @@ Table of Contents                                   *trunks-table-of-contents*
   - Help Commands                      |trunks-special-commands-help-commands|
 6. Miscellaneous Command Changes        |trunks-miscellaneous-command-changes|
   - Git Switch               |trunks-miscellaneous-command-changes-git-switch|
+  - Quiet commands       |trunks-miscellaneous-command-changes-quiet-commands|
 7. Custom Commands                                    |trunks-custom-commands|
 8. UI Management (Tabs, Windows, Buffers)|trunks-ui-management-(tabs,-windows,-buffers)|
 9. Optional Dependencies                        |trunks-optional-dependencies|
@@ -442,6 +443,16 @@ of that remote branch, which is normally what you’d want.
 
 If you pass any options to the command, like `:G switch origin/some-branch
 --create`, this behavior is not used.
+
+
+QUIET COMMANDS           *trunks-miscellaneous-command-changes-quiet-commands*
+
+You can pass `--quiet` to some commands to run the commands without opening a
+UI of any kind, e.g. `:G switch main --quiet`. Currently this only works for
+"write" commands, and not "read" commands, as I can’t think of a reason why
+one would want to run a "read" command with `--quiet`. For instance, `:G log
+--quiet` doesn’t make a lot of sense because the point of log is to show
+information.
 
 
 ==============================================================================
