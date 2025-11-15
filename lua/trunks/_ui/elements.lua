@@ -38,7 +38,7 @@ end
 ---@param split_cmd string[]
 ---@param bufnr integer
 ---@param strategy trunks.Strategy
----@return integer -- The channel id of the terminal
+---@return integer | nil -- The channel id of the terminal
 local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
     local strategies = require("trunks._constants.command_strategies").STRATEGIES
     local display_strategy = parse_display_strategy(split_cmd, strategy.display_strategy)
@@ -63,6 +63,9 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         end
     elseif display_strategy == strategies.FULL then
         vim.api.nvim_win_set_buf(0, bufnr)
+    elseif display_strategy == strategies.QUIET then
+        require("trunks._core.run_cmd").run_hidden_cmd(cmd)
+        return nil
     else
         error("Unable to determine display strategy", vim.log.levels.ERROR)
     end
@@ -104,12 +107,12 @@ function M.terminal(cmd, strategy)
     -- such as the commit editor, use the current nvim instance instead of a nested one.
     vim.b[bufnr].trunks_use_nested_nvim = true
 
-    local base_cmd = split_cmd[2]
-    local base_strategy = require("trunks._constants.command_strategies").default
-    local derived_strategy = require("trunks._constants.command_strategies")[base_cmd] or {}
-    strategy = vim.tbl_extend("force", base_strategy, derived_strategy, strategy or {})
+    strategy = require("trunks._constants.command_strategies").get_strategy(split_cmd, strategy)
 
     local channel_id = open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
+    if not channel_id then
+        return
+    end
     local should_enter_insert = parse_bool_or_function(split_cmd, strategy.insert)
     if should_enter_insert then
         vim.cmd("startinsert")

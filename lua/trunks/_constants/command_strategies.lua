@@ -1,4 +1,4 @@
----@alias trunks.DisplayStrategy "above" | "below" | "right" | "left" | "full"
+---@alias trunks.DisplayStrategy "above" | "below" | "right" | "left" | "full" | "quiet"
 ---@alias trunks.DisplayStrategyParser fun(cmd: string[]): trunks.DisplayStrategy
 ---@alias trunks.DisplayStrategyBoolParser fun(cmd: string[]): boolean
 
@@ -22,6 +22,24 @@ local function is_full_screen_command(cmd)
     return require("trunks._core.tabler").tbls_overlap(cmd, full_screen_options)
 end
 
+---@param cmd string[]
+---@param custom_strategy? trunks.Strategy
+---@return trunks.Strategy
+function M.get_strategy(cmd, custom_strategy)
+    local base_cmd = cmd[2]
+    if not base_cmd then
+        return M.default
+    end
+    local strategy = vim.tbl_extend("force", M.default, M[base_cmd], custom_strategy or {})
+    -- Passing --quiet to a command will stop the output from displaying.
+    -- This is only for "write" commands like "commit" or "checkout",
+    -- since it doesn't make sense to quiet a "read" command like log or status.
+    if vim.tbl_contains(cmd, "--quiet") and strategy.trigger_redraw then
+        strategy.display_strategy = M.STRATEGIES.QUIET
+    end
+    return strategy
+end
+
 ---@type table<string, trunks.DisplayStrategy>
 M.STRATEGIES = {
     ABOVE = "above",
@@ -29,6 +47,7 @@ M.STRATEGIES = {
     RIGHT = "right",
     LEFT = "left",
     FULL = "full",
+    QUIET = "quiet",
 }
 
 M.default = {
