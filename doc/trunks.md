@@ -208,11 +208,12 @@ Additionally, keymaps are added to open a file under the cursor in a split, tab,
 There are other UIs for which these "open file" keymaps are added as well.
 
 # Special Commands
-Some git commands that are often used, or are normally cumbersome to use, are handled differently than just running the command in terminal mode. This typically means opening a buffer that serves as a UI for the command. Here are the special commands:
+Some git commands benefit from a tighter integration with the editor. These are handled differently than just running the command in terminal mode. This typically means opening a buffer that serves as a UI for the command, but not always (for instance, `mergetool` and `grep` open the quickfix list). Here are the special commands:
 * `:G blame`
 * `:G branch`
 * `:G commit`
 * `:G difftool`
+* `:G grep`
 * `:G log`
 * `:G mergetool`
 * `:G reflog`
@@ -230,10 +231,10 @@ Using the `:G` command renders a home ui, that will display some status info. Th
 a diff split to display these changes, and some keymaps to manipulate these files.
 Use `h` and `l` to then display the UI for  `git branch`, `git log`, and `git stash`, all of which are further detailed below.
 
-## Difftool
-Trunks's `difftool` command, e.g. `:G difftool abc123` or `:G difftool abc123..def456`, will open a UI that allows for seeing the diff introduced by a commit, or the diff between two commits. Note that if a commit range is given, e.g. `abc123..def456`, using the open-file keymaps will use the latter commit. So in this example, using `oh` to open a file in a horizontal split would use commit `def456`.
-
-When used without arguments, `difftool` uses `HEAD` as the commit to diff against, e.g. `:G difftool` is the same as `:G difftool HEAD`. This is useful for diffing the working tree against HEAD.
+## Blame
+Like vim-fugitive, running `:G blame` will open a blame window to the left, that uses `:h scrollbind` to sync with with the opened file.
+From there, many of the keymaps for the commit UI also work in the blame UI.
+The [default configuration section](#configuration) shows every keymap, as does pressing `g?` in the blame UI.
 
 ## Branch
 `:G` commands that display a list of branches, such as `:G branch`, `:G branch --all`, `:G branch --merged`,
@@ -241,6 +242,23 @@ and so on, bring up a branch UI, from which keymaps can be used to view commits,
 The [default configuration section](#configuration) shows every keymap, as does pressing `g?` in the branch UI.
 
 G branch commands that do not display a list of branches, such as `:G branch --delete`, run the command in terminal mode, as if it were a non-special command.
+
+## Commit
+`:G commit` will open an editor to create the commit message when that message is not passed to the command, 
+e.g. `git commit` (no message, opens the editor) vs `git commit -m "some message"` (does not open the commit message editor).
+When the commit message editor is opened, Trunks opens it in the current Neovim instance.
+You can write and quit the editor (`:wq`) to apply the message, or simply close the editor without saving to abort the commit due to an empty commit message.
+If the commit message editor doesn't need to open, the command will just run in terminal mode like most other commands.
+
+## Difftool
+Trunks's `difftool` command, e.g. `:G difftool abc123` or `:G difftool abc123..def456`, will open a UI that allows for seeing the diff introduced by a commit, or the diff between two commits. Note that if a commit range is given, e.g. `abc123..def456`, using the open-file keymaps will use the latter commit. So in this example, using `oh` to open a file in a horizontal split would use commit `def456`.
+
+When used without arguments, `difftool` uses `HEAD` as the commit to diff against, e.g. `:G difftool` is the same as `:G difftool HEAD`. This is useful for diffing the working tree against HEAD.
+
+## Grep
+Trunks's `:G grep` command is pretty simple. It just opens a quickfix list with the results of the grep command. Note that while `git grep` supports grepping across past revisions, `:G grep` currently only supports grepping the working tree.
+
+Other than that, you should mostly be able to use `:G grep` exactly as you'd expect.
 
 ## Log
 `:G log` commands will typically open a UI. The [default configuration section](#configuration) shows every keymap, as does pressing `g?` in the log UI.
@@ -260,24 +278,25 @@ This can be used to see the commits that changed the number of times a given sea
 
 This can very useful. With Trunks, running this command in visual mode will use your visually selected text as the search term., e.g. `:G log -S` while text is visually selected.
 
-## Commit
-`:G commit` will open an editor to create the commit message when that message is not passed to the command, 
-e.g. `git commit` (no message, opens the editor) vs `git commit -m "some message"` (does not open the commit message editor).
-When the commit message editor is opened, Trunks opens it in the current Neovim instance.
-You can write and quit the editor (`:wq`) to apply the message, or simply close the editor without saving to abort the commit due to an empty commit message.
-If the commit message editor doesn't need to open, the command will just run in terminal mode like most other commands.
+## Mergetool
+`:G mergetool` opens a quickfix list with the locations of all merge conflicts. Trunks doesn't have an integrated merge conflict resolution solution currently, but it has these mappings:
+<Plug>(Trunks-resolve-base): when the cursor is on a merge conflict, keep the "base" code
+<Plug>(Trunks-resolve-ours): when the cursor is on a merge conflict, keep the "ours" code
+<Plug>(Trunks-resolve-theirs): when the cursor is on a merge conflict, keep the "theirs" code
+<Plug>(Trunks-resolve-all): when the cursor is on a merge conflict, keep all code
 
-## Blame
-Like vim-fugitive, running `:G blame` will open a blame window to the left, that uses `:h scrollbind` to sync with with the opened file.
-From there, many of the keymaps for the commit UI also work in the blame UI.
-The [default configuration section](#configuration) shows every keymap, as does pressing `g?` in the blame UI.
+To use such a mapping, you can do something like this:
+
+```lua
+vim.keymap.set("n", "<leader>rb", "<Plug>(Trunks-resolve-base)")
+```
+
+## Show
+Running `:G show` commands will just open their output in the current window. You can close this with `q` like other Trunks buffers.
 
 ## Stash List
 Running `:G stash list` will open a UI, in which you can view, pop, apply, and drop stashes. 
 Other stash commands, like `:G stash show`, run in terminal mode like most other commands.
-
-## Show
-Running `:G show` commands will just open their output in the current window. You can close this with `q` like other Trunks buffers.
 
 ## Help Commands
 Running a git help command, such as `:G commit -h` or `:G log --help`, will open that help file in the current window. 
@@ -350,23 +369,6 @@ Some UIs, such as the status UI, will automatically display another window in a 
 * The stash UI displays a diff for the entire stash under the cursor
 
 To toggle the auto-display, enter the toggle keymap, which by default is `<tab>`.
-
-# Plug mappings
-Trunks provides some plug mappings, so you can conveniently create your own mappings for some actions if you want. 
-
-### Merge conflict mappings
-Trunks doesn't have an integrated merge conflict resolution solution currently, so in the meantime, we have these mappings:
-<Plug>(Trunks-resolve-base): when the cursor is on a merge conflict, keep the "base" code
-<Plug>(Trunks-resolve-ours): when the cursor is on a merge conflict, keep the "ours" code
-<Plug>(Trunks-resolve-theirs): when the cursor is on a merge conflict, keep the "theirs" code
-<Plug>(Trunks-resolve-all): when the cursor is on a merge conflict, keep all code
-
-To use such a mapping, you can do something like this:
-
-```lua
--- Keymap to display the commit popup
-vim.keymap.set("n", "<leader>rb", "<Plug>(Trunks-resolve-base)")
-```
 
 # Optional Dependencies
 It is recommended, though not required, to use a tool that improves the output of git commands. Some recommendations:
