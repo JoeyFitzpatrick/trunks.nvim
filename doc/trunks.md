@@ -311,6 +311,9 @@ When running `:G switch origin/some-branch`, with no command options like `--cre
 
 If you pass any options to the command, like `:G switch origin/some-branch --create`, this behavior is not used.
 
+## Quiet commands
+You can pass `--quiet` to some commands to run the commands without opening a UI of any kind, e.g. `:G switch main --quiet`. Currently this only works for "write" commands, and not "read" commands, as I can't think of a reason why one would want to run a "read" command with `--quiet`. For instance, `:G log --quiet` doesn't make a lot of sense because the point of log is to show information.
+
 # Custom Commands
 Trunks provides some commands that are not valid git commands. Instead of the `:G` command, these custom commands are under the `:Trunks` command, and `:G` is reserved for valid git commands.
 
