@@ -1,8 +1,8 @@
 local M = {}
 
 M.signcolumns = {
-    trunks_PLUS = "TrunksPlus",
-    trunks_MINUS = "TrunksMinus",
+    TRUNKS_PLUS = "TrunksPlus",
+    TRUNKS_MINUS = "TrunksMinus",
 }
 
 return M

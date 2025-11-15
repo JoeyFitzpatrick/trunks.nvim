@@ -5,6 +5,7 @@
 ---@field end_line integer -- 0-indexed line number where code ends
 
 local M = {}
+local signcolumns = require("trunks._constants.signcolumns").signcolumns
 
 ---@param line string
 ---@return string|nil
@@ -127,10 +128,20 @@ function M.highlight_line(bufnr, line, line_num)
             hl_group = "DiffAdd",
             priority = 100,
         })
+        -- Place + sign in signcolumn
+        pcall(vim.fn.sign_place, 0, "trunks_diff_signs", signcolumns.TRUNKS_PLUS, bufnr, {
+            lnum = line_num + 1, -- sign_place uses 1-indexed line numbers
+            priority = 100,
+        })
     elseif line_type == "removed" then
         pcall(vim.api.nvim_buf_set_extmark, bufnr, ns, line_num, 0, {
             end_col = #actual_line,
             hl_group = "DiffDelete",
+            priority = 100,
+        })
+        -- Place - sign in signcolumn
+        pcall(vim.fn.sign_place, 0, "trunks_diff_signs", signcolumns.TRUNKS_MINUS, bufnr, {
+            lnum = line_num + 1, -- sign_place uses 1-indexed line numbers
             priority = 100,
         })
     elseif line:match("^@@") then

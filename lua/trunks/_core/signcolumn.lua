@@ -3,11 +3,11 @@ local M = {}
 function M.initialize_signcolumns()
     local highlight_groups = require("trunks._constants.highlight_groups").highlight_groups
     local signcolumns = require("trunks._constants.signcolumns").signcolumns
-    vim.fn.sign_define(signcolumns.trunks_PLUS, {
+    vim.fn.sign_define(signcolumns.TRUNKS_PLUS, {
         text = "+",
         texthl = highlight_groups.TRUNKS_DIFF_ADD,
     })
-    vim.fn.sign_define(signcolumns.trunks_MINUS, {
+    vim.fn.sign_define(signcolumns.TRUNKS_MINUS, {
         text = "-",
         texthl = highlight_groups.TRUNKS_DIFF_REMOVE,
     })

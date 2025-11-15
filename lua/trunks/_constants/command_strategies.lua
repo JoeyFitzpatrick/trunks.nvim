@@ -30,7 +30,7 @@ function M.get_strategy(cmd, custom_strategy)
     if not base_cmd then
         return M.default
     end
-    local strategy = vim.tbl_extend("force", M.default, M[base_cmd], custom_strategy or {})
+    local strategy = vim.tbl_extend("force", M.default, M[base_cmd] or {}, custom_strategy or {})
     -- Passing --quiet to a command will stop the output from displaying.
     -- This is only for "write" commands like "commit" or "checkout",
     -- since it doesn't make sense to quiet a "read" command like log or status.
