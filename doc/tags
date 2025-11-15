@@ -7,14 +7,15 @@ trunks-keymaps-for-raw-git-output	trunks.txt	/*trunks-keymaps-for-raw-git-output
 trunks-miscellaneous-command-changes	trunks.txt	/*trunks-miscellaneous-command-changes*
 trunks-miscellaneous-command-changes-git-switch	trunks.txt	/*trunks-miscellaneous-command-changes-git-switch*
 trunks-optional-dependencies	trunks.txt	/*trunks-optional-dependencies*
-trunks-plug-mappings	trunks.txt	/*trunks-plug-mappings*
 trunks-special-commands	trunks.txt	/*trunks-special-commands*
 trunks-special-commands-blame	trunks.txt	/*trunks-special-commands-blame*
 trunks-special-commands-branch	trunks.txt	/*trunks-special-commands-branch*
 trunks-special-commands-commit	trunks.txt	/*trunks-special-commands-commit*
 trunks-special-commands-difftool	trunks.txt	/*trunks-special-commands-difftool*
+trunks-special-commands-grep	trunks.txt	/*trunks-special-commands-grep*
 trunks-special-commands-help-commands	trunks.txt	/*trunks-special-commands-help-commands*
 trunks-special-commands-log	trunks.txt	/*trunks-special-commands-log*
+trunks-special-commands-mergetool	trunks.txt	/*trunks-special-commands-mergetool*
 trunks-special-commands-show	trunks.txt	/*trunks-special-commands-show*
 trunks-special-commands-stash-list	trunks.txt	/*trunks-special-commands-stash-list*
 trunks-table-of-contents	trunks.txt	/*trunks-table-of-contents*

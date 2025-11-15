@@ -1,4 +1,4 @@
-*trunks.txt*         For Neovim >= 0.11.0        Last change: 2025 November 14
+*trunks.txt*         For Neovim >= 0.11.0        Last change: 2025 November 15
 
 ==============================================================================
 Table of Contents                                   *trunks-table-of-contents*
@@ -8,26 +8,27 @@ Table of Contents                                   *trunks-table-of-contents*
 3. Usage                                                        |trunks-usage|
 4. Keymaps for Raw Git Output              |trunks-keymaps-for-raw-git-output|
 5. Special Commands                                  |trunks-special-commands|
-  - Difftool                                |trunks-special-commands-difftool|
-  - Branch                                    |trunks-special-commands-branch|
-  - Log                                          |trunks-special-commands-log|
-  - Commit                                    |trunks-special-commands-commit|
   - Blame                                      |trunks-special-commands-blame|
-  - Stash List                            |trunks-special-commands-stash-list|
+  - Branch                                    |trunks-special-commands-branch|
+  - Commit                                    |trunks-special-commands-commit|
+  - Difftool                                |trunks-special-commands-difftool|
+  - Grep                                        |trunks-special-commands-grep|
+  - Log                                          |trunks-special-commands-log|
+  - Mergetool                              |trunks-special-commands-mergetool|
   - Show                                        |trunks-special-commands-show|
+  - Stash List                            |trunks-special-commands-stash-list|
   - Help Commands                      |trunks-special-commands-help-commands|
 6. Miscellaneous Command Changes        |trunks-miscellaneous-command-changes|
   - Git Switch               |trunks-miscellaneous-command-changes-git-switch|
 7. Custom Commands                                    |trunks-custom-commands|
 8. UI Management (Tabs, Windows, Buffers)|trunks-ui-management-(tabs,-windows,-buffers)|
-9. Plug mappings                                        |trunks-plug-mappings|
-10. Optional Dependencies                       |trunks-optional-dependencies|
-11. Development and Contributing         |trunks-development-and-contributing|
-12. Tests                                                       |trunks-tests|
+9. Optional Dependencies                        |trunks-optional-dependencies|
+10. Development and Contributing         |trunks-development-and-contributing|
+11. Tests                                                       |trunks-tests|
   - Initialization                               |trunks-tests-initialization|
   - Running                                             |trunks-tests-running|
-13. Tracking Updates                                 |trunks-tracking-updates|
-14. Credits                                                   |trunks-credits|
+12. Tracking Updates                                 |trunks-tracking-updates|
+13. Credits                                                   |trunks-credits|
 
 ==============================================================================
 1. Installation                                          *trunks-installation*
@@ -267,12 +268,13 @@ There are other UIs for which these "open file" keymaps are added as well.
 ==============================================================================
 5. Special Commands                                  *trunks-special-commands*
 
-Some git commands that are often used, or are normally cumbersome to use, are
+Some git commands benefit from a tighter integration with the editor. These are
 handled differently than just running the command in terminal mode. This
-typically means opening a buffer that serves as a UI for the command. Here are
-the special commands: `:G blame` `:G branch` `:G commit` `:G difftool` `:G log`
-`:G mergetool` `:G reflog` `:G show` `:G stash list` `:G {command} -h` `:G
-{command} --help`
+typically means opening a buffer that serves as a UI for the command, but not
+always (for instance, `mergetool` and `grep` open the quickfix list). Here are
+the special commands: `:G blame` `:G branch` `:G commit` `:G difftool` `:G
+grep` `:G log` `:G mergetool` `:G reflog` `:G show` `:G stash list` `:G
+{command} -h` `:G {command} --help`
 
 Note that for any command that brings up a UI: You can close the UI by pressing
 `q`, in addition to the normal methods, such as `:q` The jumplist still works
@@ -283,6 +285,40 @@ This includes the git status of all changed files, a diff split to display
 these changes, and some keymaps to manipulate these files. Use `h` and `l` to
 then display the UI for `git branch`, `git log`, and `git stash`, all of which
 are further detailed below.
+
+
+BLAME                                          *trunks-special-commands-blame*
+
+Like vim-fugitive, running `:G blame` will open a blame window to the left,
+that uses |scrollbind| to sync with with the opened file. From there, many of
+the keymaps for the commit UI also work in the blame UI. The
+|trunks-default-configuration-section| shows every keymap, as does pressing
+`g?` in the blame UI.
+
+
+BRANCH                                        *trunks-special-commands-branch*
+
+`:G` commands that display a list of branches, such as `:G branch`, `:G branch
+--all`, `:G branch --merged`, and so on, bring up a branch UI, from which
+keymaps can be used to view commits, rename branches, merge branches, etc. The
+|trunks-default-configuration-section| shows every keymap, as does pressing
+`g?` in the branch UI.
+
+G branch commands that do not display a list of branches, such as `:G branch
+--delete`, run the command in terminal mode, as if it were a non-special
+command.
+
+
+COMMIT                                        *trunks-special-commands-commit*
+
+`:G commit` will open an editor to create the commit message when that message
+is not passed to the command, e.g. `git commit` (no message, opens the editor)
+vs `git commit -m "some message"` (does not open the commit message editor).
+When the commit message editor is opened, Trunks opens it in the current Neovim
+instance. You can write and quit the editor (`:wq`) to apply the message, or
+simply close the editor without saving to abort the commit due to an empty
+commit message. If the commit message editor doesn’t need to open, the
+command will just run in terminal mode like most other commands.
 
 
 DIFFTOOL                                    *trunks-special-commands-difftool*
@@ -299,17 +335,15 @@ against, e.g. `:G difftool` is the same as `:G difftool HEAD`. This is useful
 for diffing the working tree against HEAD.
 
 
-BRANCH                                        *trunks-special-commands-branch*
+GREP                                            *trunks-special-commands-grep*
 
-`:G` commands that display a list of branches, such as `:G branch`, `:G branch
---all`, `:G branch --merged`, and so on, bring up a branch UI, from which
-keymaps can be used to view commits, rename branches, merge branches, etc. The
-|trunks-default-configuration-section| shows every keymap, as does pressing
-`g?` in the branch UI.
+Trunks’s `:G grep` command is pretty simple. It just opens a quickfix list
+with the results of the grep command. Note that while `git grep` supports
+grepping across past revisions, `:G grep` currently only supports grepping the
+working tree.
 
-G branch commands that do not display a list of branches, such as `:G branch
---delete`, run the command in terminal mode, as if it were a non-special
-command.
+Other than that, you should mostly be able to use `:G grep` exactly as you’d
+expect.
 
 
 LOG                                              *trunks-special-commands-log*
@@ -353,25 +387,27 @@ your visually selected text as the search term., e.g. `:G log -S` while text
 is visually selected.
 
 
-COMMIT                                        *trunks-special-commands-commit*
+MERGETOOL                                  *trunks-special-commands-mergetool*
 
-`:G commit` will open an editor to create the commit message when that message
-is not passed to the command, e.g. `git commit` (no message, opens the editor)
-vs `git commit -m "some message"` (does not open the commit message editor).
-When the commit message editor is opened, Trunks opens it in the current Neovim
-instance. You can write and quit the editor (`:wq`) to apply the message, or
-simply close the editor without saving to abort the commit due to an empty
-commit message. If the commit message editor doesn’t need to open, the
-command will just run in terminal mode like most other commands.
+`:G mergetool` opens a quickfix list with the locations of all merge conflicts.
+Trunks doesn’t have an integrated merge conflict resolution solution
+currently, but it has these mappings: (Trunks-resolve-base): when the cursor is
+on a merge conflict, keep the "base" code (Trunks-resolve-ours): when the
+cursor is on a merge conflict, keep the "ours" code (Trunks-resolve-theirs):
+when the cursor is on a merge conflict, keep the "theirs" code
+(Trunks-resolve-all): when the cursor is on a merge conflict, keep all code
+
+To use such a mapping, you can do something like this:
+
+>lua
+    vim.keymap.set("n", "<leader>rb", "<Plug>(Trunks-resolve-base)")
+<
 
 
-BLAME                                          *trunks-special-commands-blame*
+SHOW                                            *trunks-special-commands-show*
 
-Like vim-fugitive, running `:G blame` will open a blame window to the left,
-that uses |scrollbind| to sync with with the opened file. From there, many of
-the keymaps for the commit UI also work in the blame UI. The
-|trunks-default-configuration-section| shows every keymap, as does pressing
-`g?` in the blame UI.
+Running `:G show` commands will just open their output in the current window.
+You can close this with `q` like other Trunks buffers.
 
 
 STASH LIST                                *trunks-special-commands-stash-list*
@@ -379,12 +415,6 @@ STASH LIST                                *trunks-special-commands-stash-list*
 Running `:G stash list` will open a UI, in which you can view, pop, apply, and
 drop stashes. Other stash commands, like `:G stash show`, run in terminal mode
 like most other commands.
-
-
-SHOW                                            *trunks-special-commands-show*
-
-Running `:G show` commands will just open their output in the current window.
-You can close this with `q` like other Trunks buffers.
 
 
 HELP COMMANDS                          *trunks-special-commands-help-commands*
@@ -536,32 +566,7 @@ To toggle the auto-display, enter the toggle keymap, which by default is
 
 
 ==============================================================================
-9. Plug mappings                                        *trunks-plug-mappings*
-
-Trunks provides some plug mappings, so you can conveniently create your own
-mappings for some actions if you want.
-
-
-MERGE CONFLICT MAPPINGS ~
-
-Trunks doesn’t have an integrated merge conflict resolution solution
-currently, so in the meantime, we have these mappings: (Trunks-resolve-base):
-when the cursor is on a merge conflict, keep the "base" code
-(Trunks-resolve-ours): when the cursor is on a merge conflict, keep the "ours"
-code (Trunks-resolve-theirs): when the cursor is on a merge conflict, keep the
-"theirs" code (Trunks-resolve-all): when the cursor is on a merge conflict,
-keep all code
-
-To use such a mapping, you can do something like this:
-
->lua
-    -- Keymap to display the commit popup
-    vim.keymap.set("n", "<leader>rb", "<Plug>(Trunks-resolve-base)")
-<
-
-
-==============================================================================
-10. Optional Dependencies                       *trunks-optional-dependencies*
+9. Optional Dependencies                        *trunks-optional-dependencies*
 
 It is recommended, though not required, to use a tool that improves the output
 of git commands. Some recommendations: delta
@@ -570,7 +575,7 @@ of git commands. Some recommendations: delta
 
 
 ==============================================================================
-11. Development and Contributing         *trunks-development-and-contributing*
+10. Development and Contributing         *trunks-development-and-contributing*
 
 I welcome users of any experience level to contribute to Trunks and improve the
 project. If you’d like to contribute by writing code, please run
@@ -586,7 +591,7 @@ are also good ways to contribute.
 
 
 ==============================================================================
-12. Tests                                                       *trunks-tests*
+11. Tests                                                       *trunks-tests*
 
 
 INITIALIZATION                                   *trunks-tests-initialization*
@@ -628,13 +633,13 @@ We might not have any tagged tests, but to make one, set up as test like this:
 
 
 ==============================================================================
-13. Tracking Updates                                 *trunks-tracking-updates*
+12. Tracking Updates                                 *trunks-tracking-updates*
 
 See doc/news.txt <doc/news.txt> for updates.
 
 
 ==============================================================================
-14. Credits                                                   *trunks-credits*
+13. Credits                                                   *trunks-credits*
 
 Thank you to Samuel Williams and the maintainers of nvim-unception
 <https://github.com/samjwill/nvim-unception>. Some code from that plugin was
