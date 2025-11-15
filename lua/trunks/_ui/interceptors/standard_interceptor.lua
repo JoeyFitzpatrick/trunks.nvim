@@ -6,8 +6,15 @@ function M.render(command_builder)
     local bufnr = require("trunks._ui.elements").new_buffer({ filetype = "git" })
     require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
 
-    -- Check if this is a diff command
-    local is_diff_command = command_builder.base and command_builder.base:match("^diff")
+    local diff_commands = { "diff", "show" }
+    local is_diff_command = false
+    if command_builder.base then
+        for _, diff_command in ipairs(diff_commands) do
+            if vim.startswith(command_builder.base, diff_command) then
+                is_diff_command = true
+            end
+        end
+    end
 
     if is_diff_command then
         local diff_syntax = require("trunks._ui.diff_syntax")
