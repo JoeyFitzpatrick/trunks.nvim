@@ -23,6 +23,7 @@ Table of Contents                                   *trunks-table-of-contents*
   - Quiet commands       |trunks-miscellaneous-command-changes-quiet-commands|
 7. Custom Commands                                    |trunks-custom-commands|
 8. UI Management (Tabs, Windows, Buffers)|trunks-ui-management-(tabs,-windows,-buffers)|
+  - User Autocmds|trunks-ui-management-(tabs,-windows,-buffers)-user-autocmds|
 9. Optional Dependencies                        |trunks-optional-dependencies|
 10. Development and Contributing         |trunks-development-and-contributing|
 11. Tests                                                       |trunks-tests|
@@ -574,6 +575,30 @@ entire stash under the cursor
 
 To toggle the auto-display, enter the toggle keymap, which by default is
 `<tab>`.
+
+
+USER AUTOCMDS    *trunks-ui-management-(tabs,-windows,-buffers)-user-autocmds*
+
+There is a `TrunksUiOpened` event that fires when a Trunks UI opens. You can
+use this autocmd to run custom logic whenever a Trunks UI opens. For instance,
+to set a custom keymap when the log UI opens:
+
+>lua
+    vim.api.nvim_create_autocmd("TrunksUiOpened", {
+        desc = "Your custom autocmd",
+        callback = function(data)
+            local ui_type = data.ui_type -- "buffer" or "quickfix"
+            local ui_name = data.ui_name -- name of UI, "log" in this case
+            if ui_name == "log" then
+                vim.keymap.set("n", "p", function ()
+                    vim.print(ui_type, ui_name)
+                end,
+                {buffer = 0}
+                )
+            end
+        end,
+    })
+<
 
 
 ==============================================================================
