@@ -16,6 +16,13 @@ In a git patch, be able to do the above, as well as:
 ### Allow users to create custom command mappings
 Create autocmds for different UIs, so that keymaps could be created for a given UI as part of its autocmd. Not a huge fan of this approach, but there might be other reasons to create these autocmds anyways.
 
+### Command log
+A user-facing command log would have a couple of benefits:
+- It tells the user what commands are running. This allows them to find bugs more easily, recover from catastrophe better, and in general have better insight into what the plugin is doing.
+- It is the first step towards git undo commands, if we ever want to implement that.
+
+There's an open question of how to surface this to users. Could be a trunks command. That could allow for args to be passed that allow for showing "main" commands or "every command that runs".
+
 ## Improvements
 
 ### Git pull can't rebase multiple branches
@@ -34,6 +41,3 @@ Make `:G log --graph` highlight the graph characters and actually fetch the comm
 
 ### Git diff keymaps
 When using a command like `:G show abc123`, there are keymaps that allow for opening files and diffs for a the given commit. It would be nice to have the same keymaps for `:G diff abc123`. For `show`, there are maps to open a file at the given commit, or at the commit _before_ the given commit. For `diff`, we'd probably want to use that, but also support a commit range or multiple given commits, so in the case of `:G diff commit1 commit2`, the "previous" file would be `commit1`.
-
-### Reblame handles files not in commit
-When reblaming a file that has a different name at a given commit, a pretty ugly error is shown. We should handle that more gracefully by either figuring out the old file name, or if that's not possible, show a better error.
