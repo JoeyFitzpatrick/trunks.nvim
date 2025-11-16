@@ -409,6 +409,7 @@ function M.render(bufnr, opts)
     -- Lines are 0-indexed, so we only need to increment start_line by 1.
     opts.start_line = opts.start_line + 1
     M.set_keymaps(bufnr, opts)
+    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "status" })
 end
 
 return M

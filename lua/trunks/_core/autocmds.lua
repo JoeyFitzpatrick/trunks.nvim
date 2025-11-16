@@ -14,4 +14,12 @@ function M.setup_autocmds()
     })
 end
 
+---@param data { ui_type: "buffer" | "quickfix", ui_name: string }
+function M.execute_user_autocmds(data)
+    vim.api.nvim_exec_autocmds("User", {
+        pattern = "TrunksUiOpened",
+        data = data,
+    })
+end
+
 return M

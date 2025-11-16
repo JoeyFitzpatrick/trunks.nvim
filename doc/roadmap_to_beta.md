@@ -13,9 +13,6 @@ In a file from a previous commit, be able to:
 In a git patch, be able to do the above, as well as:
 * restore a single hunk
 
-### Allow users to create custom command mappings
-Create autocmds for different UIs, so that keymaps could be created for a given UI as part of its autocmd. Not a huge fan of this approach, but there might be other reasons to create these autocmds anyways.
-
 ### Command log
 A user-facing command log would have a couple of benefits:
 - It tells the user what commands are running. This allows them to find bugs more easily, recover from catastrophe better, and in general have better insight into what the plugin is doing.

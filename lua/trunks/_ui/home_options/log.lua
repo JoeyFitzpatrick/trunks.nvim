@@ -288,6 +288,7 @@ function M.render(bufnr, opts)
         local get_line_fn = set_lines_result.use_graph_output and M._get_graph_line or base_get_line
         set_keymaps(bufnr, get_line_fn, opts)
     end
+    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "log" })
 end
 
 return M

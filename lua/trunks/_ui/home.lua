@@ -180,6 +180,7 @@ local function create_and_render_buffer(tab, indices)
         create_and_render_buffer(tabs.current_option, tabs.current_tab_indices)
         require("trunks._core.register").deregister_buffer(old_bufnr, { delete_win_buffers = false })
     end, { buffer = bufnr })
+    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = string.lower(tab) })
 end
 
 function M.open()

@@ -74,6 +74,7 @@ function M.render(command_builder)
     require("trunks._ui.utils.buffer_text").set(bufnr, output, 2)
     highlight(bufnr)
     set_keymaps(bufnr)
+    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "reflog" })
 end
 
 return M

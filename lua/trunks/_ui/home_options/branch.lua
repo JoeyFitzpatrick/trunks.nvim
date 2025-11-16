@@ -272,6 +272,7 @@ function M.render(bufnr, opts)
 
     set_lines(bufnr, opts)
     set_keymaps(bufnr, opts)
+    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "branch" })
 end
 
 return M

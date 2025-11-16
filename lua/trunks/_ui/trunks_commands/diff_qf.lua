@@ -221,6 +221,7 @@ function M.render(commit)
     })
     vim.cmd.copen()
     highlight_qf_buffer(vim.api.nvim_get_current_buf())
+    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "quickfix", ui_name = "diff_qf" })
 end
 
 return M

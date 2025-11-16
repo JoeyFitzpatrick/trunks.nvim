@@ -3,6 +3,7 @@ local M = {}
 ---@param command_builder trunks.Command
 function M.render(command_builder)
     local cmd = command_builder:build()
+    local base_cmd = vim.split(cmd, " ")[1]
     local bufnr = require("trunks._ui.elements").new_buffer({ filetype = "git" })
     require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
 
@@ -34,6 +35,7 @@ function M.render(command_builder)
     else
         require("trunks._ui.stream").stream_lines(bufnr, cmd, {})
     end
+    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = base_cmd })
 end
 
 return M

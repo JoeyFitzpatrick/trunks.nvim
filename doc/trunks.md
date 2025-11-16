@@ -373,6 +373,25 @@ Some UIs, such as the status UI, will automatically display another window in a 
 
 To toggle the auto-display, enter the toggle keymap, which by default is `<tab>`.
 
+## User Autocmds
+There is a `TrunksUiOpened` event that fires when a Trunks UI opens. You can use this autocmd to run custom logic whenever a Trunks UI opens. For instance, to set a custom keymap when the log UI opens:
+```lua
+vim.api.nvim_create_autocmd("TrunksUiOpened", {
+    desc = "Your custom autocmd",
+    callback = function(data)
+        local ui_type = data.ui_type -- "buffer" or "quickfix"
+        local ui_name = data.ui_name -- name of UI, "log" in this case
+        if ui_name == "log" then
+            vim.keymap.set("n", "p", function ()
+                vim.print(ui_type, ui_name)
+            end,
+            {buffer = 0}
+            )
+        end
+    end,
+})
+```
+
 # Optional Dependencies
 It is recommended, though not required, to use a tool that improves the output of git commands. Some recommendations:
 * [delta](https://github.com/dandavison/delta): used in the demos/examples

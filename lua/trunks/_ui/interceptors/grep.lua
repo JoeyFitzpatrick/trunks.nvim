@@ -21,6 +21,7 @@ end
 ---@param command_builder trunks.Command
 function M.render(command_builder)
     populate_and_open_quickfix(command_builder)
+    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "quickfix", ui_name = "grep" })
 end
 
 return M
