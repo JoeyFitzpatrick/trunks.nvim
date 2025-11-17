@@ -22,6 +22,11 @@ local cmd_ui_map = {
         require("trunks._ui.keymaps.set").set_q_keymap(0)
     end,
     log = function(command_builder)
+        local cmd = command_builder:build()
+        if require("trunks._core.texter").has_options(cmd, { "--graph" }) then
+            require("trunks._ui.elements").terminal(cmd, { display_strategy = "full", insert = true })
+            return
+        end
         local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = os.tmpname() .. "/TrunksLog" })
         require("trunks._ui.home_options.log").render(
             bufnr,

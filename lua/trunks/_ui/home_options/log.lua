@@ -1,5 +1,3 @@
--- Log rendering
-
 local M = {}
 
 ---@param bufnr integer
@@ -33,31 +31,6 @@ local function base_get_line(bufnr, line_num)
     return { hash = line:match("%w+") }
 end
 
----@param bufnr integer
----@param line_num? integer
----@return { hash: string } | nil
-function M._get_graph_line(bufnr, line_num)
-    line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
-    local lines = vim.api.nvim_buf_get_lines(bufnr, math.max(0, line_num - 2), line_num, false)
-    local line, line_before = lines[2], lines[1]
-    -- If cursor is on first line, line_before is the line we want
-    if not line then
-        line = line_before
-    end
-    local commit_hash_length = 7
-    -- Match on 7 consecutive hexadecimal characters
-    local commit_pattern = string.rep("%x", commit_hash_length)
-    local commit_start_index = 9
-    local hash = line:match(commit_pattern, commit_start_index)
-    if not hash then
-        hash = line_before:match(commit_pattern, commit_start_index)
-    end
-    if not hash then
-        return nil
-    end
-    return { hash = hash }
-end
-
 -- The extra space after %an is to help the highlight regex.
 -- This way, there are always two spaces between the author name and commit message.
 local DEFAULT_LOG_FORMAT = "--pretty='format:%h %<(25)%cr %<(25)%an  %<(25)%s'"
@@ -77,7 +50,7 @@ local function contains_option(command, option)
 end
 
 ---@param command_builder? trunks.Command
----@return { cmd: string, use_native_output: boolean, use_graph_output?: boolean, show_head: boolean }
+---@return { cmd: string, use_native_output: boolean, show_head: boolean }
 function M._parse_log_cmd(command_builder)
     -- if command has no args, the default command is "git log" with special format
     if not command_builder then
@@ -89,16 +62,6 @@ function M._parse_log_cmd(command_builder)
     if not args or args:match("log%s-$") then
         command_builder:add_args(DEFAULT_LOG_FORMAT)
         return { cmd = command_builder:build(), use_native_output = false, show_head = true }
-    end
-
-    if contains_option(args, "--graph") then
-        command_builder:add_args(DEFAULT_LOG_FORMAT)
-        return {
-            cmd = command_builder:build(),
-            use_graph_output = true,
-            show_head = false,
-            use_native_output = false,
-        }
     end
 
     local native_output = { cmd = command_builder:build(), use_native_output = true, show_head = false }
@@ -121,30 +84,9 @@ function M._parse_log_cmd(command_builder)
     return { cmd = cmd_with_format, use_native_output = false, show_head = show_head }
 end
 
-local graph_map = {
-    ["|"] = "│",
-    ["*"] = "●",
-    ["/"] = "╱",
-    ["\\"] = "╲",
-    ["-"] = "─",
-    [" "] = " ",
-}
-
----@param line string
----@return string
-local function transform_graph_line(line)
-    -- Only replace the graph part at the start of the line (before the commit hash)
-    local graph, rest = line:match("^([|\\/* -]+)(.*)$")
-    if not graph then
-        return line
-    end
-    local beautified = graph:gsub(".", graph_map)
-    return beautified .. rest
-end
-
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
----@return { use_native_keymaps: boolean, use_graph_output?: boolean }
+---@return { use_native_keymaps: boolean }
 function M.set_lines(bufnr, opts)
     require("trunks._ui.keymaps.keymaps_text").show(bufnr, opts.ui_types)
     local start_line = opts.start_line or 2
@@ -163,13 +105,12 @@ function M.set_lines(bufnr, opts)
         highlight_line = highlight_line,
         start_line = start_line,
         filetype = cmd_tbl.use_native_output and "git" or nil,
-        transform_line = cmd_tbl.use_graph_output and transform_graph_line or nil,
     })
 
     -- This should already be set to false by stream_lines.
     -- Just leaving this in case there's an error there.
     vim.bo[bufnr].modifiable = false
-    return { use_native_keymaps = cmd_tbl.use_native_output, use_graph_output = cmd_tbl.use_graph_output }
+    return { use_native_keymaps = cmd_tbl.use_native_output }
 end
 
 ---@param bufnr integer
@@ -285,7 +226,7 @@ function M.render(bufnr, opts)
     if set_lines_result.use_native_keymaps then
         require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
     else
-        local get_line_fn = set_lines_result.use_graph_output and M._get_graph_line or base_get_line
+        local get_line_fn = base_get_line
         set_keymaps(bufnr, get_line_fn, opts)
     end
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "log" })
