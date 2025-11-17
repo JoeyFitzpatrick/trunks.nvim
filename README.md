@@ -21,8 +21,6 @@ Here's an example of running some git commands with Trunks:
 
 🚧 NOTE: this plugin is in an alpha state. API changes and bugs are expected. 🚧
 
-A roadmap to beta can be found [here](doc/roadmap_to_beta.md).
-
 
 # Installation
 - [lazy.nvim](https://github.com/folke/lazy.nvim)
