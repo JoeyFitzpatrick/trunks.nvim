@@ -175,6 +175,9 @@ local function set_keymaps(bufnr, opts)
 
     for _, mapping in ipairs(keymap_to_command_map) do
         set("n", mapping.keymap, function()
+            vim.wait(2000, function()
+                return not vim.b.trunks_fetch_running
+            end)
             vim.cmd("G " .. mapping.command)
         end, keymap_opts)
     end

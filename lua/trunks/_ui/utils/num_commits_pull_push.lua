@@ -84,6 +84,7 @@ end
 ---@param bufnr integer
 ---@param opts trunks.SetNumCommitsParams
 M.set_num_commits_to_pull_and_push = vim.schedule_wrap(function(bufnr, opts)
+    vim.b[bufnr].trunks_fetch_running = true
     render_num_commits(bufnr, opts)
     local received_output = false
     vim.fn.jobstart("git fetch", {
@@ -104,6 +105,9 @@ M.set_num_commits_to_pull_and_push = vim.schedule_wrap(function(bufnr, opts)
             end
         end,
         on_exit = function(_, code, _)
+            if vim.api.nvim_buf_is_valid(bufnr) then
+                vim.b[bufnr].trunks_fetch_running = false
+            end
             if code ~= 0 or not received_output then
                 return
             end
