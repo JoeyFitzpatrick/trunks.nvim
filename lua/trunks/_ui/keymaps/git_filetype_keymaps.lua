@@ -7,6 +7,8 @@
 ---@field filepath? string
 ---@field previous_filepath? string
 
+local open_file_module = require("trunks._core.open_file")
+
 local PREVIOUS_FILE_PATTERN = "^%-%-%-%s%l"
 local CURRENT_FILE_PATTERN = "^%+%+%+%s%l"
 local DIFF_PATTERN = "^diff"
@@ -33,6 +35,14 @@ end
 ---@param cursor_row integer
 ---@return string | nil
 local function find_commit(bufnr, cursor_row)
+    -- First check if we have diff refs stored in buffer variables
+    -- (from git diff command parsing)
+    local diff_to = vim.b[bufnr].trunks_diff_to
+    if diff_to then
+        return diff_to
+    end
+
+    -- Otherwise search backwards for "commit" line (for git show output)
     while cursor_row > 0 do
         local line = vim.api.nvim_buf_get_lines(bufnr, cursor_row - 1, cursor_row, false)[1]
         if line:match("^commit") then
@@ -43,9 +53,17 @@ local function find_commit(bufnr, cursor_row)
     return nil
 end
 
+---@param bufnr integer
 ---@param commit string
 ---@return string
-local function get_previous_commit(commit)
+local function get_previous_commit(bufnr, commit)
+    -- If we have a stored "from" ref from git diff parsing, use that
+    local diff_from = vim.b[bufnr].trunks_diff_from
+    if diff_from then
+        return diff_from
+    end
+
+    -- Otherwise, get the parent commit
     local previous_commit_hash_output = require("trunks._core.run_cmd").run_cmd("rev-list --parents -n 1 " .. commit)[1]
     local previous_commit = previous_commit_hash_output:match("%s(%x+)")
     if not previous_commit then
@@ -77,7 +95,7 @@ local function get_line(bufnr)
         return output
     end
 
-    output.previous_commit = get_previous_commit(output.commit)
+    output.previous_commit = get_previous_commit(bufnr, output.commit)
 
     local current_line = vim.api.nvim_get_current_line()
     if current_line:match(PREVIOUS_FILE_PATTERN) then
@@ -132,13 +150,13 @@ local function open_file(line_data, open_type)
     end
 
     if open_type == "tab" then
-        require("trunks._core.open_file").open_file_in_tab(file_to_open, commit_to_use, {})
+        open_file_module.open_file_in_tab(file_to_open, commit_to_use, {})
     elseif open_type == "window" then
-        require("trunks._core.open_file").open_file_in_current_window(file_to_open, commit_to_use, {})
+        open_file_module.open_file_in_current_window(file_to_open, commit_to_use, {})
     elseif open_type == "vertical" then
-        require("trunks._core.open_file").open_file_in_split(file_to_open, commit_to_use, "right", {})
+        open_file_module.open_file_in_split(file_to_open, commit_to_use, "right", {})
     elseif open_type == "horizontal" then
-        require("trunks._core.open_file").open_file_in_split(file_to_open, commit_to_use, "below", {})
+        open_file_module.open_file_in_split(file_to_open, commit_to_use, "below", {})
     end
 end
 
@@ -162,21 +180,13 @@ function M.set_keymaps(bufnr)
         if item_type == "commit" then
             require("trunks._ui.commit_details").render(line_data.commit, {})
         elseif item_type == "filepath" then
-            require("trunks._core.open_file").open_file_in_split(line_data.filepath, line_data.commit, "right")
+            open_file_module.open_file_in_split(line_data.filepath, line_data.commit, "right", {})
         elseif item_type == "previous_filepath" then
-            require("trunks._core.open_file").open_file_in_split(
-                line_data.previous_filepath,
-                line_data.previous_commit,
-                "right"
-            )
+            open_file_module.open_file_in_split(line_data.previous_filepath, line_data.previous_commit, "right", {})
         elseif item_type == "vimdiff" then
-            require("trunks._core.open_file").open_file_in_split(
-                line_data.previous_filepath,
-                line_data.previous_commit,
-                "below"
-            )
+            open_file_module.open_file_in_split(line_data.previous_filepath, line_data.previous_commit, "below", {})
             vim.cmd("diffthis")
-            require("trunks._core.open_file").open_file_in_split(line_data.filepath, line_data.commit, "right")
+            open_file_module.open_file_in_split(line_data.filepath, line_data.commit, "right", {})
             vim.cmd("diffthis")
         end
     end, keymap_opts)

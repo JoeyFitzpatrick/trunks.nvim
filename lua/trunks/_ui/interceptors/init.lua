@@ -14,7 +14,7 @@ local cmd_ui_map = {
     help = function(command_builder)
         -- col -b is needed to remove bad characters from --help output
         command_builder:add_args("| col -b")
-        require("trunks._ui.interceptors.standard_interceptor").render(command_builder)
+        require("trunks._ui.interceptors.standard_interceptor").render(command_builder, "help")
         -- Setting the filetype to man add nice highlighting.
         -- It also makes the "q" keymap exit neovim if this is the last buffer, so we need to set it again
         vim.bo["filetype"] = "man"
@@ -54,7 +54,7 @@ local standard_output_commands = {
 
 for _, command in ipairs(standard_output_commands) do
     cmd_ui_map[command] = function(command_builder)
-        require("trunks._ui.interceptors.standard_interceptor").render(command_builder)
+        require("trunks._ui.interceptors.standard_interceptor").render(command_builder, command)
     end
 end
 
