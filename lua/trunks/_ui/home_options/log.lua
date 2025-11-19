@@ -85,6 +85,21 @@ function M._parse_log_cmd(command_builder)
 end
 
 ---@param bufnr integer
+---@param line_num integer | nil
+---@return string | nil
+local function get_log_branch(bufnr, line_num)
+    if not line_num then
+        return nil
+    end
+    local line = vim.api.nvim_buf_get_lines(bufnr, line_num, line_num + 1, false)[1]
+    if not line then
+        return nil
+    end
+    local branch_name = line:match("Branch: (%S+)")
+    return branch_name
+end
+
+---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 ---@return { use_native_keymaps: boolean }
 function M.set_lines(bufnr, opts)
@@ -113,6 +128,35 @@ function M.set_lines(bufnr, opts)
     return { use_native_keymaps = cmd_tbl.use_native_output }
 end
 
+---@class trunks.LogConfirmCommandParams
+---@field cmd string
+---@field command_name string
+---@field current_branch string | nil
+---@field log_branch string | nil
+
+---@param params trunks.LogConfirmCommandParams
+local function confirm_command(params)
+    local current_branch = params.current_branch
+    local log_branch = params.log_branch
+    local command_name = params.command_name:gsub("_", " ")
+    if current_branch and log_branch and current_branch ~= log_branch then
+        if
+            require("trunks._ui.utils.confirm").confirm_choice(
+                string.format(
+                    "Current branch is %s, but viewing log for %s. Are you sure you want to %s?",
+                    current_branch,
+                    log_branch,
+                    command_name
+                )
+            )
+        then
+            vim.cmd(params.cmd)
+        end
+    else
+        vim.cmd(params.cmd)
+    end
+end
+
 ---@param bufnr integer
 ---@param get_line fun(bufnr: integer, line_num?: integer): { hash: string } | nil
 ---@param opts trunks.UiRenderOpts
@@ -120,6 +164,8 @@ local function set_keymaps(bufnr, get_line, opts)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "log", {})
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
+    local log_branch = get_log_branch(bufnr, opts.start_line)
+    local current_branch = require("trunks._core.run_cmd").run_cmd("branch --show-current")[1]
 
     local keymap_to_command_map = {
         { keymap = keymaps.pull, command = "pull" },
@@ -178,7 +224,12 @@ local function set_keymaps(bufnr, get_line, opts)
         if not ok or not line_data then
             return
         end
-        vim.cmd("G rebase -i " .. line_data.hash .. "^")
+        confirm_command({
+            cmd = "G rebase -i ",
+            command_name = "rebase",
+            current_branch = current_branch,
+            log_branch = log_branch,
+        })
     end, keymap_opts)
 
     set("n", keymaps.reset, function()
