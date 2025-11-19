@@ -120,16 +120,17 @@ function M.get_ui(command_builder)
         end
     end
 
+    local is_help_command = cmd:match("%-h%s*$") or cmd:match("%-%-help%s*$")
+    if is_help_command then
+        return cmd_ui_map.help
+    end
+
     if cmd:match("^stash%s*$") then
         return stash_render
     end
     if vim.startswith(cmd, "branch") then
         -- If this is nil, fall back to terminal mode
         return branch_interceptor(command_builder)
-    end
-    local is_help_command = cmd:match("%-h%s*$") or cmd:match("%-%-help%s*$")
-    if is_help_command then
-        return cmd_ui_map.help
     end
     return cmd_ui_map[subcommand]
 end
