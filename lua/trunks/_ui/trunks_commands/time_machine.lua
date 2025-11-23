@@ -133,9 +133,7 @@ end
 
 ---@param bufnr integer
 local function set_file_keymaps(bufnr)
-    local time_machine_keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine", {})
-    local time_machine_file_keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine_file", {})
-    local keymaps = vim.tbl_extend("force", time_machine_keymaps, time_machine_file_keymaps)
+    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine", {})
 
     local keymap_opts = { buffer = bufnr, nowait = true }
     local safe_set_keymap = require("trunks._ui.keymaps.set").safe_set_keymap
@@ -156,14 +154,6 @@ local function set_file_keymaps(bufnr)
 
     safe_set_keymap("n", keymaps.diff_against_head, function()
         time_machine_split(bufnr)
-    end, keymap_opts)
-
-    safe_set_keymap("n", keymaps.next, function()
-        vim.cmd("Trunks time-machine-next")
-    end, keymap_opts)
-
-    safe_set_keymap("n", keymaps.previous, function()
-        vim.cmd("Trunks time-machine-previous")
     end, keymap_opts)
 
     safe_set_keymap("n", "q", function()

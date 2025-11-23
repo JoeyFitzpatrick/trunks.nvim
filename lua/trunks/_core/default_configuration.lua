@@ -147,10 +147,4 @@ return {
             diff_against_head = "D", -- Diff file against HEAD
         },
     },
-    time_machine_file = {
-        keymaps = {
-            next = "<C-n>", -- Navigate to next revision for file
-            previous = "<C-p>", -- Navigate to previous revision for file
-        },
-    },
 }

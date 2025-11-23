@@ -24,7 +24,6 @@
 ---@field stash_popup? trunks.StashPopupConfiguration
 ---@field status? trunks.StatusConfiguration
 ---@field time_machine? trunks.TimeMachineConfiguration
----@field time_machine_file? trunks.TimeMachineFileConfiguration
 
 ---@class trunks.BlameConfiguration
 ---@field keymaps? trunks.BlameKeymaps
@@ -77,9 +76,6 @@
 ---@class trunks.TimeMachineConfiguration
 ---@field auto_display_on? boolean
 ---@field keymaps? trunks.TimeMachineKeymaps
-
----@class trunks.TimeMachineFileConfiguration
----@field keymaps? trunks.TimeMachineFileKeymaps
 
 ---@class trunks.HomeKeymaps
 ---@field next? string

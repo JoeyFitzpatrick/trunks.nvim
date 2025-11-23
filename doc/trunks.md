@@ -168,12 +168,6 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     diff_against_head = "D", -- Diff file against HEAD
                 },
             },
-            time_machine_file = {
-                keymaps = {
-                    next = "<C-n>", -- Navigate to next revision for file
-                    previous = "<C-p>", -- Navigate to previous revision for file
-                },
-            },
             -- End of default configuration
         }
     end
