@@ -138,21 +138,30 @@ local tab_render_map = {
 ---@param indices trunks.TabHighlightIndices[]
 ---@param parent_bufnr integer
 local function create_tabs_window(ui_types, indices, parent_bufnr)
-    local bufnr, win =
-        require("trunks._ui.elements").new_buffer({ enter = false, win_config = { split = "above", height = 5 } })
-    require("trunks._ui.utils.buffer_text").set(bufnr, tabs_text)
-    require("trunks._ui.keymaps.keymaps_text").show(bufnr, ui_types)
-    vim.wo[win].number = false
-    vim.wo[win].relativenumber = false
-    vim.wo[win].signcolumn = "no"
-    vim.wo[win].statuscolumn = ""
-    vim.wo[win].winhighlight = "Normal:Normal,EndOfBuffer:Normal"
-    vim.wo[win].cursorline = false
-    vim.bo[bufnr].modifiable = false
-    vim.bo[bufnr].buftype = "nofile"
-    highlight_tabs(bufnr, indices)
-    require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
+    local BUF_NAME = "HomeUiTabsInfo"
+    local bufnr = vim.fn.bufnr(BUF_NAME, false)
+    local not_buf_exists = bufnr == -1
 
+    if not_buf_exists then
+        local new_bufnr, win = require("trunks._ui.elements").new_buffer({
+            buffer_name = BUF_NAME,
+            enter = false,
+            win_config = { split = "above", height = 5 },
+        })
+        bufnr = new_bufnr
+        vim.wo[win].number = false
+        vim.wo[win].relativenumber = false
+        vim.wo[win].signcolumn = "no"
+        vim.wo[win].statuscolumn = ""
+        vim.wo[win].winhighlight = "Normal:Normal,EndOfBuffer:Normal"
+        vim.wo[win].cursorline = false
+        vim.bo[bufnr].modifiable = false
+        vim.bo[bufnr].buftype = "nofile"
+
+        require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
+    end
+
+    -- Always update the autocmd with the current parent buffer
     local augroup = vim.api.nvim_create_augroup("TrunksHomeUiInfo", { clear = true })
 
     vim.api.nvim_create_autocmd("BufHidden", {
@@ -165,6 +174,10 @@ local function create_tabs_window(ui_types, indices, parent_bufnr)
             end
         end,
     })
+
+    require("trunks._ui.utils.buffer_text").set(bufnr, tabs_text)
+    require("trunks._ui.keymaps.keymaps_text").show(bufnr, ui_types)
+    highlight_tabs(bufnr, indices)
 end
 
 ---@param tab trunks.TabOption
@@ -175,6 +188,14 @@ local function create_and_render_buffer(tab, indices)
     local ui_types = { "home", string.lower(tab) }
 
     local bufnr = ui_render()
+
+    require("trunks._core.register").register_buffer(bufnr, {
+        render_fn = function()
+            local new_bufnr = ui_render()
+            create_tabs_window(ui_types, indices, new_bufnr)
+        end,
+    })
+
     create_tabs_window(ui_types, indices, bufnr)
 
     local keymaps = require("trunks._core.configuration").DATA.home.keymaps

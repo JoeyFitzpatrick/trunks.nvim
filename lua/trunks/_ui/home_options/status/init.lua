@@ -290,11 +290,6 @@ end
 function M.render()
     local _, bufnr =
         require("trunks._ui.elements").terminal("git status -s", { enter = true, display_strategy = "full" })
-    -- require("trunks._core.register").register_buffer(bufnr, {
-    --     render_fn = function()
-    --         ui_render(bufnr, { ui_types = ui_types })
-    --     end,
-    -- })
 
     -- If there's already a buffer named TrunksStatus, just don't set a name
     pcall(vim.api.nvim_buf_set_name, bufnr, "TrunksStatus")
