@@ -146,8 +146,6 @@ local function add_description(ui_type, map_name, desc, lhs)
     table.insert(M.short_descriptions[ui_type], lhs .. " " .. desc)
 end
 
-M.short_descriptions = {}
-
 ---@type trunks.Configuration
 M.short_descriptions = {}
 

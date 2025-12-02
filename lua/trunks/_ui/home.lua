@@ -13,9 +13,6 @@
 
 local M = {}
 
--- includes padding and keymap text
-local TAB_HEIGHT = 6
-
 --- Creates tabs for home UI
 ---@param options string[]
 ---@return string[], trunks.TabHighlightIndices[]
@@ -138,29 +135,58 @@ local tab_render_map = {
     end,
 }
 
+---@param ui_types string[]
+---@param indices trunks.TabHighlightIndices[]
+---@param parent_bufnr integer
+local function create_tabs_window(ui_types, indices, parent_bufnr)
+    local bufnr, win =
+        require("trunks._ui.elements").new_buffer({ enter = false, win_config = { split = "above", height = 5 } })
+    require("trunks._ui.utils.buffer_text").set(bufnr, tabs_text)
+    require("trunks._ui.keymaps.keymaps_text").show(bufnr, ui_types)
+    vim.wo[win].number = false
+    vim.wo[win].relativenumber = false
+    vim.wo[win].signcolumn = "no"
+    vim.wo[win].statuscolumn = ""
+    vim.wo[win].winhighlight = "Normal:Normal,EndOfBuffer:Normal"
+    vim.wo[win].cursorline = false
+    vim.bo[bufnr].modifiable = false
+    vim.bo[bufnr].buftype = "nofile"
+    highlight_tabs(bufnr, indices)
+    require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
+
+    local augroup = vim.api.nvim_create_augroup("TrunksHomeUiInfo", { clear = true })
+
+    vim.api.nvim_create_autocmd("BufHidden", {
+        group = augroup,
+        buffer = parent_bufnr,
+        desc = "Remove home UI info when parent buffer is hidden",
+        callback = function()
+            if vim.api.nvim_buf_is_valid(bufnr) then
+                vim.api.nvim_buf_delete(bufnr, { force = true })
+            end
+        end,
+    })
+end
+
 ---@param tab trunks.TabOption
 ---@param indices trunks.TabHighlightIndices[]
 local function create_and_render_buffer(tab, indices)
-    local bufnr, win = require("trunks._ui.elements").new_buffer({})
-    require("trunks._ui.utils.buffer_text").set(bufnr, tabs_text)
     local ui_render = tab_render_map[tab]
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
+    local bufnr, win = require("trunks._ui.elements").new_buffer({})
+    local ui_types = { "home", string.lower(tab) }
 
     require("trunks._core.register").register_buffer(bufnr, {
         render_fn = function()
-            ui_render(bufnr, { start_line = TAB_HEIGHT, ui_types = { "home", string.lower(tab) } })
+            ui_render(bufnr, { ui_types = ui_types })
         end,
     })
 
     vim.bo[bufnr].modifiable = true
-    ui_render(bufnr, { start_line = TAB_HEIGHT, win = win, ui_types = { "home", string.lower(tab) } })
+    ui_render(bufnr, { win = win, ui_types = ui_types })
     vim.bo[bufnr].modifiable = false
-    local line_to_set_cursor_to = TAB_HEIGHT + 1
-    if tab == "Status" then
-        line_to_set_cursor_to = line_to_set_cursor_to + 2
-    end
-    vim.api.nvim_win_set_cursor(win, { math.min(vim.api.nvim_buf_line_count(bufnr), line_to_set_cursor_to), 0 })
-    highlight_tabs(bufnr, indices)
+
+    create_tabs_window(ui_types, indices, bufnr)
 
     local keymaps = require("trunks._core.configuration").DATA.home.keymaps
     if not keymaps then

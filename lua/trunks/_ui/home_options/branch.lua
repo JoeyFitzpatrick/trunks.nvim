@@ -38,7 +38,6 @@ end
 ---@param opts trunks.UiRenderOpts
 ---@return string[]
 local function set_lines(bufnr, opts)
-    require("trunks._ui.keymaps.keymaps_text").show(bufnr, opts.ui_types)
     local start_line = opts.start_line or 2
     -- if cmd is nil, the default command is "git branch"
     if not opts.command_builder then

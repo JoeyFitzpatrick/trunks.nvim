@@ -29,7 +29,6 @@ end
 ---@param opts trunks.UiRenderOpts
 ---@return string[]
 local function set_lines(bufnr, opts)
-    require("trunks._ui.keymaps.keymaps_text").show(bufnr, opts.ui_types)
     local start_line = opts.start_line or 2
     local output =
         require("trunks._core.run_cmd").run_cmd("stash list --pretty=format:'%<(12)%gd %<(18)%cr   %<(25)%s'")
