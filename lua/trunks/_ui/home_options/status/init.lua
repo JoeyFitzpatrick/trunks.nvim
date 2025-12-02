@@ -11,94 +11,11 @@ local function get_status(line)
     return line:sub(1, 2)
 end
 
---- Highlight status lines
 ---@param bufnr integer
----@param start_line integer
----@param lines string[]
-local function highlight(bufnr, start_line, lines)
-    local highlight_groups = require("trunks._constants.highlight_groups").highlight_groups
-    for line_num, line in ipairs(lines) do
-        local highlight_group
-        local status = get_status(line)
-        -- Some statuses that are "modified" are also "staged", and for highlights,
-        -- we want modified to take precedence
-        if require("trunks._core.git").is_modified(status) then
-            highlight_group = highlight_groups.TRUNKS_DIFF_MODIFIED
-        elseif require("trunks._core.git").is_staged(status) then
-            highlight_group = highlight_groups.TRUNKS_DIFF_ADD
-        else
-            highlight_group = highlight_groups.TRUNKS_DIFF_REMOVE
-        end
-        vim.hl.range(
-            bufnr,
-            vim.api.nvim_create_namespace(""),
-            highlight_group,
-            { line_num + start_line - 1, 0 },
-            { line_num + start_line - 1, 2 }
-        )
-    end
-end
-
--- Git sorts files by status, and when a status changes by (un)staging,
--- it can re-order the files, which we don't want.
--- Instead, sort by the filepaths.
--- NOTE: this function sorts the input table in place.
----@param files string[]
-function M._sort_status_files(files)
-    table.sort(files, function(left, right)
-        return left:sub(4) < right:sub(4)
-    end)
-end
-
----@param bufnr integer
----@param opts trunks.UiRenderOpts
-function M.set_lines(bufnr, opts)
-    if not vim.api.nvim_buf_is_valid(bufnr) then
-        return
-    end
-    require("trunks._ui.keymaps.keymaps_text").show(bufnr, opts.ui_types)
-    local Command = require("trunks._core.command")
-
-    ---@param cmd string
-    local parse_and_run_cmd = function(cmd)
-        return require("trunks._core.run_cmd").run_cmd(Command.base_command(cmd))
-    end
-    local start_line = opts.start_line or 1
-
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    local current_head = require("trunks._ui.utils.get_current_head").get_current_head()
-    local stat_line = parse_and_run_cmd(
-        "diff --staged --shortstat | grep -q '^' && git diff --staged --shortstat || echo 'No files staged'"
-    )[1]
-    local files = parse_and_run_cmd("status --porcelain --untracked")
-    M._sort_status_files(files)
-    vim.api.nvim_buf_set_lines(bufnr, start_line - 1, -1, false, { current_head, stat_line, unpack(files) })
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-
-    require("trunks._ui.utils.get_current_head").highlight_head_line(bufnr, current_head, start_line - 1)
-    -- For highlights, we don't want to include the 2 lines of non-files text.
-    -- Lines are 0-indexed, so we only need to increment start_line by 1.
-    highlight(bufnr, start_line + 1, files)
-    require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(bufnr, {
-        highlight = function(hl_bufnr, hl_start_line, hl_lines)
-            require("trunks._ui.utils.get_current_head").highlight_head_line(bufnr, current_head, start_line - 1)
-            require("trunks._ui.utils.num_commits_pull_push").highlight_num_commits(hl_bufnr, hl_start_line, hl_lines)
-        end,
-        start_line = start_line - 1,
-        end_line = start_line,
-        line_type = "head",
-    })
-end
-
----@param bufnr integer
----@param start_line integer
 ---@param line_num? integer
 ---@return trunks.StatusLineData | nil
-function M.get_line(bufnr, start_line, line_num)
+function M.get_line(bufnr, line_num)
     line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
-    if line_num <= start_line then
-        return nil
-    end
     local line = vim.api.nvim_buf_get_lines(bufnr, line_num - 1, line_num, false)[1]
     if not line or not line:match("^%s?[%w%?]") then
         return nil
@@ -115,18 +32,15 @@ local function remove_untracked_file(filename)
 end
 
 ---@param bufnr integer
----@param opts trunks.UiRenderOpts
-function M.set_keymaps(bufnr, opts)
+function M.set_keymaps(bufnr)
     local default_ui_keymap_opts = { auto_display_keymaps = true }
-    local ui_keymap_opts = vim.tbl_extend("force", default_ui_keymap_opts, opts.keymap_opts or {})
+    local ui_keymap_opts = vim.tbl_extend("force", default_ui_keymap_opts, {})
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "status", ui_keymap_opts)
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
-    -- 2 because we don't want to include the 2 lines of non-files text.
-    local start_line = opts.start_line or 2
 
     set("n", keymaps.stage, function()
-        local ok, line_data = pcall(M.get_line, bufnr, start_line)
+        local ok, line_data = pcall(M.get_line, bufnr)
         if not ok or not line_data then
             return
         end
@@ -142,7 +56,6 @@ function M.set_keymaps(bufnr, opts)
 
     set("v", keymaps.stage, function()
         local visual_start_line, end_line = require("trunks._ui.utils.ui_utils").get_visual_line_nums()
-        visual_start_line = math.max(visual_start_line, start_line)
         local files = vim.api.nvim_buf_get_lines(bufnr, visual_start_line, end_line, false)
         local should_stage = require("trunks._ui.home_options.status.status_utils").should_stage_files(files)
         local files_as_string = ""
@@ -162,7 +75,7 @@ function M.set_keymaps(bufnr, opts)
 
     set("n", keymaps.stage_all, function()
         local should_stage = require("trunks._ui.home_options.status.status_utils").should_stage_files(
-            vim.api.nvim_buf_get_lines(bufnr, start_line, -1, false)
+            vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
         )
         if should_stage then
             require("trunks._core.run_cmd").run_hidden_cmd("git add -A", { rerender = true })
@@ -190,7 +103,7 @@ function M.set_keymaps(bufnr, opts)
     end, keymap_opts)
 
     set("n", keymaps.diff_file, function()
-        local ok, line_data = pcall(M.get_line, bufnr, start_line)
+        local ok, line_data = pcall(M.get_line, bufnr)
         if not ok or not line_data then
             return
         end
@@ -198,7 +111,7 @@ function M.set_keymaps(bufnr, opts)
     end, keymap_opts)
 
     set("n", keymaps.edit_file, function()
-        local ok, line_data = pcall(M.get_line, bufnr, start_line)
+        local ok, line_data = pcall(M.get_line, bufnr)
         if not ok or not line_data then
             return
         end
@@ -225,7 +138,7 @@ function M.set_keymaps(bufnr, opts)
                     keys = "f",
                     description = "Just this file",
                     action = function()
-                        local ok, line_data = pcall(M.get_line, bufnr, start_line, line_num)
+                        local ok, line_data = pcall(M.get_line, bufnr, line_num)
                         if not ok or not line_data then
                             return
                         end
@@ -244,7 +157,7 @@ function M.set_keymaps(bufnr, opts)
                     keys = "u",
                     description = "Unstaged changes for this file",
                     action = function()
-                        local ok, line_data = pcall(M.get_line, bufnr, start_line, line_num)
+                        local ok, line_data = pcall(M.get_line, bufnr, line_num)
                         if not ok or not line_data then
                             return
                         end
@@ -297,7 +210,6 @@ function M.set_keymaps(bufnr, opts)
 
     set("v", keymaps.restore, function()
         local visual_start_line, end_line = require("trunks._ui.utils.ui_utils").get_visual_line_nums()
-        visual_start_line = math.max(visual_start_line, start_line)
         local files = vim.api.nvim_buf_get_lines(bufnr, visual_start_line, end_line, false)
         local statuses = {
             staged = "",
@@ -375,32 +287,28 @@ local function get_diff_cmd(status, filename)
     return "git diff -- " .. filename
 end
 
----@param bufnr integer
----@param opts trunks.UiRenderOpts
-function M.render(bufnr, opts)
-    if not vim.api.nvim_buf_is_valid(bufnr) then
-        return
-    end
+function M.render()
+    local _, bufnr =
+        require("trunks._ui.elements").terminal("git status -s", { enter = true, display_strategy = "full" })
+    -- require("trunks._core.register").register_buffer(bufnr, {
+    --     render_fn = function()
+    --         ui_render(bufnr, { ui_types = ui_types })
+    --     end,
+    -- })
 
     -- If there's already a buffer named TrunksStatus, just don't set a name
     pcall(vim.api.nvim_buf_set_name, bufnr, "TrunksStatus")
 
-    if not opts.start_line then
-        opts.start_line = 1
-    else
-        opts.start_line = opts.start_line + 1
-    end
-    M.set_lines(bufnr, opts)
     require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
         generate_cmd = function()
-            local ok, line_data = pcall(M.get_line, bufnr, opts.start_line)
+            local ok, line_data = pcall(M.get_line, bufnr)
             if not ok or not line_data then
                 return
             end
             return get_diff_cmd(line_data.status, line_data.safe_filename)
         end,
         get_current_diff = function()
-            local ok, line_data = pcall(M.get_line, bufnr, opts.start_line)
+            local ok, line_data = pcall(M.get_line, bufnr)
             if not ok or not line_data then
                 return
             end
@@ -408,11 +316,9 @@ function M.render(bufnr, opts)
         end,
         strategy = { enter = false, display_strategy = "right" },
     })
-    -- For keymaps, we don't want to include the 2 lines of non-files text.
-    -- Lines are 0-indexed, so we only need to increment start_line by 1.
-    opts.start_line = opts.start_line + 1
-    M.set_keymaps(bufnr, opts)
+    M.set_keymaps(bufnr)
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "status" })
+    return bufnr
 end
 
 return M

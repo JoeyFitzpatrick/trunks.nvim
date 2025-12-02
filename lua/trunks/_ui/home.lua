@@ -5,7 +5,6 @@
 ---@alias trunks.TabOption "Status" | "Branch" | "Log" | "Stash"
 
 ---@class trunks.UiRenderOpts
----@field start_line? integer
 ---@field command_builder? trunks.Command -- The command used for this UI
 ---@field keymap_opts? trunks.GetKeymapsOpts
 ---@field win? integer
@@ -121,8 +120,8 @@ end
 
 ---@type table<trunks.TabOption, fun(bufnr: integer, opts: trunks.UiRenderOpts)>
 local tab_render_map = {
-    Status = function(bufnr, opts)
-        require("trunks._ui.home_options.status").render(bufnr, opts)
+    Status = function()
+        return require("trunks._ui.home_options.status").render()
     end,
     Branch = function(bufnr, opts)
         require("trunks._ui.home_options.branch").render(bufnr, opts)
@@ -173,19 +172,9 @@ end
 local function create_and_render_buffer(tab, indices)
     local ui_render = tab_render_map[tab]
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
-    local bufnr, win = require("trunks._ui.elements").new_buffer({})
     local ui_types = { "home", string.lower(tab) }
 
-    require("trunks._core.register").register_buffer(bufnr, {
-        render_fn = function()
-            ui_render(bufnr, { ui_types = ui_types })
-        end,
-    })
-
-    vim.bo[bufnr].modifiable = true
-    ui_render(bufnr, { win = win, ui_types = ui_types })
-    vim.bo[bufnr].modifiable = false
-
+    local bufnr = ui_render()
     create_tabs_window(ui_types, indices, bufnr)
 
     local keymaps = require("trunks._core.configuration").DATA.home.keymaps
