@@ -143,28 +143,43 @@ local function create_tabs_window(ui_types, indices, parent_bufnr)
     local not_buf_exists = bufnr == -1
 
     if not_buf_exists then
-        local new_bufnr, win = require("trunks._ui.elements").new_buffer({
-            buffer_name = BUF_NAME,
-            enter = false,
-            win_config = { split = "above", height = 5 },
-        })
-        bufnr = new_bufnr
+        -- Create buffer manually without registering it as a trunks buffer
+        bufnr = vim.api.nvim_create_buf(false, true)
+        -- Set buffer name
+        local ok = pcall(vim.api.nvim_buf_set_name, bufnr, BUF_NAME)
+        if not ok then
+            vim.cmd("e " .. BUF_NAME)
+        end
+        -- Create window
+        local win = vim.api.nvim_open_win(bufnr, false, { split = "above", height = 5 })
+        -- Set window options
         vim.wo[win].number = false
         vim.wo[win].relativenumber = false
         vim.wo[win].signcolumn = "no"
         vim.wo[win].statuscolumn = ""
         vim.wo[win].winhighlight = "Normal:Normal,EndOfBuffer:Normal"
         vim.wo[win].cursorline = false
+        -- Set buffer options
         vim.bo[bufnr].modifiable = false
         vim.bo[bufnr].buftype = "nofile"
-
-        require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
+    else
+        local win = vim.fn.bufwinid(bufnr)
+        -- If buffer exists but no window is displaying it, create a new window
+        if win == -1 then
+            win = vim.api.nvim_open_win(bufnr, false, { split = "above", height = 5 })
+            vim.wo[win].number = false
+            vim.wo[win].relativenumber = false
+            vim.wo[win].signcolumn = "no"
+            vim.wo[win].statuscolumn = ""
+            vim.wo[win].winhighlight = "Normal:Normal,EndOfBuffer:Normal"
+            vim.wo[win].cursorline = false
+        end
     end
 
     -- Always update the autocmd with the current parent buffer
     local augroup = vim.api.nvim_create_augroup("TrunksHomeUiInfo", { clear = true })
 
-    vim.api.nvim_create_autocmd("BufHidden", {
+    vim.api.nvim_create_autocmd("BufLeave", {
         group = augroup,
         buffer = parent_bufnr,
         desc = "Remove home UI info when parent buffer is hidden",
