@@ -189,31 +189,15 @@ local function create_tabs_window(ui_types, indices, parent_bufnr)
     highlight_tabs(bufnr, indices)
 end
 
+---@param bufnr integer
 ---@param tab trunks.TabOption
----@param indices trunks.TabHighlightIndices[]
-local function create_and_render_buffer(tab, indices)
-    local ui_render = tab_render_map[tab]
-    local set = require("trunks._ui.keymaps.set").safe_set_keymap
-    local ui_types = { "home", string.lower(tab) }
-
-    local bufnr, win = ui_render()
-    create_tabs_window(ui_types, indices, bufnr)
-
-    require("trunks._core.register").register_buffer(bufnr, {
-        render_fn = function()
-            local cursor = vim.api.nvim_win_get_cursor(win)
-            local new_bufnr, new_win = ui_render()
-            vim.api.nvim_win_set_cursor(new_win, cursor)
-            create_tabs_window(ui_types, indices, new_bufnr)
-        end,
-        state = { display_auto_display = true },
-    })
-
+local function set_keymaps_and_user_commands(bufnr, tab)
     local keymaps = require("trunks._core.configuration").DATA.home.keymaps
     if not keymaps then
         return
     end
 
+    local set = require("trunks._ui.keymaps.set").safe_set_keymap
     set("n", keymaps.next, function()
         local old_bufnr = bufnr
         tabs:cycle_tab("forward")
@@ -228,6 +212,29 @@ local function create_and_render_buffer(tab, indices)
         require("trunks._core.register").deregister_buffer(old_bufnr, { delete_win_buffers = false })
     end, { buffer = bufnr })
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = string.lower(tab) })
+end
+
+---@param tab trunks.TabOption
+---@param indices trunks.TabHighlightIndices[]
+local function create_and_render_buffer(tab, indices)
+    local ui_render = tab_render_map[tab]
+    local ui_types = { "home", string.lower(tab) }
+
+    local bufnr, win = ui_render()
+    create_tabs_window(ui_types, indices, bufnr)
+
+    require("trunks._core.register").register_buffer(bufnr, {
+        render_fn = function()
+            local cursor = vim.api.nvim_win_get_cursor(win)
+            local new_bufnr, new_win = ui_render()
+            vim.api.nvim_win_set_cursor(new_win, cursor)
+            create_tabs_window(ui_types, indices, new_bufnr)
+            set_keymaps_and_user_commands(new_bufnr, tab)
+        end,
+        state = { display_auto_display = true },
+    })
+
+    set_keymaps_and_user_commands(bufnr, tab)
 end
 
 function M.open()
