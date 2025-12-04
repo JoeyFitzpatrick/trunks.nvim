@@ -206,6 +206,7 @@ local function create_and_render_buffer(tab, indices)
             vim.api.nvim_win_set_cursor(new_win, cursor)
             create_tabs_window(ui_types, indices, new_bufnr)
         end,
+        state = { display_auto_display = true },
     })
 
     local keymaps = require("trunks._core.configuration").DATA.home.keymaps

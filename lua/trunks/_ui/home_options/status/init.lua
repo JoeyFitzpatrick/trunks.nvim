@@ -293,9 +293,6 @@ function M.render()
     local bufnr = term.bufnr
     local win = term.win
 
-    -- If there's already a buffer named TrunksStatus, just don't set a name
-    pcall(vim.api.nvim_buf_set_name, bufnr, "TrunksStatus")
-
     require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
         generate_cmd = function()
             local ok, line_data = pcall(M.get_line, bufnr)
@@ -311,6 +308,7 @@ function M.render()
             end
             return line_data.safe_filename
         end,
+        --
         strategy = { enter = false, display_strategy = "right" },
     })
     M.set_keymaps(bufnr)
