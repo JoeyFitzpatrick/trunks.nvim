@@ -290,12 +290,13 @@ end
 ---@return integer, integer -- bufnr, win
 function M.render()
     local head_cmd =
-        'echo "Branch: $(git symbolic-ref --short HEAD)" || echo "HEAD detached at $(git rev-parse --short HEAD)"'
+        'git symbolic-ref -q HEAD >/dev/null 2>&1 && echo "Branch: $(git symbolic-ref --short HEAD)" || echo "HEAD detached at $(git rev-parse --short HEAD)"'
     local lines_change_cmd =
         "git diff --staged --shortstat | grep -q '^' && git diff --staged --shortstat || echo 'No files staged'"
     local status_cmd = "git status -s"
+    local whitespace_line = "echo"
     local term = require("trunks._ui.elements").terminal(
-        table.concat({ head_cmd, lines_change_cmd, status_cmd }, ";"),
+        table.concat({ head_cmd, lines_change_cmd, whitespace_line, status_cmd }, ";"),
         { enter = true, display_strategy = "full" }
     )
     local bufnr = term.bufnr
