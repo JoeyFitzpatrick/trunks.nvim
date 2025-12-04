@@ -174,6 +174,15 @@ local function create_tabs_window(ui_types, indices, parent_bufnr)
         end,
     })
 
+    vim.api.nvim_create_autocmd("WinResized", {
+        group = augroup,
+        buffer = bufnr,
+        desc = "Keep win height stable",
+        callback = function()
+            vim.api.nvim_win_set_height(TABS_WINDOW, 5)
+        end,
+    })
+
     require("trunks._ui.utils.buffer_text").set(bufnr, tabs_text)
     require("trunks._ui.keymaps.keymaps_text").show(bufnr, ui_types)
     vim.api.nvim_win_set_cursor(TABS_WINDOW, { 1, 0 })
