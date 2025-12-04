@@ -289,7 +289,15 @@ end
 
 ---@return integer, integer -- bufnr, win
 function M.render()
-    local term = require("trunks._ui.elements").terminal("git status -s", { enter = true, display_strategy = "full" })
+    local head_cmd =
+        'echo "Branch: $(git symbolic-ref --short HEAD)" || echo "HEAD detached at $(git rev-parse --short HEAD)"'
+    local lines_change_cmd =
+        "git diff --staged --shortstat | grep -q '^' && git diff --staged --shortstat || echo 'No files staged'"
+    local status_cmd = "git status -s"
+    local term = require("trunks._ui.elements").terminal(
+        table.concat({ head_cmd, lines_change_cmd, status_cmd }, ";"),
+        { enter = true, display_strategy = "full" }
+    )
     local bufnr = term.bufnr
     local win = term.win
 
@@ -308,7 +316,6 @@ function M.render()
             end
             return line_data.safe_filename
         end,
-        --
         strategy = { enter = false, display_strategy = "right" },
     })
     M.set_keymaps(bufnr)
