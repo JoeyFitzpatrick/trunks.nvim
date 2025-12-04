@@ -187,12 +187,14 @@ local function create_and_render_buffer(tab, indices)
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
     local ui_types = { "home", string.lower(tab) }
 
-    local bufnr = ui_render()
+    local bufnr, win = ui_render()
     create_tabs_window(ui_types, indices, bufnr)
 
     require("trunks._core.register").register_buffer(bufnr, {
         render_fn = function()
-            local new_bufnr = ui_render()
+            local cursor = vim.api.nvim_win_get_cursor(win)
+            local new_bufnr, new_win = ui_render()
+            vim.api.nvim_win_set_cursor(new_win, cursor)
             create_tabs_window(ui_types, indices, new_bufnr)
         end,
     })

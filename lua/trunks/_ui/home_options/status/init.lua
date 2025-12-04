@@ -287,9 +287,11 @@ local function get_diff_cmd(status, filename)
     return "git diff -- " .. filename
 end
 
+---@return integer, integer -- bufnr, win
 function M.render()
-    local _, bufnr =
-        require("trunks._ui.elements").terminal("git status -s", { enter = true, display_strategy = "full" })
+    local term = require("trunks._ui.elements").terminal("git status -s", { enter = true, display_strategy = "full" })
+    local bufnr = term.bufnr
+    local win = term.win
 
     -- If there's already a buffer named TrunksStatus, just don't set a name
     pcall(vim.api.nvim_buf_set_name, bufnr, "TrunksStatus")
@@ -313,7 +315,7 @@ function M.render()
     })
     M.set_keymaps(bufnr)
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "status" })
-    return bufnr
+    return bufnr, win
 end
 
 return M

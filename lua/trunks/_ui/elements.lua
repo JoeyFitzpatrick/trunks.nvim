@@ -38,7 +38,7 @@ end
 ---@param split_cmd string[]
 ---@param bufnr integer
 ---@param strategy trunks.Strategy
----@return integer | nil -- The channel id of the terminal
+---@return integer | nil, integer | nil -- Win id, channel id of the terminal
 local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
     local strategies = require("trunks._constants.command_strategies").STRATEGIES
     local display_strategy = parse_display_strategy(split_cmd, strategy.display_strategy)
@@ -69,7 +69,7 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         vim.api.nvim_win_set_buf(0, bufnr)
     elseif display_strategy == strategies.QUIET then
         require("trunks._core.run_cmd").run_hidden_cmd(cmd)
-        return nil
+        return nil, nil
     else
         error("Unable to determine display strategy", vim.log.levels.ERROR)
     end
@@ -85,7 +85,7 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         })
         vim.opt_local.number = false
     end)
-    return channel_id
+    return win, channel_id
 end
 
 ---@param bufnr integer
@@ -103,7 +103,7 @@ end
 
 ---@param cmd string
 ---@param strategy? trunks.Strategy
----@return integer, integer -- terminal channel id, buffer id
+---@return { bufnr: integer, win: integer, chan: integer } | nil
 function M.terminal(cmd, strategy)
     local split_cmd = vim.split(cmd, " ")
     local bufnr = vim.api.nvim_create_buf(false, true)
@@ -113,7 +113,7 @@ function M.terminal(cmd, strategy)
 
     strategy = require("trunks._constants.command_strategies").get_strategy(split_cmd, strategy)
 
-    local channel_id = open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
+    local win, channel_id = open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
     if not channel_id then
         return
     end
@@ -125,7 +125,7 @@ function M.terminal(cmd, strategy)
     end
     require("trunks._ui.keymaps.base").set_keymaps(bufnr, { terminal_channel_id = channel_id })
     set_terminal_autocmds(bufnr, strategy)
-    return channel_id, bufnr
+    return { bufnr = bufnr, win = win, chan = channel_id }
 end
 
 ---@param bufnr integer
