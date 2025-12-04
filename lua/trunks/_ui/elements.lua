@@ -61,6 +61,10 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         else
             win = vim.api.nvim_open_win(bufnr, enter, { split = display_strategy })
         end
+        local direction_to_win_cmd = { left = "H", below = "J", above = "K", right = "L" }
+        vim.api.nvim_win_call(win, function()
+            vim.cmd("wincmd " .. direction_to_win_cmd[display_strategy])
+        end)
     elseif display_strategy == strategies.FULL then
         vim.api.nvim_win_set_buf(0, bufnr)
     elseif display_strategy == strategies.QUIET then

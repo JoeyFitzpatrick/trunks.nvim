@@ -1,3 +1,4 @@
+vim.cmd("tabnew")
 local buf = vim.api.nvim_create_buf(false, true)
 vim.api.nvim_buf_set_lines(buf, 0, 1, false, { "parent" })
 vim.api.nvim_win_set_buf(0, buf)
@@ -11,7 +12,9 @@ vim.api.nvim_create_autocmd("BufLeave", {
     desc = "Remove home UI info when parent buffer is hidden",
     callback = function()
         if vim.api.nvim_buf_is_valid(new_buf) then
-            vim.api.nvim_buf_delete(new_buf, { force = true })
+            vim.schedule(function()
+                vim.api.nvim_buf_delete(new_buf, { force = false })
+            end)
         end
     end,
 })

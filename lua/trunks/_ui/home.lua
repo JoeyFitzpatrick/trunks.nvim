@@ -134,64 +134,49 @@ local tab_render_map = {
     end,
 }
 
+local TABS_WINDOW = nil
+
 ---@param ui_types string[]
 ---@param indices trunks.TabHighlightIndices[]
 ---@param parent_bufnr integer
 local function create_tabs_window(ui_types, indices, parent_bufnr)
-    local BUF_NAME = "HomeUiTabsInfo"
-    local bufnr = vim.fn.bufnr(BUF_NAME, false)
-    local not_buf_exists = bufnr == -1
-
-    if not_buf_exists then
-        -- Create buffer manually without registering it as a trunks buffer
+    local bufnr
+    if TABS_WINDOW and vim.api.nvim_win_is_valid(TABS_WINDOW) then
+        bufnr = vim.fn.winbufnr(TABS_WINDOW)
+    else
         bufnr = vim.api.nvim_create_buf(false, true)
-        -- Set buffer name
-        local ok = pcall(vim.api.nvim_buf_set_name, bufnr, BUF_NAME)
-        if not ok then
-            vim.cmd("e " .. BUF_NAME)
-        end
-        -- Create window
         local win = vim.api.nvim_open_win(bufnr, false, { split = "above", height = 5 })
-        -- Set window options
+        TABS_WINDOW = win
         vim.wo[win].number = false
         vim.wo[win].relativenumber = false
         vim.wo[win].signcolumn = "no"
         vim.wo[win].statuscolumn = ""
         vim.wo[win].winhighlight = "Normal:Normal,EndOfBuffer:Normal"
         vim.wo[win].cursorline = false
-        -- Set buffer options
+        vim.wo[win].winfixbuf = true
         vim.bo[bufnr].modifiable = false
         vim.bo[bufnr].buftype = "nofile"
-    else
-        local win = vim.fn.bufwinid(bufnr)
-        -- If buffer exists but no window is displaying it, create a new window
-        if win == -1 then
-            win = vim.api.nvim_open_win(bufnr, false, { split = "above", height = 5 })
-            vim.wo[win].number = false
-            vim.wo[win].relativenumber = false
-            vim.wo[win].signcolumn = "no"
-            vim.wo[win].statuscolumn = ""
-            vim.wo[win].winhighlight = "Normal:Normal,EndOfBuffer:Normal"
-            vim.wo[win].cursorline = false
-        end
     end
 
     -- Always update the autocmd with the current parent buffer
     local augroup = vim.api.nvim_create_augroup("TrunksHomeUiInfo", { clear = true })
 
-    vim.api.nvim_create_autocmd("BufLeave", {
+    vim.api.nvim_create_autocmd("WinClosed", {
         group = augroup,
         buffer = parent_bufnr,
         desc = "Remove home UI info when parent buffer is hidden",
         callback = function()
-            if vim.api.nvim_buf_is_valid(bufnr) then
-                vim.api.nvim_buf_delete(bufnr, { force = true })
-            end
+            vim.schedule(function()
+                if vim.api.nvim_buf_is_valid(bufnr) then
+                    vim.api.nvim_buf_delete(bufnr, { force = true })
+                end
+            end)
         end,
     })
 
     require("trunks._ui.utils.buffer_text").set(bufnr, tabs_text)
     require("trunks._ui.keymaps.keymaps_text").show(bufnr, ui_types)
+    vim.api.nvim_win_set_cursor(TABS_WINDOW, { 1, 0 })
     highlight_tabs(bufnr, indices)
 end
 
@@ -203,6 +188,7 @@ local function create_and_render_buffer(tab, indices)
     local ui_types = { "home", string.lower(tab) }
 
     local bufnr = ui_render()
+    create_tabs_window(ui_types, indices, bufnr)
 
     require("trunks._core.register").register_buffer(bufnr, {
         render_fn = function()
@@ -210,8 +196,6 @@ local function create_and_render_buffer(tab, indices)
             create_tabs_window(ui_types, indices, new_bufnr)
         end,
     })
-
-    create_tabs_window(ui_types, indices, bufnr)
 
     local keymaps = require("trunks._core.configuration").DATA.home.keymaps
     if not keymaps then
