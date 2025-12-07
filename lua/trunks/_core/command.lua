@@ -32,7 +32,7 @@ function Command.base_command(cmd, filename)
     self.base = cmd
     self._prefix = { "git" }
     self._args = {}
-    self._prefix_args = {}
+    self._prefix_args = { "--no-pager" }
     self._postfix_args = {}
     self._env_vars = {}
 

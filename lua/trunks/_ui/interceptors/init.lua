@@ -88,16 +88,12 @@ local function branch_interceptor(command_builder)
     local has_only_ui_options = require("trunks._core.texter").only_has_options(command_builder, BRANCH_UI_OPTIONS)
     if has_only_ui_options then
         return function(branch_command_builder)
-            local bufnr = require("trunks._ui.elements").new_buffer({
-                buffer_name = os.tmpname() .. "/TrunksBranch",
-                win_config = { split = "below" },
+            require("trunks._ui.home_options.branch").render({
+                command_builder = branch_command_builder,
+                ui_types = { "branch" },
             })
-            require("trunks._ui.home_options.branch").render(
-                bufnr,
-                { command_builder = branch_command_builder, ui_types = { "branch" } }
-            )
             -- By default branch UI "q" map will go back to last buffer, but in a split we just want to close it
-            require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
+            -- require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
         end
     end
     return nil

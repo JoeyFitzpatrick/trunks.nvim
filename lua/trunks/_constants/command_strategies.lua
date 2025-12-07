@@ -8,6 +8,8 @@
 ---@field trigger_redraw? boolean | trunks.DisplayStrategyBoolParser
 ---@field enter? boolean
 ---@field win_size? number
+---@field term? boolean
+---@field pty? boolean
 
 local M = {}
 
@@ -63,6 +65,7 @@ M.default = {
     display_strategy = M.STRATEGIES.BELOW,
     insert = false,
     trigger_redraw = false,
+    pty = true,
 }
 
 ---@type trunks.Strategy
@@ -109,7 +112,7 @@ M.commit = {
 }
 
 M.config = { insert = true }
-M.diff = { display_strategy = M.STRATEGIES.RIGHT, insert = false }
+M.diff = { display_strategy = M.STRATEGIES.RIGHT, insert = false, pty = false }
 M.fetch = { display_strategy = M.STRATEGIES.BELOW, trigger_redraw = true }
 M.merge = { insert = true, trigger_redraw = true }
 
@@ -127,7 +130,7 @@ M.push = { trigger_redraw = true }
 M.rebase = { insert = true, trigger_redraw = true }
 M.reset = { trigger_redraw = true }
 M.revert = { trigger_redraw = true }
-M.show = { display_strategy = M.STRATEGIES.FULL, insert = true }
+M.show = { display_strategy = M.STRATEGIES.FULL, insert = true, pty = false }
 M.stage = { trigger_redraw = true }
 M.stash = { trigger_redraw = true }
 M.switch = { trigger_redraw = true }

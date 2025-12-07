@@ -266,7 +266,7 @@ end
 local function get_diff_cmd(status, filename)
     local status_checks = require("trunks._core.git")
     if status_checks.is_untracked(status) then
-        return "git diff --no-index /dev/null -- " .. filename
+        return "diff --no-index /dev/null -- " .. filename
     end
     if status_checks.is_modified(status) then
         return string.format(
@@ -279,12 +279,12 @@ local function get_diff_cmd(status, filename)
         )
     end
     if status_checks.is_staged(status) then
-        return "git diff --staged -- " .. filename
+        return "diff --staged -- " .. filename
     end
     if status_checks.is_deleted(status) then
-        return "git diff -- " .. filename
+        return "diff -- " .. filename
     end
-    return "git diff -- " .. filename
+    return "diff -- " .. filename
 end
 
 ---@return integer, integer -- bufnr, win
@@ -295,10 +295,8 @@ function M.render()
         "git diff --staged --shortstat | grep -q '^' && git diff --staged --shortstat || echo 'No files staged'"
     local status_cmd = "git status -s"
     local whitespace_line = "echo"
-    local term = require("trunks._ui.elements").terminal(
-        table.concat({ head_cmd, lines_change_cmd, whitespace_line, status_cmd }, ";"),
-        { enter = true, display_strategy = "full" }
-    )
+
+    local term = require("trunks._ui.elements").terminal(status_cmd, { enter = true, display_strategy = "full" })
     local bufnr = term.bufnr
     local win = term.win
 
@@ -308,7 +306,9 @@ function M.render()
             if not ok or not line_data then
                 return
             end
-            return get_diff_cmd(line_data.status, line_data.safe_filename)
+            local Command = require("trunks._core.command")
+            return Command.base_command(get_diff_cmd(line_data.status, line_data.safe_filename)):build()
+                .. "|delta --paging=never"
         end,
         get_current_diff = function()
             local ok, line_data = pcall(M.get_line, bufnr)
@@ -317,7 +317,7 @@ function M.render()
             end
             return line_data.safe_filename
         end,
-        strategy = { enter = false, display_strategy = "right" },
+        strategy = { enter = false, display_strategy = "right", pty = false },
     })
     M.set_keymaps(bufnr)
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "status" })

@@ -69,24 +69,31 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         vim.api.nvim_win_set_buf(0, bufnr)
     elseif display_strategy == strategies.QUIET then
         require("trunks._core.run_cmd").run_hidden_cmd(cmd)
-        return nil, nil
+        return { win = nil, channel_id = nil, exit_code = nil }
     else
         error("Unable to determine display strategy", vim.log.levels.ERROR)
     end
-    local channel_id
     local term_exit_code
-    vim.api.nvim_win_call(win, function()
-        channel_id = vim.fn.jobstart(cmd, {
-            term = true,
-            on_exit = function(_, exit_code, _)
-                term_exit_code = exit_code
-                if parse_bool_or_function(vim.split(cmd, " "), strategy.trigger_redraw) then
-                    require("trunks._core.register").rerender_buffers()
+    local channel_id = vim.api.nvim_open_term(bufnr, {})
+    vim.fn.jobstart(cmd, {
+        pty = strategy.pty,
+        term = strategy.term,
+        -- No on_stderr needed, it's merged with stdout when pty = true
+        on_stdout = function(_, data, _)
+            for _, line in ipairs(data) do
+                if line ~= "" then
+                    vim.api.nvim_chan_send(channel_id, line .. "\r\n")
                 end
-            end,
-        })
-        vim.opt_local.number = false
-    end)
+            end
+        end,
+        on_exit = function(_, exit_code, _)
+            term_exit_code = exit_code
+            if parse_bool_or_function(vim.split(cmd, " "), strategy.trigger_redraw) then
+                require("trunks._core.register").rerender_buffers()
+            end
+        end,
+    })
+    vim.opt_local.number = false
     return { win = win, channel_id = channel_id, exit_code = term_exit_code }
 end
 
