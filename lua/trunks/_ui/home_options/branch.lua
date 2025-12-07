@@ -4,60 +4,6 @@ local M = {}
 
 local run_cmd = require("trunks._core.run_cmd")
 
---- Highlight branch lines
----@param bufnr integer
----@param start_line integer
----@param lines string[]
-local function highlight(bufnr, start_line, lines)
-    local highlight_groups = require("trunks._constants.highlight_groups").highlight_groups
-    for i, line in ipairs(lines) do
-        local line_num = i + start_line - 1
-        if line:match("^%*") then
-            vim.hl.range(
-                bufnr,
-                vim.api.nvim_create_namespace(""),
-                highlight_groups.TRUNKS_DIFF_ADD,
-                { line_num, 2 },
-                { line_num, -1 }
-            )
-        end
-    end
-    require("trunks._ui.utils.num_commits_pull_push").highlight_num_commits(bufnr, start_line, lines)
-end
-
----@param bufnr integer
----@param opts trunks.UiRenderOpts
-local function set_cursor_to_first_branch(bufnr, opts)
-    local start_line = opts.start_line or 0
-    if opts.win and vim.api.nvim_buf_line_count(bufnr) > start_line then
-        vim.api.nvim_win_set_cursor(opts.win, { start_line + 1, 0 })
-    end
-end
-
----@param bufnr integer
----@param opts trunks.UiRenderOpts
----@return string[]
-local function set_lines(bufnr, opts)
-    local start_line = opts.start_line or 2
-    -- if cmd is nil, the default command is "git branch"
-    if not opts.command_builder then
-        -- This sorts branches such that the current branch appears first
-        opts.command_builder = Command.base_command("branch --sort=-HEAD")
-    end
-    local output = run_cmd.run_cmd(opts.command_builder)
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    vim.api.nvim_buf_set_lines(bufnr, start_line, -1, false, output)
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-
-    set_cursor_to_first_branch(bufnr, opts)
-    highlight(bufnr, start_line, output)
-    require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(
-        bufnr,
-        { highlight = highlight, start_line = start_line, line_type = "branch" }
-    )
-    return output
-end
-
 ---@param bufnr integer
 ---@param line_num? integer
 ---@return { branch_name: string } | nil
@@ -71,8 +17,7 @@ local function get_line(bufnr, line_num)
 end
 
 ---@param bufnr integer
----@param opts trunks.UiRenderOpts
-local function set_keymaps(bufnr, opts)
+local function set_keymaps(bufnr)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "branch", {})
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
@@ -117,7 +62,6 @@ local function set_keymaps(bufnr, opts)
                         description = "Yes",
                         action = function()
                             run_cmd.run_hidden_cmd("branch -D " .. branch_name)
-                            set_lines(bufnr, opts)
                         end,
                     },
                     {
@@ -129,7 +73,6 @@ local function set_keymaps(bufnr, opts)
                 },
             })
         end
-        set_lines(bufnr, opts)
     end
 
     set("n", keymaps.delete, function()
@@ -206,7 +149,6 @@ local function set_keymaps(bufnr, opts)
             if result == "error" then
                 return
             end
-            set_lines(bufnr, opts)
         end)
     end, keymap_opts)
 
@@ -250,7 +192,6 @@ local function set_keymaps(bufnr, opts)
                 { rerender = true }
             )
         end)
-        set_lines(bufnr, opts)
     end, keymap_opts)
 
     set("n", keymaps.switch, function()
@@ -262,19 +203,21 @@ local function set_keymaps(bufnr, opts)
         if result == "error" then
             return
         end
-        set_lines(bufnr, opts)
     end, keymap_opts)
 end
 
----@param bufnr integer
----@param opts trunks.UiRenderOpts
-function M.render(bufnr, opts)
-    -- If there's already a buffer named TrunksBranch, just don't set a name
-    pcall(vim.api.nvim_buf_set_name, bufnr, "TrunksBranch")
+---@param opts? trunks.UiRenderOpts
+function M.render(opts)
+    opts = opts or {}
+    local command_builder = opts.command_builder or Command.base_command("branch --sort=-HEAD")
+    local term =
+        require("trunks._ui.elements").terminal(command_builder:build(), { enter = true, display_strategy = "full" })
+    local bufnr = term.bufnr
+    local win = term.win
 
-    set_lines(bufnr, opts)
-    set_keymaps(bufnr, opts)
+    set_keymaps(bufnr)
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "branch" })
+    return bufnr, win
 end
 
 return M

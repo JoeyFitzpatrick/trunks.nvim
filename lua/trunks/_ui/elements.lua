@@ -38,7 +38,7 @@ end
 ---@param split_cmd string[]
 ---@param bufnr integer
 ---@param strategy trunks.Strategy
----@return integer | nil, integer | nil -- Win id, channel id of the terminal
+---@return { win?: integer, channel_id?: integer, exit_code: integer }
 local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
     local strategies = require("trunks._constants.command_strategies").STRATEGIES
     local display_strategy = parse_display_strategy(split_cmd, strategy.display_strategy)
@@ -74,10 +74,12 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         error("Unable to determine display strategy", vim.log.levels.ERROR)
     end
     local channel_id
+    local term_exit_code
     vim.api.nvim_win_call(win, function()
         channel_id = vim.fn.jobstart(cmd, {
             term = true,
-            on_exit = function()
+            on_exit = function(_, exit_code, _)
+                term_exit_code = exit_code
                 if parse_bool_or_function(vim.split(cmd, " "), strategy.trigger_redraw) then
                     require("trunks._core.register").rerender_buffers()
                 end
@@ -85,7 +87,7 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         })
         vim.opt_local.number = false
     end)
-    return win, channel_id
+    return { win = win, channel_id = channel_id, exit_code = term_exit_code }
 end
 
 ---@param bufnr integer
@@ -103,7 +105,7 @@ end
 
 ---@param cmd string
 ---@param strategy? trunks.Strategy
----@return { bufnr: integer, win: integer, chan: integer } | nil
+---@return { bufnr: integer, win: integer, chan: integer, exit_code: integer } | nil
 function M.terminal(cmd, strategy)
     local split_cmd = vim.split(cmd, " ")
     local bufnr = vim.api.nvim_create_buf(false, true)
@@ -113,7 +115,10 @@ function M.terminal(cmd, strategy)
 
     strategy = require("trunks._constants.command_strategies").get_strategy(split_cmd, strategy)
 
-    local win, channel_id = open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
+    local open_term_result = open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
+    local win = open_term_result.win
+    local channel_id = open_term_result.channel_id
+    local exit_code = open_term_result.exit_code
     if not channel_id then
         return
     end
@@ -125,7 +130,7 @@ function M.terminal(cmd, strategy)
     end
     require("trunks._ui.keymaps.base").set_keymaps(bufnr, { terminal_channel_id = channel_id })
     set_terminal_autocmds(bufnr, strategy)
-    return { bufnr = bufnr, win = win, chan = channel_id }
+    return { bufnr = bufnr, win = win, chan = channel_id, exit_code = exit_code }
 end
 
 ---@param bufnr integer

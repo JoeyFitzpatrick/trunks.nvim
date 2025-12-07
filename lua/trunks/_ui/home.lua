@@ -52,8 +52,8 @@ local tab_render_map = {
     Status = function()
         return require("trunks._ui.home_options.status").render()
     end,
-    Branch = function(bufnr, opts)
-        require("trunks._ui.home_options.branch").render(bufnr, opts)
+    Branch = function(opts)
+        return require("trunks._ui.home_options.branch").render(opts)
     end,
     Log = function(bufnr, opts)
         require("trunks._ui.home_options.log").render(bufnr, opts)
@@ -94,7 +94,6 @@ function M.create_and_render_buffer(tab)
     local ui_types = { "home", string.lower(tab) }
 
     local bufnr, win = ui_render()
-
     require("trunks._core.register").register_buffer(bufnr, {
         render_fn = function()
             local cursor = vim.api.nvim_win_get_cursor(win)
