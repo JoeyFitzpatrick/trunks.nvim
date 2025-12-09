@@ -38,6 +38,9 @@ end
 ---@return trunks.Strategy
 function M.get_strategy(cmd, custom_strategy)
     local base_cmd = cmd[2]
+    if base_cmd and vim.startswith(base_cmd, "-") then
+        base_cmd = cmd[3]
+    end
     if not base_cmd then
         return M.default
     end
@@ -81,7 +84,24 @@ M.add = {
 }
 
 M.annotate = { insert = true }
-M.branch = { display_strategy = M.STRATEGIES.BELOW, trigger_redraw = true }
+
+---@type trunks.Strategy
+M.branch = {
+    display_strategy = M.STRATEGIES.BELOW,
+    trigger_redraw = function(cmd)
+        local args_that_trigger_redraw = {
+            "-d",
+            "--delete",
+            "-m",
+            "--move",
+            "-M",
+            "-c",
+            "--copy",
+        }
+        return tbls_overlap(args_that_trigger_redraw, cmd)
+    end,
+}
+
 M.checkout = { trigger_redraw = true }
 M["checkout-index"] = { trigger_redraw = true }
 

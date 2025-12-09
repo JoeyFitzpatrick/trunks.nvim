@@ -49,7 +49,10 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         on_stdout = function(_, data, _)
             for _, line in ipairs(data) do
                 if line ~= "" then
-                    vim.api.nvim_chan_send(channel_id, line .. "\r\n")
+                    local ok = pcall(vim.api.nvim_chan_send, channel_id, line .. "\r\n")
+                    if not ok then
+                        return
+                    end
                 end
             end
         end,

@@ -6,7 +6,7 @@
 
 ---@class trunks.UiRenderOpts
 ---@field command_builder? trunks.Command -- The command used for this UI
----@field keymap_opts? trunks.GetKeymapsOpts
+---@field set_keymaps? fun(bufnr: integer)
 ---@field win? integer
 ---@field ui_types? string[]
 
@@ -49,8 +49,8 @@ local tabs = {
 
 ---@type table<trunks.TabOption, fun(bufnr: integer, opts: trunks.UiRenderOpts)>
 local tab_render_map = {
-    Status = function()
-        return require("trunks._ui.home_options.status").render()
+    Status = function(opts)
+        return require("trunks._ui.home_options.status").render(opts)
     end,
     Branch = function(opts)
         return require("trunks._ui.home_options.branch").render(opts)
@@ -65,7 +65,7 @@ local tab_render_map = {
 
 ---@param bufnr integer
 ---@param tab trunks.TabOption
-local function set_keymaps_and_user_commands(bufnr, tab)
+local function set_keymaps(bufnr, tab)
     local keymaps = require("trunks._core.configuration").DATA.home.keymaps
     if not keymaps then
         return
@@ -85,7 +85,6 @@ local function set_keymaps_and_user_commands(bufnr, tab)
         M.create_and_render_buffer(tabs.current_option)
         require("trunks._core.register").deregister_buffer(old_bufnr, { delete_win_buffers = false })
     end, { buffer = bufnr })
-    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = string.lower(tab) })
 end
 
 ---@param tab trunks.TabOption
@@ -93,18 +92,7 @@ function M.create_and_render_buffer(tab)
     local ui_render = tab_render_map[tab]
     local ui_types = { "home", string.lower(tab) }
 
-    local bufnr, win = ui_render()
-    require("trunks._core.register").register_buffer(bufnr, {
-        render_fn = function()
-            local cursor = vim.api.nvim_win_get_cursor(win)
-            local new_bufnr, new_win = ui_render()
-            vim.api.nvim_win_set_cursor(new_win, cursor)
-            set_keymaps_and_user_commands(new_bufnr, tab)
-        end,
-        state = { display_auto_display = true },
-    })
-
-    set_keymaps_and_user_commands(bufnr, tab)
+    local bufnr, win = ui_render({ set_keymaps = set_keymaps })
 end
 
 function M.open()

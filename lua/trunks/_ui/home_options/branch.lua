@@ -216,6 +216,14 @@ function M.render(opts)
     local win = term.win
 
     set_keymaps(bufnr)
+    require("trunks._core.register").register_buffer(bufnr, {
+        render_fn = function()
+            M.render()
+        end,
+    })
+    if opts.set_keymaps then
+        opts.set_keymaps(bufnr)
+    end
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "branch" })
     return bufnr, win
 end

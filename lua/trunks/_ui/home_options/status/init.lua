@@ -1,5 +1,3 @@
--- Status rendering
-
 ---@class trunks.StatusLineData
 ---@field filename string
 ---@field safe_filename string
@@ -287,8 +285,10 @@ local function get_diff_cmd(status, filename)
     return "diff -- " .. filename
 end
 
+---@param opts? trunks.UiRenderOpts
 ---@return integer, integer -- bufnr, win
-function M.render()
+function M.render(opts)
+    opts = opts or {}
     local head_cmd =
         'git symbolic-ref -q HEAD >/dev/null 2>&1 && echo "Branch: $(git symbolic-ref --short HEAD)" || echo "HEAD detached at $(git rev-parse --short HEAD)"'
     local lines_change_cmd =
@@ -320,6 +320,17 @@ function M.render()
         strategy = { enter = false, display_strategy = "right", pty = false },
     })
     M.set_keymaps(bufnr)
+    if opts.set_keymaps then
+        opts.set_keymaps(bufnr)
+    end
+
+    require("trunks._core.register").register_buffer(bufnr, {
+        render_fn = function()
+            M.render(opts)
+            require("trunks._core.register").deregister_buffer(bufnr, { delete_win_buffers = false })
+        end,
+        state = { display_auto_display = true },
+    })
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "status" })
     return bufnr, win
 end
