@@ -40,6 +40,27 @@ end
 ---@param strategy trunks.Strategy
 ---@return { win?: integer, channel_id?: integer, exit_code: integer }
 local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
+    local term_exit_code
+    local channel_id = vim.api.nvim_open_term(bufnr, {})
+    vim.fn.jobstart(cmd, {
+        pty = strategy.pty,
+        term = strategy.term,
+        -- No on_stderr needed, it's merged with stdout when pty = true
+        on_stdout = function(_, data, _)
+            for _, line in ipairs(data) do
+                if line ~= "" then
+                    vim.api.nvim_chan_send(channel_id, line .. "\r\n")
+                end
+            end
+        end,
+        on_exit = function(_, exit_code, _)
+            term_exit_code = exit_code
+            if parse_bool_or_function(vim.split(cmd, " "), strategy.trigger_redraw) then
+                require("trunks._core.register").rerender_buffers()
+            end
+        end,
+    })
+
     local strategies = require("trunks._constants.command_strategies").STRATEGIES
     local display_strategy = parse_display_strategy(split_cmd, strategy.display_strategy)
     local win = vim.api.nvim_get_current_win()
@@ -73,26 +94,6 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
     else
         error("Unable to determine display strategy", vim.log.levels.ERROR)
     end
-    local term_exit_code
-    local channel_id = vim.api.nvim_open_term(bufnr, {})
-    vim.fn.jobstart(cmd, {
-        pty = strategy.pty,
-        term = strategy.term,
-        -- No on_stderr needed, it's merged with stdout when pty = true
-        on_stdout = function(_, data, _)
-            for _, line in ipairs(data) do
-                if line ~= "" then
-                    vim.api.nvim_chan_send(channel_id, line .. "\r\n")
-                end
-            end
-        end,
-        on_exit = function(_, exit_code, _)
-            term_exit_code = exit_code
-            if parse_bool_or_function(vim.split(cmd, " "), strategy.trigger_redraw) then
-                require("trunks._core.register").rerender_buffers()
-            end
-        end,
-    })
     vim.opt_local.number = false
     return { win = win, channel_id = channel_id, exit_code = term_exit_code }
 end
