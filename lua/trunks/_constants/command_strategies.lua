@@ -38,7 +38,7 @@ end
 ---@return trunks.Strategy
 function M.get_strategy(cmd, custom_strategy)
     local base_cmd = cmd[2]
-    if base_cmd and vim.startswith(base_cmd, "-") then
+    if base_cmd and vim.startswith(cmd[2], "-") then
         base_cmd = cmd[3]
     end
     if not base_cmd then

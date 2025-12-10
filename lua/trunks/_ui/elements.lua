@@ -58,13 +58,13 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
                     if is_streaming then
                         line = "\r\n" .. line
                     end
-                    local ok = pcall(vim.api.nvim_chan_send, channel_id, line .. "\r\n")
+                    local ok = pcall(vim.api.nvim_chan_send, channel_id, line)
                     if not ok then
                         return
                     end
                 end
+                is_streaming = true
             end
-            is_streaming = true
         end,
         on_exit = function(_, exit_code, _)
             term_exit_code = exit_code

@@ -221,7 +221,7 @@ function M.render(bufnr, opts)
     set_keymaps(bufnr)
     require("trunks._core.register").register_buffer(bufnr, {
         render_fn = function()
-            M.render()
+            M.render(bufnr, opts)
         end,
     })
     if opts.set_keymaps then

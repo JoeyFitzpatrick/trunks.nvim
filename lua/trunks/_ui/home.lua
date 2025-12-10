@@ -52,8 +52,8 @@ local tab_render_map = {
     Status = function(bufnr, opts)
         return require("trunks._ui.home_options.status").render(bufnr, opts)
     end,
-    Branch = function(opts)
-        return require("trunks._ui.home_options.branch").render(opts)
+    Branch = function(bufnr, opts)
+        return require("trunks._ui.home_options.branch").render(bufnr, opts)
     end,
     Log = function(bufnr, opts)
         require("trunks._ui.home_options.log").render(bufnr, opts)

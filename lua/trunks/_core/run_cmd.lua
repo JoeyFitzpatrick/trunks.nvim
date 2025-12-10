@@ -79,8 +79,8 @@ M.run_hidden_cmd = function(cmd, opts)
     end
     local should_rerender = false
     if opts.rerender == nil then
-        local should_rerender =
-            require("trunks._constants/command_strategies").get_strategy(vim.split(final_command, " ")).trigger_redraw
+        should_rerender =
+            require("trunks._constants.command_strategies").get_strategy(vim.split(final_command, " ")).trigger_redraw
     else
         should_rerender = opts.rerender
     end
