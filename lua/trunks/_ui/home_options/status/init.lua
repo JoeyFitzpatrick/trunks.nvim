@@ -300,25 +300,25 @@ function M.render(bufnr, opts)
     )
     local win = term.win
 
-    -- require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
-    --     generate_cmd = function()
-    --         local ok, line_data = pcall(M.get_line, bufnr)
-    --         if not ok or not line_data then
-    --             return
-    --         end
-    --         local Command = require("trunks._core.command")
-    --         return Command.base_command(get_diff_cmd(line_data.status, line_data.safe_filename)):build()
-    --             .. "|delta --paging=never"
-    --     end,
-    --     get_current_diff = function()
-    --         local ok, line_data = pcall(M.get_line, bufnr)
-    --         if not ok or not line_data then
-    --             return
-    --         end
-    --         return line_data.safe_filename
-    --     end,
-    --     strategy = { enter = false, display_strategy = "right", pty = false },
-    -- })
+    require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
+        generate_cmd = function()
+            local ok, line_data = pcall(M.get_line, bufnr)
+            if not ok or not line_data then
+                return
+            end
+            local Command = require("trunks._core.command")
+            return Command.base_command(get_diff_cmd(line_data.status, line_data.safe_filename)):build()
+                .. "|delta --paging=never"
+        end,
+        get_current_diff = function()
+            local ok, line_data = pcall(M.get_line, bufnr)
+            if not ok or not line_data then
+                return
+            end
+            return line_data.safe_filename
+        end,
+        strategy = { enter = false, display_strategy = "right", pty = false },
+    })
     M.set_keymaps(bufnr)
     if opts.set_keymaps then
         opts.set_keymaps(bufnr)

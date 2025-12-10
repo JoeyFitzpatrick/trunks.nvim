@@ -1,43 +1,7 @@
---Stash ui
-
 ---@class trunks.StashLineData
 ---@field stash_index string
 
 local M = {}
-
---- Highlight stash lines
----@param bufnr integer
----@param start_line integer
----@param lines string[]
-local function highlight(bufnr, start_line, lines)
-    local highlight_line = require("trunks._ui.highlight").highlight_line
-    for i, line in ipairs(lines) do
-        if line == "" then
-            return
-        end
-        local line_num = i + start_line - 1
-        local stash_index_start, stash_index_end = line:find("^%S+")
-        highlight_line(bufnr, "Keyword", line_num, stash_index_start, stash_index_end)
-        local date_start, date_end = line:find(".+ago", stash_index_end + 1)
-        highlight_line(bufnr, "Function", line_num, date_start, date_end)
-        local branch_start, branch_end = line:find(" .+:", date_end + 1)
-        highlight_line(bufnr, "Removed", line_num, branch_start, branch_end)
-    end
-end
-
----@param bufnr integer
----@param opts trunks.UiRenderOpts
----@return string[]
-local function set_lines(bufnr, opts)
-    local start_line = opts.start_line or 2
-    local output =
-        require("trunks._core.run_cmd").run_cmd("stash list --pretty=format:'%<(12)%gd %<(18)%cr   %<(25)%s'")
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    vim.api.nvim_buf_set_lines(bufnr, start_line, -1, false, output)
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-    highlight(bufnr, start_line, output)
-    return output
-end
 
 ---@param bufnr integer
 ---@param line_num? integer
@@ -99,10 +63,15 @@ end
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
-    -- If there's already a buffer named TrunksStash, just don't set a name
-    pcall(vim.api.nvim_buf_set_name, bufnr, "TrunksStash")
+    local Command = require("trunks._core.command")
+    local command_builder = Command.base_command("stash list")
 
-    set_lines(bufnr, opts)
+    local term = require("trunks._ui.elements").terminal(
+        bufnr,
+        command_builder:build(),
+        { enter = true, display_strategy = "full", trigger_redraw = false }
+    )
+
     require("trunks._ui.auto_display").create_auto_display(bufnr, "stash", {
         generate_cmd = function()
             local ok, line_data = pcall(get_line, bufnr)
@@ -112,7 +81,7 @@ function M.render(bufnr, opts)
             local command_builder = require("trunks._core.command").base_command(
                 "stash show -p --include-untracked " .. line_data.stash_index
             )
-            return command_builder:build()
+            return command_builder:build() .. "|delta --paging=never"
         end,
         get_current_diff = function()
             local ok, line_data = pcall(get_line, bufnr)
@@ -121,11 +90,22 @@ function M.render(bufnr, opts)
             end
             return line_data.stash_index
         end,
-        strategy = { display_strategy = "right", insert = false, trigger_redraw = false },
+        strategy = { display_strategy = "right", insert = false, trigger_redraw = false, pty = false },
     })
 
     set_keymaps(bufnr)
+    if opts.set_keymaps then
+        opts.set_keymaps(bufnr)
+    end
+
+    require("trunks._core.register").register_buffer(bufnr, {
+        render_fn = function()
+            M.render(bufnr, opts)
+        end,
+        state = { display_auto_display = true },
+    })
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "stash" })
+    return bufnr, term.win
 end
 
 return M

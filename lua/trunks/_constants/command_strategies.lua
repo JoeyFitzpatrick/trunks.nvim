@@ -152,7 +152,17 @@ M.reset = { trigger_redraw = true }
 M.revert = { trigger_redraw = true }
 M.show = { display_strategy = M.STRATEGIES.FULL, insert = true, pty = false }
 M.stage = { trigger_redraw = true }
-M.stash = { trigger_redraw = true }
+
+M.stash = {
+    trigger_redraw = function(cmd)
+        local read_only_commands = { "list", "show" }
+        if tbls_overlap(cmd, read_only_commands) then
+            return false
+        end
+        return true
+    end,
+}
+
 M.switch = { trigger_redraw = true }
 M.whatchanged = { insert = true }
 
