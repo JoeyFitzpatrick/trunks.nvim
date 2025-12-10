@@ -58,6 +58,9 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
                     if is_streaming then
                         line = "\r\n" .. line
                     end
+                    -- Strip trailing carriage returns to ensure cursor is at end of line before clearing
+                    line = line:gsub("\r+$", "")
+                    line = line .. esc .. "[K" -- delete from cursor to end of line
                     local ok = pcall(vim.api.nvim_chan_send, channel_id, line)
                     if not ok then
                         return
@@ -68,6 +71,7 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         end,
         on_exit = function(_, exit_code, _)
             term_exit_code = exit_code
+            vim.api.nvim_chan_send(channel_id, "\r\n" .. esc .. "[J") -- clear from cursor
             if parse_bool_or_function(vim.split(cmd, " "), strategy.trigger_redraw) then
                 require("trunks._core.register").rerender_buffers()
             end
