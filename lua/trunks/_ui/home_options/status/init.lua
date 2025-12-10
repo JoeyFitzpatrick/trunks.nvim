@@ -285,40 +285,40 @@ local function get_diff_cmd(status, filename)
     return "diff -- " .. filename
 end
 
+---@param bufnr integer
 ---@param opts? trunks.UiRenderOpts
 ---@return integer, integer -- bufnr, win
-function M.render(opts)
+function M.render(bufnr, opts)
     opts = opts or {}
-    local head_cmd =
-        'git symbolic-ref -q HEAD >/dev/null 2>&1 && echo "Branch: $(git symbolic-ref --short HEAD)" || echo "HEAD detached at $(git rev-parse --short HEAD)"'
-    local lines_change_cmd =
-        "git diff --staged --shortstat | grep -q '^' && git diff --staged --shortstat || echo 'No files staged'"
-    local status_cmd = "git status -s"
-    local whitespace_line = "echo"
+    local Command = require("trunks._core.command")
+    local command_builder = Command.base_command("status -s")
 
-    local term = require("trunks._ui.elements").terminal(status_cmd, { enter = true, display_strategy = "full" })
-    local bufnr = term.bufnr
+    local term = require("trunks._ui.elements").terminal(
+        bufnr,
+        command_builder:build(),
+        { enter = true, display_strategy = "full" }
+    )
     local win = term.win
 
-    require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
-        generate_cmd = function()
-            local ok, line_data = pcall(M.get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
-            local Command = require("trunks._core.command")
-            return Command.base_command(get_diff_cmd(line_data.status, line_data.safe_filename)):build()
-                .. "|delta --paging=never"
-        end,
-        get_current_diff = function()
-            local ok, line_data = pcall(M.get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
-            return line_data.safe_filename
-        end,
-        strategy = { enter = false, display_strategy = "right", pty = false },
-    })
+    -- require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
+    --     generate_cmd = function()
+    --         local ok, line_data = pcall(M.get_line, bufnr)
+    --         if not ok or not line_data then
+    --             return
+    --         end
+    --         local Command = require("trunks._core.command")
+    --         return Command.base_command(get_diff_cmd(line_data.status, line_data.safe_filename)):build()
+    --             .. "|delta --paging=never"
+    --     end,
+    --     get_current_diff = function()
+    --         local ok, line_data = pcall(M.get_line, bufnr)
+    --         if not ok or not line_data then
+    --             return
+    --         end
+    --         return line_data.safe_filename
+    --     end,
+    --     strategy = { enter = false, display_strategy = "right", pty = false },
+    -- })
     M.set_keymaps(bufnr)
     if opts.set_keymaps then
         opts.set_keymaps(bufnr)
@@ -326,8 +326,7 @@ function M.render(opts)
 
     require("trunks._core.register").register_buffer(bufnr, {
         render_fn = function()
-            M.render(opts)
-            require("trunks._core.register").deregister_buffer(bufnr, { delete_win_buffers = false })
+            M.render(bufnr, opts)
         end,
         state = { display_auto_display = true },
     })

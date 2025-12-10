@@ -206,13 +206,16 @@ local function set_keymaps(bufnr)
     end, keymap_opts)
 end
 
+---@param bufnr integer
 ---@param opts? trunks.UiRenderOpts
-function M.render(opts)
+function M.render(bufnr, opts)
     opts = opts or {}
     local command_builder = opts.command_builder or Command.base_command("branch --sort=-HEAD")
-    local term =
-        require("trunks._ui.elements").terminal(command_builder:build(), { enter = true, display_strategy = "full" })
-    local bufnr = term.bufnr
+    local term = require("trunks._ui.elements").terminal(
+        bufnr,
+        command_builder:build(),
+        { enter = true, display_strategy = "full" }
+    )
     local win = term.win
 
     set_keymaps(bufnr)

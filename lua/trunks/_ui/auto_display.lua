@@ -103,10 +103,10 @@ local function render_auto_display(bufnr, ui_type, auto_display_opts)
         end
         state.diff_bufnr = nil
     end
+    state.diff_bufnr = vim.api.nvim_create_buf(false, true)
     local win = vim.api.nvim_get_current_win()
-    local term = require("trunks._ui.elements").terminal(diff_cmd, auto_display_opts.strategy)
+    local term = require("trunks._ui.elements").terminal(state.diff_bufnr, diff_cmd, auto_display_opts.strategy)
     state.diff_channel_id = term.chan
-    state.diff_bufnr = term.bufnr
     set_diff_buffer_autocmds(state.diff_bufnr, bufnr, win, ui_type)
     set_diff_buffer_keymaps(state.diff_bufnr, bufnr)
     vim.api.nvim_set_current_win(win)

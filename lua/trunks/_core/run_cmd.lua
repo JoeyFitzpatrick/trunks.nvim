@@ -84,7 +84,6 @@ M.run_hidden_cmd = function(cmd, opts)
     else
         should_rerender = opts.rerender
     end
-    vim.print(final_command)
     if should_rerender then
         require("trunks._core.register").rerender_buffers()
         vim.cmd.checktime()

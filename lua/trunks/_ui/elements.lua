@@ -41,7 +41,13 @@ end
 ---@return { win?: integer, channel_id?: integer, exit_code: integer }
 local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
     local term_exit_code
-    local channel_id = vim.api.nvim_open_term(bufnr, {})
+    local channel_id = vim.b[bufnr].channel_id or vim.api.nvim_open_term(bufnr, {})
+    vim.b[bufnr].channel_id = channel_id
+
+    local esc = string.char(27)
+    vim.api.nvim_chan_send(channel_id, esc .. "[H") -- go home
+
+    local is_streaming = false
     vim.fn.jobstart(cmd, {
         pty = strategy.pty,
         term = strategy.term,
@@ -49,12 +55,16 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         on_stdout = function(_, data, _)
             for _, line in ipairs(data) do
                 if line ~= "" then
+                    if is_streaming then
+                        line = "\r\n" .. line
+                    end
                     local ok = pcall(vim.api.nvim_chan_send, channel_id, line .. "\r\n")
                     if not ok then
                         return
                     end
                 end
             end
+            is_streaming = true
         end,
         on_exit = function(_, exit_code, _)
             term_exit_code = exit_code
@@ -114,12 +124,12 @@ local function set_terminal_autocmds(bufnr, strategy)
     end
 end
 
+---@param bufnr integer
 ---@param cmd string
 ---@param strategy? trunks.Strategy
 ---@return { bufnr: integer, win: integer, chan: integer, exit_code: integer } | nil
-function M.terminal(cmd, strategy)
+function M.terminal(bufnr, cmd, strategy)
     local split_cmd = vim.split(cmd, " ")
-    local bufnr = vim.api.nvim_create_buf(false, true)
     -- Buffer local variable that makes any editors opened from this terminal,
     -- such as the commit editor, use the current nvim instance instead of a nested one.
     vim.b[bufnr].trunks_use_nested_nvim = true

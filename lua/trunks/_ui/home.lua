@@ -49,8 +49,8 @@ local tabs = {
 
 ---@type table<trunks.TabOption, fun(bufnr: integer, opts: trunks.UiRenderOpts)>
 local tab_render_map = {
-    Status = function(opts)
-        return require("trunks._ui.home_options.status").render(opts)
+    Status = function(bufnr, opts)
+        return require("trunks._ui.home_options.status").render(bufnr, opts)
     end,
     Branch = function(opts)
         return require("trunks._ui.home_options.branch").render(opts)
@@ -89,10 +89,11 @@ end
 
 ---@param tab trunks.TabOption
 function M.create_and_render_buffer(tab)
+    local bufnr = require("trunks._ui.elements").new_buffer({})
     local ui_render = tab_render_map[tab]
     local ui_types = { "home", string.lower(tab) }
 
-    local bufnr, win = ui_render({ set_keymaps = set_keymaps })
+    local bufnr, win = ui_render(bufnr, { set_keymaps = set_keymaps })
 end
 
 function M.open()
