@@ -64,7 +64,8 @@ end
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
     local Command = require("trunks._core.command")
-    local command_builder = Command.base_command("stash list")
+    local command_builder =
+        Command.base_command("stash list --format='%C(yellow)%gd%C(reset) - %C(cyan)(%cr)%C(reset) %s%C(reset)'")
 
     local term = require("trunks._ui.elements").terminal(
         bufnr,
