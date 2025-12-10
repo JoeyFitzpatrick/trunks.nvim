@@ -63,7 +63,6 @@ end
 
 ---@param bufnr? integer optional buffer to rerender first
 function M.rerender_buffers(bufnr)
-    vim.print("here")
     -- Always rerender current buffer first if one isn't passed in
     bufnr = bufnr or vim.api.nvim_get_current_buf()
     local main_buffer = M.buffers[bufnr]

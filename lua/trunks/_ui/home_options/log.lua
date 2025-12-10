@@ -1,22 +1,6 @@
 local M = {}
 
 ---@param bufnr integer
----@param line string
----@param line_num integer
-local function highlight_line(bufnr, line, line_num)
-    local ui_highlight_line = require("trunks._ui.highlight").highlight_line
-    if not line or line == "" then
-        return
-    end
-    local hash_start, hash_end = line:find("^%w+")
-    ui_highlight_line(bufnr, "Directory", line_num, hash_start, hash_end)
-    local date_start, date_end = line:find(".+ago", hash_end + 1)
-    ui_highlight_line(bufnr, "Number", line_num, date_start, date_end)
-    local author_start, author_end = line:find("%s%s+(.-)%s%s+", date_end + 1)
-    ui_highlight_line(bufnr, "Identifier", line_num, author_start, author_end)
-end
-
----@param bufnr integer
 ---@param line_num? integer
 ---@return { hash: string } | nil
 local function base_get_line(bufnr, line_num)
@@ -31,9 +15,7 @@ local function base_get_line(bufnr, line_num)
     return { hash = line:match("%w+") }
 end
 
--- The extra space after %an is to help the highlight regex.
--- This way, there are always two spaces between the author name and commit message.
-local DEFAULT_LOG_FORMAT = "--pretty='format:%h %<(25)%cr %<(25)%an  %<(25)%s'"
+local DEFAULT_LOG_FORMAT = "--pretty='%C(yellow)%h %Cblue%>(12)%ad %Cgreen%<(7)%aN%Cred%d %Creset%s'"
 M.NATIVE_OUTPUT_OPTIONS = {
     "-p",
     "-L",
@@ -97,34 +79,6 @@ local function get_log_branch(bufnr, line_num)
     end
     local branch_name = line:match("Branch: (%S+)")
     return branch_name
-end
-
----@param bufnr integer
----@param opts trunks.UiRenderOpts
----@return { use_native_keymaps: boolean }
-function M.set_lines(bufnr, opts)
-    local start_line = opts.start_line or 2
-    local cmd_tbl = M._parse_log_cmd(opts.command_builder)
-    vim.bo[bufnr].modifiable = true
-
-    if cmd_tbl.show_head then
-        local first_line = require("trunks._ui.utils.get_current_head").get_current_head(opts.command_builder)
-        vim.api.nvim_buf_set_lines(bufnr, start_line, start_line + 1, false, { first_line })
-        require("trunks._ui.utils.get_current_head").highlight_head_line(bufnr, first_line, start_line)
-        start_line = start_line + 1
-    end
-
-    require("trunks._ui.stream").stream_lines(bufnr, cmd_tbl.cmd, {
-        filter_empty_lines = not cmd_tbl.use_native_output,
-        highlight_line = highlight_line,
-        start_line = start_line,
-        filetype = cmd_tbl.use_native_output and "git" or nil,
-    })
-
-    -- This should already be set to false by stream_lines.
-    -- Just leaving this in case there's an error there.
-    vim.bo[bufnr].modifiable = false
-    return { use_native_keymaps = cmd_tbl.use_native_output }
 end
 
 ---@class trunks.LogConfirmCommandParams
@@ -271,16 +225,18 @@ end
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
-    -- If there's already a buffer named TrunksLog, just don't set a name
-    pcall(vim.api.nvim_buf_set_name, bufnr, "TrunksLog")
+    local cmd_tbl = M._parse_log_cmd(opts.command_builder)
+    local term =
+        require("trunks._ui.elements").terminal(bufnr, cmd_tbl.cmd, { enter = true, display_strategy = "full" })
 
-    vim.api.nvim_set_option_value("wrap", false, { win = 0 })
-    local set_lines_result = M.set_lines(bufnr, opts)
-    if set_lines_result.use_native_keymaps then
+    if cmd_tbl.use_native_output then
         require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
     else
         local get_line_fn = base_get_line
         set_keymaps(bufnr, get_line_fn, opts)
+    end
+    if opts.set_keymaps then
+        opts.set_keymaps(bufnr)
     end
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "log" })
 end
