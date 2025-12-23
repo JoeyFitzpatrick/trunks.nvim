@@ -3,6 +3,7 @@ local status = "git --no-pager status -s"
 local log = "git --no-pager log --pretty='%C(yellow)%h %Cblue%>(12)%ad %Cgreen%<(7)%aN%Cred%d %Creset%s'"
 local branch = "git --no-pager branch"
 local diff = "git --no-pager diff | delta --paging=never"
+local commit = "git commit"
 
 local buf = vim.api.nvim_create_buf(false, true)
 vim.api.nvim_win_set_buf(0, buf)
@@ -18,12 +19,12 @@ local function render_term(cmd)
     vim.api.nvim_chan_send(chan, esc .. "[H") -- go home
     local is_streaming = false
     vim.fn.jobstart(cmd, {
-        pty = true,
+        term = true,
         on_stdout = function(_, data, _)
             for _, line in ipairs(data) do
                 if line ~= "" then
                     if is_streaming then
-                        line = "\r\n" .. line
+                        -- line = "\r\n" .. line
                     end
                     vim.api.nvim_chan_send(chan, line)
                 end
@@ -46,4 +47,4 @@ vim.keymap.set("n", "u", function()
     render_term(status)
 end, { buffer = buf })
 
-render_term(status)
+render_term(commit)

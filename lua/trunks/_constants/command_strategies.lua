@@ -107,6 +107,8 @@ M["checkout-index"] = { trigger_redraw = true }
 
 ---@type trunks.Strategy
 M.commit = {
+    trigger_redraw = true,
+    pty = false,
     insert = function(cmd)
         local should_not_enter_insert_options = {
             "--allow-empty",
@@ -128,7 +130,6 @@ M.commit = {
         }
         return not tbls_overlap(cmd, should_not_enter_insert_options)
     end,
-    trigger_redraw = true,
 }
 
 M.config = { insert = true }

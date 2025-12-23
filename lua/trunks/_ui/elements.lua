@@ -33,6 +33,37 @@ local function parse_bool_or_function(cmd, parse_fn)
     end
     return parse_fn
 end
+local esc = string.char(27)
+
+local pty_on_stdout = function(channel_id)
+    return function(_, data, _)
+        for _, line in ipairs(data) do
+            if line ~= "" then
+                if is_streaming then
+                    line = "\r\n" .. line
+                end
+                -- Strip trailing carriage returns to ensure cursor is at end of line before clearing
+                line = line:gsub("\r+$", "")
+                line = line .. esc .. "[K" -- delete from cursor to end of line
+                local ok = pcall(vim.api.nvim_chan_send, channel_id, line)
+                if not ok then
+                    return
+                end
+            end
+            is_streaming = true
+        end
+    end
+end
+
+local pty_on_exit = function(channel_id, cmd, strategy)
+    return function(_, exit_code, _)
+        term_exit_code = exit_code
+        vim.api.nvim_chan_send(channel_id, "\r\n" .. esc .. "[J") -- clear from cursor
+        if parse_bool_or_function(vim.split(cmd, " "), strategy.trigger_redraw) then
+            require("trunks._core.register").rerender_buffers()
+        end
+    end
+end
 
 ---@param cmd string
 ---@param split_cmd string[]
@@ -41,42 +72,31 @@ end
 ---@return { win?: integer, channel_id?: integer, exit_code: integer }
 local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
     local term_exit_code
-    local channel_id = vim.b[bufnr].channel_id or vim.api.nvim_open_term(bufnr, {})
+    local channel_id
+    if strategy.pty then
+        channel_id = vim.b[bufnr].channel_id or vim.api.nvim_open_term(bufnr, {})
+    end
     vim.b[bufnr].channel_id = channel_id
 
-    local esc = string.char(27)
-    vim.api.nvim_chan_send(channel_id, esc .. "[H") -- go home
+    local on_stdout = nil
+    local on_exit = nil
+    if strategy.pty then
+        vim.api.nvim_chan_send(channel_id, esc .. "[H") -- go home
+        on_stdout = pty_on_stdout(channel_id)
+        on_exit = pty_on_exit(channel_id, cmd, strategy)
+    end
 
     local is_streaming = false
-    vim.fn.jobstart(cmd, {
-        pty = strategy.pty,
-        term = strategy.term,
-        -- No on_stderr needed, it's merged with stdout when pty = true
-        on_stdout = function(_, data, _)
-            for _, line in ipairs(data) do
-                if line ~= "" then
-                    if is_streaming then
-                        line = "\r\n" .. line
-                    end
-                    -- Strip trailing carriage returns to ensure cursor is at end of line before clearing
-                    line = line:gsub("\r+$", "")
-                    line = line .. esc .. "[K" -- delete from cursor to end of line
-                    local ok = pcall(vim.api.nvim_chan_send, channel_id, line)
-                    if not ok then
-                        return
-                    end
-                end
-                is_streaming = true
-            end
-        end,
-        on_exit = function(_, exit_code, _)
-            term_exit_code = exit_code
-            vim.api.nvim_chan_send(channel_id, "\r\n" .. esc .. "[J") -- clear from cursor
-            if parse_bool_or_function(vim.split(cmd, " "), strategy.trigger_redraw) then
-                require("trunks._core.register").rerender_buffers()
-            end
-        end,
-    })
+    local new_channel_id
+    vim.api.nvim_buf_call(bufnr, function()
+        new_channel_id = vim.fn.jobstart(cmd, {
+            pty = strategy.pty,
+            term = not strategy.pty,
+            -- No on_stderr needed, it's merged with stdout when pty = true
+            on_stdout = on_stdout,
+            on_exit = on_exit,
+        })
+    end)
 
     local strategies = require("trunks._constants.command_strategies").STRATEGIES
     local display_strategy = parse_display_strategy(split_cmd, strategy.display_strategy)
@@ -112,7 +132,7 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         error("Unable to determine display strategy", vim.log.levels.ERROR)
     end
     vim.opt_local.number = false
-    return { win = win, channel_id = channel_id, exit_code = term_exit_code }
+    return { win = win, channel_id = channel_id or new_channel_id, exit_code = term_exit_code }
 end
 
 ---@param bufnr integer
