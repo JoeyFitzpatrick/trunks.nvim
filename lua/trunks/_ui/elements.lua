@@ -60,6 +60,12 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
             -- No on_stderr needed, it's merged with stdout when pty = true
             on_stdout = on_stdout,
             on_exit = function(_, exit_code, _)
+                term_exit_code = exit_code
+
+                if strategy.trigger_redraw then
+                    require("trunks._core.register").rerender_buffers()
+                end
+
                 if strategy.pty then
                     local chan_info = vim.api.nvim_get_chan_info(channel_id)
                     if not chan_info.id then
@@ -67,10 +73,6 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
                     end
                     vim.api.nvim_chan_send(channel_id, "\r\n" .. esc .. "[J") -- clear from cursor
                 end
-                if strategy.trigger_redraw then
-                    require("trunks._core.register").rerender_buffers()
-                end
-                term_exit_code = exit_code
             end,
         })
     end)
