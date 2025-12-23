@@ -306,7 +306,6 @@ function M.render(bufnr, opts)
             if not ok or not line_data then
                 return
             end
-            local Command = require("trunks._core.command")
             return Command.base_command(get_diff_cmd(line_data.status, line_data.safe_filename)):build()
                 .. "|delta --paging=never"
         end,

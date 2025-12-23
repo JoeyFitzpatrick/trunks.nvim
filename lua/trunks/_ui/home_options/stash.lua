@@ -79,10 +79,10 @@ function M.render(bufnr, opts)
             if not ok or not line_data then
                 return
             end
-            local command_builder = require("trunks._core.command").base_command(
+            local diff_command_builder = require("trunks._core.command").base_command(
                 "stash show -p --include-untracked " .. line_data.stash_index
             )
-            return command_builder:build() .. "|delta --paging=never"
+            return diff_command_builder:build() .. "|delta --paging=never"
         end,
         get_current_diff = function()
             local ok, line_data = pcall(get_line, bufnr)

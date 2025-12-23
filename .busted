@@ -6,6 +6,7 @@ return {
     },
     default = {
         verbose = true,
+        ROOT = { "./spec/unit/" },
     },
     tests = {
         verbose = true,

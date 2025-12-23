@@ -14,6 +14,7 @@ local esc = string.char(27)
 
 local pty_on_stdout = function(channel_id)
     return function(_, data, _)
+        local is_streaming = false
         for _, line in ipairs(data) do
             if line ~= "" then
                 if is_streaming then
@@ -32,13 +33,13 @@ local pty_on_stdout = function(channel_id)
     end
 end
 
-local pty_on_exit = function(channel_id, cmd, strategy)
+local pty_on_exit = function(channel_id, strategy)
     return function(_, exit_code, _)
-        term_exit_code = exit_code
         vim.api.nvim_chan_send(channel_id, "\r\n" .. esc .. "[J") -- clear from cursor
         if strategy.trigger_redraw then
             require("trunks._core.register").rerender_buffers()
         end
+        return exit_code
     end
 end
 
@@ -47,7 +48,6 @@ end
 ---@param strategy trunks.Strategy
 ---@return { win: integer, channel_id: integer, exit_code: integer }
 local function open_terminal_buffer(cmd, bufnr, strategy)
-    local term_exit_code
     local channel_id
     if strategy.pty then
         channel_id = vim.b[bufnr].channel_id or vim.api.nvim_open_term(bufnr, {})
@@ -59,10 +59,9 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
     if strategy.pty then
         vim.api.nvim_chan_send(channel_id, esc .. "[H") -- go home
         on_stdout = pty_on_stdout(channel_id)
-        on_exit = pty_on_exit(channel_id, cmd, strategy)
+        on_exit = pty_on_exit(channel_id, strategy)
     end
 
-    local is_streaming = false
     local new_channel_id
     vim.api.nvim_buf_call(bufnr, function()
         new_channel_id = vim.fn.jobstart(cmd, {
@@ -105,7 +104,7 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
         error("Unable to determine display strategy", vim.log.levels.ERROR)
     end
     vim.opt_local.number = false
-    return { win = win, channel_id = channel_id or new_channel_id, exit_code = term_exit_code }
+    return { win = win, channel_id = channel_id or new_channel_id, exit_code = nil }
 end
 
 ---@param bufnr integer

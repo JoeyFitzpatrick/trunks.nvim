@@ -65,7 +65,7 @@ local tab_render_map = {
 
 ---@param bufnr integer
 ---@param tab trunks.TabOption
-local function set_keymaps(bufnr, tab)
+local function set_keymaps(bufnr)
     local keymaps = require("trunks._core.configuration").DATA.home.keymaps
     if not keymaps then
         return
@@ -91,9 +91,7 @@ end
 function M.create_and_render_buffer(tab)
     local bufnr = require("trunks._ui.elements").new_buffer({})
     local ui_render = tab_render_map[tab]
-    local ui_types = { "home", string.lower(tab) }
-
-    local bufnr, win = ui_render(bufnr, { set_keymaps = set_keymaps })
+    ui_render(bufnr, { set_keymaps = set_keymaps })
 end
 
 function M.open()

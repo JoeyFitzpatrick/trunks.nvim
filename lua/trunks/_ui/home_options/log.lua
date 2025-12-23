@@ -226,8 +226,7 @@ end
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
     local cmd_tbl = M._parse_log_cmd(opts.command_builder)
-    local term =
-        require("trunks._ui.elements").terminal(bufnr, cmd_tbl.cmd, { enter = true, display_strategy = "full" })
+    require("trunks._ui.elements").terminal(bufnr, cmd_tbl.cmd, { enter = true, display_strategy = "full" })
 
     if cmd_tbl.use_native_output then
         require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)

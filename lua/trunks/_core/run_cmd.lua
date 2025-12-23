@@ -77,7 +77,7 @@ M.run_hidden_cmd = function(cmd, opts)
         end
         return "error", error_code
     end
-    local should_rerender = false
+    local should_rerender
     if opts.rerender == nil then
         should_rerender = require("trunks._constants.command_strategies").get_strategy(final_command).trigger_redraw
     else

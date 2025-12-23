@@ -43,7 +43,6 @@ function M.get_strategy(cmd, custom_strategy)
         base_cmd = split_cmd[3]
     end
 
-    local default
     custom_strategy = custom_strategy or {}
     local default_strategy = vim.tbl_extend("force", M.default, custom_strategy)
     if not base_cmd then
