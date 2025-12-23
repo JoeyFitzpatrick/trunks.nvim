@@ -13,12 +13,14 @@ local M = {}
 local esc = string.char(27)
 
 local pty_on_stdout = function(channel_id)
+    local is_first_line = true
     return function(_, data, _)
-        local is_streaming = false
         for _, line in ipairs(data) do
             if line ~= "" then
-                if is_streaming then
+                if not is_first_line then
                     line = "\r\n" .. line
+                else
+                    is_first_line = false
                 end
                 -- Strip trailing carriage returns to ensure cursor is at end of line before clearing
                 line = line:gsub("\r+$", "")
@@ -28,13 +30,16 @@ local pty_on_stdout = function(channel_id)
                     return
                 end
             end
-            is_streaming = true
         end
     end
 end
 
 local pty_on_exit = function(channel_id, strategy)
     return function(_, exit_code, _)
+        local chan_info = vim.api.nvim_get_chan_info(channel_id)
+        if not chan_info.id then
+            return
+        end
         vim.api.nvim_chan_send(channel_id, "\r\n" .. esc .. "[J") -- clear from cursor
         if strategy.trigger_redraw then
             require("trunks._core.register").rerender_buffers()
