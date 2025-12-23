@@ -65,11 +65,21 @@ end
 function M.rerender_buffers(bufnr)
     local main_buffer = M.buffers[bufnr]
     if main_buffer and main_buffer.render_fn then
-        main_buffer.render_fn()
+        if main_buffer.win and vim.api.nvim_win_is_valid(main_buffer.win) then
+            vim.api.nvim_win_call(main_buffer.win, main_buffer.render_fn)
+        else
+            main_buffer.render_fn()
+        end
     end
     for buf, opts in pairs(M.buffers) do
         if buf ~= bufnr and opts.render_fn then
-            vim.schedule(opts.render_fn)
+            vim.schedule(function()
+                if opts.win and vim.api.nvim_win_is_valid(opts.win) then
+                    vim.api.nvim_win_call(opts.win, opts.render_fn)
+                else
+                    opts.render_fn()
+                end
+            end)
         end
     end
 end
