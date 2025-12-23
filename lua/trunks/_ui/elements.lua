@@ -12,7 +12,8 @@ local M = {}
 
 local esc = string.char(27)
 
-local pty_on_stdout = function(channel_id)
+M._pty_on_stdout = function(channel_id)
+    vim.api.nvim_chan_send(channel_id, esc .. "[H") -- go home
     local is_first_line = true
     return function(_, data, _)
         for _, line in ipairs(data) do
@@ -48,7 +49,7 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
     local on_stdout = nil
     if strategy.pty then
         vim.api.nvim_chan_send(channel_id, esc .. "[H") -- go home
-        on_stdout = pty_on_stdout(channel_id)
+        on_stdout = M._pty_on_stdout(channel_id)
     end
 
     local new_channel_id
