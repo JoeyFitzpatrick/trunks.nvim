@@ -33,25 +33,38 @@ local function is_full_screen_command(cmd)
     return tbls_overlap(cmd, full_screen_options)
 end
 
----@param cmd string[]
+---@param cmd string
 ---@param custom_strategy? trunks.Strategy
 ---@return trunks.Strategy
 function M.get_strategy(cmd, custom_strategy)
-    local base_cmd = cmd[2]
-    if base_cmd and vim.startswith(cmd[2], "-") then
-        base_cmd = cmd[3]
+    local split_cmd = vim.split(cmd, " ", { trimempty = true })
+    local base_cmd = split_cmd[2]
+    if base_cmd and vim.startswith(base_cmd, "-") then
+        base_cmd = split_cmd[3]
     end
+
+    local default
+    custom_strategy = custom_strategy or {}
+    local default_strategy = vim.tbl_extend("force", M.default, custom_strategy)
     if not base_cmd then
-        return M.default
+        return default_strategy
     end
-    local strategy = vim.tbl_extend("force", M.default, M[base_cmd] or {}, custom_strategy or {})
-    -- Passing --quiet to a command will stop the output from displaying.
-    -- This is only for "write" commands like "commit" or "checkout",
-    -- since it doesn't make sense to quiet a "read" command like log or status.
-    if vim.tbl_contains(cmd, "--quiet") and strategy.trigger_redraw then
-        strategy.display_strategy = M.STRATEGIES.QUIET
+
+    local command_strategy = M[base_cmd]
+    if not command_strategy then
+        return default_strategy
     end
-    return strategy
+
+    local merged_strategy = vim.tbl_extend("force", M.default, command_strategy, custom_strategy)
+    local final_strategy = {}
+    for key, value in pairs(merged_strategy) do
+        if type(value) == "function" then
+            final_strategy[key] = value(split_cmd)
+        else
+            final_strategy[key] = value
+        end
+    end
+    return final_strategy
 end
 
 ---@type table<string, trunks.DisplayStrategy>
@@ -61,7 +74,6 @@ M.STRATEGIES = {
     RIGHT = "right",
     LEFT = "left",
     FULL = "full",
-    QUIET = "quiet",
 }
 
 M.default = {

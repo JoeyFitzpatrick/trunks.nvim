@@ -9,7 +9,7 @@ local function run_git_command(input_args)
     local cmd_with_git_prefix = "git " .. cmd_with_git_dir_flag
 
     if input_args.bang then
-        local bufnr = require("trunks._ui.elements").new_buffer({})
+        local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
         require("trunks._ui.elements").terminal(
             bufnr,
             cmd_with_git_prefix,
@@ -24,7 +24,7 @@ local function run_git_command(input_args)
     if ui_function then
         ui_function(command_builder)
     else
-        local bufnr = require("trunks._ui.elements").new_buffer({})
+        local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
         require("trunks._ui.elements").terminal(bufnr, cmd_with_git_prefix)
     end
 end

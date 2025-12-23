@@ -6,12 +6,10 @@
     ".dependencies"
   ],
   "workspace.library": [
-    "$PWD/.dependencies/busted/library",
-    "$PWD/.dependencies/luassert/library",
-    "$PWD/.dependencies/luvit-meta/library",
+    ".dependencies/busted/library",
+    ".dependencies/luassert/library",
+    ".dependencies/luvit-meta/library",
     "$VIMRUNTIME/lua",
-    "$PWD/lua",
-    "$PWD/trunks",
-    "lua/trunks"
+    "lua"
   ]
 }

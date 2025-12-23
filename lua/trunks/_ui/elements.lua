@@ -6,33 +6,10 @@
 ---@field win_config? vim.api.keyset.win_config
 ---@field enter? boolean
 ---@field buffer_name? string
----@field hidden? boolean
+---@field show? boolean
 
 local M = {}
 
---- Some commands parse command options to determine what display strat to use.
---- In this case, run the parse function, otherwise return the display strat.
----@param cmd string[]
----@param display_strategy trunks.DisplayStrategy | trunks.DisplayStrategyParser
----@return trunks.DisplayStrategy
-local function parse_display_strategy(cmd, display_strategy)
-    if type(display_strategy) == "function" then
-        return display_strategy(cmd)
-    end
-    return display_strategy
-end
-
---- Some commands parse command options to determine whether to return true or false.
---- In this case, run the parse function, otherwise return the bool.
----@param cmd string[]
----@param parse_fn boolean | trunks.DisplayStrategyBoolParser
----@return boolean
-local function parse_bool_or_function(cmd, parse_fn)
-    if type(parse_fn) == "function" then
-        return parse_fn(cmd)
-    end
-    return parse_fn
-end
 local esc = string.char(27)
 
 local pty_on_stdout = function(channel_id)
@@ -59,18 +36,17 @@ local pty_on_exit = function(channel_id, cmd, strategy)
     return function(_, exit_code, _)
         term_exit_code = exit_code
         vim.api.nvim_chan_send(channel_id, "\r\n" .. esc .. "[J") -- clear from cursor
-        if parse_bool_or_function(vim.split(cmd, " "), strategy.trigger_redraw) then
+        if strategy.trigger_redraw then
             require("trunks._core.register").rerender_buffers()
         end
     end
 end
 
 ---@param cmd string
----@param split_cmd string[]
 ---@param bufnr integer
 ---@param strategy trunks.Strategy
----@return { win?: integer, channel_id?: integer, exit_code: integer }
-local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
+---@return { win: integer, channel_id: integer, exit_code: integer }
+local function open_terminal_buffer(cmd, bufnr, strategy)
     local term_exit_code
     local channel_id
     if strategy.pty then
@@ -99,7 +75,7 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
     end)
 
     local strategies = require("trunks._constants.command_strategies").STRATEGIES
-    local display_strategy = parse_display_strategy(split_cmd, strategy.display_strategy)
+    local display_strategy = strategy.display_strategy
     local win = vim.api.nvim_get_current_win()
     if vim.tbl_contains({ "above", "below", "right", "left" }, display_strategy) then
         local enter = true
@@ -125,9 +101,6 @@ local function open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
         end)
     elseif display_strategy == strategies.FULL then
         vim.api.nvim_win_set_buf(0, bufnr)
-    elseif display_strategy == strategies.QUIET then
-        require("trunks._core.run_cmd").run_hidden_cmd(cmd)
-        return { win = nil, channel_id = nil, exit_code = nil }
     else
         error("Unable to determine display strategy", vim.log.levels.ERROR)
     end
@@ -153,22 +126,20 @@ end
 ---@param strategy? trunks.Strategy
 ---@return { bufnr: integer, win: integer, chan: integer, exit_code: integer } | nil
 function M.terminal(bufnr, cmd, strategy)
-    local split_cmd = vim.split(cmd, " ")
     -- Buffer local variable that makes any editors opened from this terminal,
     -- such as the commit editor, use the current nvim instance instead of a nested one.
     vim.b[bufnr].trunks_use_nested_nvim = true
 
-    strategy = require("trunks._constants.command_strategies").get_strategy(split_cmd, strategy)
+    strategy = require("trunks._constants.command_strategies").get_strategy(cmd, strategy)
 
-    local open_term_result = open_terminal_buffer(cmd, split_cmd, bufnr, strategy)
+    local open_term_result = open_terminal_buffer(cmd, bufnr, strategy)
     local win = open_term_result.win
     local channel_id = open_term_result.channel_id
     local exit_code = open_term_result.exit_code
     if not channel_id then
         return
     end
-    local should_enter_insert = parse_bool_or_function(split_cmd, strategy.insert)
-    if should_enter_insert then
+    if strategy.insert then
         vim.cmd("startinsert")
     else
         vim.cmd("stopinsert")
@@ -232,7 +203,7 @@ function M.new_buffer(opts)
     else
         win = vim.api.nvim_get_current_win()
         local current_buf = vim.api.nvim_get_current_buf()
-        if not opts.hidden then
+        if opts.show then
             vim.api.nvim_win_set_buf(win, bufnr)
         end
         setup_last_non_trunks_buffer(current_buf, bufnr, win)
