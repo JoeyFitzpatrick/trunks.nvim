@@ -38,8 +38,8 @@ end
 ---@param cmd string
 ---@param bufnr integer
 ---@param strategy trunks.Strategy
----@return { win: integer, channel_id: integer, exit_code: integer }
-local function open_terminal_buffer(cmd, bufnr, strategy)
+---@return { channel_id: integer, exit_code: integer }
+local function run_terminal_command(cmd, bufnr, strategy)
     local channel_id
     if strategy.pty then
         channel_id = vim.b[bufnr].channel_id or vim.api.nvim_open_term(bufnr, {})
@@ -77,6 +77,15 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
             end,
         })
     end)
+    return { channel_id = channel_id or new_channel_id, exit_code = term_exit_code }
+end
+
+---@param cmd string
+---@param bufnr integer
+---@param strategy trunks.Strategy
+---@return { win: integer, channel_id: integer, exit_code: integer }
+local function open_terminal_buffer(cmd, bufnr, strategy)
+    local run_command_result = run_terminal_command(cmd, bufnr, strategy)
 
     local strategies = require("trunks._constants.command_strategies").STRATEGIES
     local display_strategy = strategy.display_strategy
@@ -109,18 +118,29 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
         error("Unable to determine display strategy", vim.log.levels.ERROR)
     end
     vim.opt_local.number = false
-    return { win = win, channel_id = channel_id or new_channel_id, exit_code = term_exit_code }
+    return { win = win, channel_id = run_command_result.channel_id, exit_code = run_command_result.exit_code }
 end
 
+---@param cmd string
 ---@param bufnr integer
 ---@param strategy trunks.Strategy
-local function set_terminal_autocmds(bufnr, strategy)
+local function set_terminal_autocmds(cmd, bufnr, strategy)
     if strategy.trigger_redraw then
         local augroup = vim.api.nvim_create_augroup("TrunksTerminalReloadBuffers", { clear = true })
         vim.api.nvim_create_autocmd({ "BufLeave" }, {
             buffer = bufnr,
             group = augroup,
             command = "checktime",
+        })
+    end
+    if not strategy.trigger_redraw then
+        local augroup = vim.api.nvim_create_augroup("TrunksTerminalRerender", { clear = true })
+        vim.api.nvim_create_autocmd({ "User" }, {
+            group = augroup,
+            pattern = require("trunks._constants.constants").AUTOCMD.RERENDER,
+            callback = function()
+                run_terminal_command(cmd, bufnr, strategy)
+            end,
         })
     end
 end
@@ -149,7 +169,7 @@ function M.terminal(bufnr, cmd, strategy)
         vim.cmd("stopinsert")
     end
     require("trunks._ui.keymaps.base").set_keymaps(bufnr, { terminal_channel_id = channel_id })
-    set_terminal_autocmds(bufnr, strategy)
+    set_terminal_autocmds(cmd, bufnr, strategy)
     return { bufnr = bufnr, win = win, chan = channel_id, exit_code = exit_code }
 end
 

@@ -22,4 +22,10 @@ function M.execute_user_autocmds(data)
     })
 end
 
+function M.execute_rerender_autocmd()
+    vim.api.nvim_exec_autocmds("User", {
+        pattern = require("trunks._constants.constants").AUTOCMD.RERENDER,
+    })
+end
+
 return M
