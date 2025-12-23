@@ -34,20 +34,6 @@ local pty_on_stdout = function(channel_id)
     end
 end
 
-local pty_on_exit = function(channel_id, strategy)
-    return function(_, exit_code, _)
-        local chan_info = vim.api.nvim_get_chan_info(channel_id)
-        if not chan_info.id then
-            return
-        end
-        vim.api.nvim_chan_send(channel_id, "\r\n" .. esc .. "[J") -- clear from cursor
-        if strategy.trigger_redraw then
-            require("trunks._core.register").rerender_buffers()
-        end
-        return exit_code
-    end
-end
-
 ---@param cmd string
 ---@param bufnr integer
 ---@param strategy trunks.Strategy
@@ -60,21 +46,32 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
     vim.b[bufnr].channel_id = channel_id
 
     local on_stdout = nil
-    local on_exit = nil
     if strategy.pty then
         vim.api.nvim_chan_send(channel_id, esc .. "[H") -- go home
         on_stdout = pty_on_stdout(channel_id)
-        on_exit = pty_on_exit(channel_id, strategy)
     end
 
     local new_channel_id
+    local term_exit_code
     vim.api.nvim_buf_call(bufnr, function()
         new_channel_id = vim.fn.jobstart(cmd, {
             pty = strategy.pty,
             term = not strategy.pty,
             -- No on_stderr needed, it's merged with stdout when pty = true
             on_stdout = on_stdout,
-            on_exit = on_exit,
+            on_exit = function(_, exit_code, _)
+                if strategy.pty then
+                    local chan_info = vim.api.nvim_get_chan_info(channel_id)
+                    if not chan_info.id then
+                        return
+                    end
+                    vim.api.nvim_chan_send(channel_id, "\r\n" .. esc .. "[J") -- clear from cursor
+                end
+                if strategy.trigger_redraw then
+                    require("trunks._core.register").rerender_buffers()
+                end
+                term_exit_code = exit_code
+            end,
         })
     end)
 
@@ -109,7 +106,7 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
         error("Unable to determine display strategy", vim.log.levels.ERROR)
     end
     vim.opt_local.number = false
-    return { win = win, channel_id = channel_id or new_channel_id, exit_code = nil }
+    return { win = win, channel_id = channel_id or new_channel_id, exit_code = term_exit_code }
 end
 
 ---@param bufnr integer
