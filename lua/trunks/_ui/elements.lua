@@ -66,6 +66,7 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
                     require("trunks._core.register").rerender_buffers()
                 end
 
+                print("here")
                 if strategy.pty then
                     local chan_info = vim.api.nvim_get_chan_info(channel_id)
                     if not chan_info.id then
