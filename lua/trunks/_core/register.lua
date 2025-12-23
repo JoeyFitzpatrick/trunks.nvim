@@ -33,10 +33,10 @@ function M.register_buffer(bufnr, opts)
 end
 
 ---@param win integer
-local function delete_trunks_buffers_for_win(win)
-    for bufnr, opts in pairs(M.buffers) do
-        if opts.win == win then
-            M.deregister_buffer(bufnr)
+function M._delete_trunks_buffers_for_win(win)
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.b[buf].trunks_buffer_window_id == win then
+            vim.api.nvim_buf_delete(buf, { force = true })
         end
     end
 end
@@ -55,7 +55,7 @@ function M.deregister_buffer(bufnr, opts)
     end
 
     if opts.delete_win_buffers ~= false then
-        delete_trunks_buffers_for_win(vim.api.nvim_get_current_win())
+        M._delete_trunks_buffers_for_win(vim.api.nvim_get_current_win())
     end
 
     vim.api.nvim_buf_delete(bufnr, { force = true })
