@@ -5,6 +5,7 @@
 ---@field _prefix_args string[]
 ---@field _postfix_args string[]
 ---@field _env_vars string[]
+---@field _pager string?
 ---@field add_args fun(self: trunks.Command, args: string): trunks.Command
 ---@field add_prefix_args fun(self: trunks.Command, args: string): trunks.Command
 ---@field add_postfix_args fun(self: trunks.Command, args: string): trunks.Command
@@ -22,6 +23,25 @@ local function table_insert_if_exists(tbl, strs)
     end
 end
 
+---@param cmd? string
+---@return string?
+local function get_pager(cmd)
+    if not cmd then
+        return nil
+    end
+
+    local base_cmd = require("trunks._core.texter").get_base_cmd(cmd)
+    if base_cmd then
+        local cmd_pager = vim.tbl_get(require("trunks._core.configuration"), "DATA", base_cmd, "pager")
+        if cmd_pager then
+            return cmd_pager
+        end
+    end
+
+    local default_pager = vim.tbl_get(require("trunks._core.configuration"), "DATA", "pager")
+    return default_pager
+end
+
 Command.__index = Command
 
 ---@param cmd? string
@@ -35,6 +55,7 @@ function Command.base_command(cmd, filename)
     self._prefix_args = { "--no-pager" }
     self._postfix_args = {}
     self._env_vars = {}
+    self._pager = get_pager(cmd)
 
     -- If the current buffer is outside cwd when this Command is instatiated, add a -C flag
     local git_c_flag = require("trunks._core.parse_command").get_git_c_flag(filename)
@@ -79,7 +100,15 @@ function Command:build()
     end
     table_insert_if_exists(cmd_parts, self._args)
     table_insert_if_exists(cmd_parts, self._postfix_args)
-    return table.concat(cmd_parts, " ")
+    local built_cmd = table.concat(cmd_parts, " ")
+
+    if self._pager then
+        local adapter = require("trunks._core.pagers")[self._pager]
+        if adapter then
+            built_cmd = adapter(built_cmd)
+        end
+    end
+    return built_cmd
 end
 
 return Command

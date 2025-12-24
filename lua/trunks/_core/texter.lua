@@ -71,4 +71,22 @@ function M.only_has_options(command_builder, options)
     return true
 end
 
+---@param cmd string
+---@return string | nil
+function M.get_base_cmd(cmd)
+    local split_cmd = vim.split(cmd, " ")
+    local i = 1
+
+    if split_cmd[i] == "git" then
+        i = i + 1
+    end
+
+    while split_cmd[i] and vim.startswith(split_cmd[i], "-") do
+        i = i + 1
+    end
+
+    local base_cmd = split_cmd[i]
+    return base_cmd
+end
+
 return M
