@@ -32,6 +32,7 @@ M._pty_on_stdout = function(channel_id)
                 end
             end
         end
+        vim.api.nvim_chan_send(channel_id, esc .. "[J") -- clear from cursor
     end
 end
 
@@ -65,14 +66,6 @@ local function run_terminal_command(cmd, bufnr, strategy)
 
                 if strategy.trigger_redraw then
                     require("trunks._core.register").rerender_buffers()
-                end
-
-                if strategy.pty then
-                    local chan_info = vim.api.nvim_get_chan_info(channel_id)
-                    if not chan_info.id then
-                        return
-                    end
-                    vim.api.nvim_chan_send(channel_id, "\r\n" .. esc .. "[J") -- clear from cursor
                 end
             end,
         })
