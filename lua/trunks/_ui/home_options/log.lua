@@ -15,7 +15,9 @@ local function base_get_line(bufnr, line_num)
     return { hash = line:match("%w+") }
 end
 
-local DEFAULT_LOG_FORMAT = "--pretty='%C(yellow)%h %Cblue%>(12)%ad %Cgreen%<(7)%aN%Cred%d %Creset%s'"
+vim.tbl_get(require("trunks._core.configuration"), "DATA", "log", "default_format")
+local log_format = vim.tbl_get(require("trunks._core.configuration"), "DATA", "log", "default_format") or ""
+
 M.NATIVE_OUTPUT_OPTIONS = {
     "-p",
     "-L",
@@ -36,13 +38,13 @@ end
 function M._parse_log_cmd(command_builder)
     -- if command has no args, the default command is "git log" with special format
     if not command_builder then
-        command_builder = require("trunks._core.command").base_command("log"):add_args(DEFAULT_LOG_FORMAT)
+        command_builder = require("trunks._core.command").base_command("log"):add_args(log_format)
         return { cmd = command_builder:build(), use_native_output = false, show_head = true }
     end
 
     local args = command_builder.base
     if not args or args:match("log%s-$") then
-        command_builder:add_args(DEFAULT_LOG_FORMAT)
+        command_builder:add_args(log_format)
         return { cmd = command_builder:build(), use_native_output = false, show_head = true }
     end
 
@@ -54,7 +56,7 @@ function M._parse_log_cmd(command_builder)
     end
 
     local args_without_log_prefix = args:sub(5)
-    local cmd_with_format = string.format("git log %s %s", DEFAULT_LOG_FORMAT, args_without_log_prefix)
+    local cmd_with_format = string.format("git log %s %s", log_format, args_without_log_prefix)
 
     -- This checks whether a flag that starts with "-" is present
     -- If not, we're probably just using log on a branch or commit,
