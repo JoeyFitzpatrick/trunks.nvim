@@ -32,7 +32,7 @@ M._pty_on_stdout = function(channel_id)
                 end
             end
         end
-        vim.api.nvim_chan_send(channel_id, esc .. "[J") -- clear from cursor
+        pcall(vim.api.nvim_chan_send, channel_id, esc .. "[J") -- clear from cursor
     end
 end
 
