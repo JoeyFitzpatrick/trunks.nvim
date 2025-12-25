@@ -1,7 +1,3 @@
----@class trunks.Pager
----@field type "prefix" | "postfix"
----@field command string
-
 ---@class trunks.Command
 ---@field base string | nil
 ---@field _prefix string[]
@@ -35,12 +31,7 @@ local PAGER_COMMANDS = {
     log = { "-p" },
 }
 
----@type table<string, trunks.Pager>
-local PAGERS = {
-    delta = { type = "postfix", command = "delta --paging=never" },
-    ["diff-so-fancy"] = { type = "postfix", command = "diff-so-fancy" },
-    difft = { type = "prefix", command = "-c diff.external=difft" },
-}
+local PAGERS = require("trunks._constants.pagers").PAGERS
 
 ---@param cmd? string
 ---@return string?

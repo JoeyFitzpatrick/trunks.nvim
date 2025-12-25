@@ -25,6 +25,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
             -- where a terminal opened by Trunks opens an editor (like the commit editor).
             -- Set this to false to allow "nvim inception" to occur (or handle yourself).
             prevent_nvim_inception = true,
+            pager = "", -- delta, diff-so-fancy, difft, etc.
             home = {
                 keymaps = {
                     -- NOTE: setting a keymap to nil disables it, e.g. `next = nil`

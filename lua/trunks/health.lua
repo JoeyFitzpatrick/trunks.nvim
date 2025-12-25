@@ -95,6 +95,14 @@ function M.check()
     else
         vim.health.error("Not currently in git repository")
     end
+    local pager = configuration.DATA.pager
+    if pager then
+        if not require("trunks._constants.pagers").PAGERS[pager] then
+            vim.health.error("Pager '" .. pager .. "' is not supported by trunks.nvim")
+        else
+            check_executable(pager)
+        end
+    end
 end
 
 return M
