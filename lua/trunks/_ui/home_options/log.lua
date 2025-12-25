@@ -194,7 +194,6 @@ local function set_keymaps(bufnr, get_line, opts)
         end
         vim.ui.select({ "mixed", "soft", "hard" }, { prompt = "Git reset type: " }, function(selection)
             require("trunks._core.run_cmd").run_hidden_cmd("git reset --" .. selection .. " " .. line_data.hash)
-            M.set_lines(bufnr, opts)
         end)
     end, keymap_opts)
 
