@@ -82,7 +82,7 @@ function M.render(bufnr, opts)
             local diff_command_builder = require("trunks._core.command").base_command(
                 "stash show -p --include-untracked " .. line_data.stash_index
             )
-            return diff_command_builder:build() .. "|delta --paging=never"
+            return diff_command_builder:build()
         end,
         get_current_diff = function()
             local ok, line_data = pcall(get_line, bufnr)

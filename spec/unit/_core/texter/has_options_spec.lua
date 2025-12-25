@@ -24,4 +24,8 @@ describe("has_options", function()
     it("should return true when a command has a single-dash option in middle of command", function()
         assert.are.equal(true, has_options("git branch -D --some-other-option", { "--delete", "-D" }))
     end)
+
+    it("should return true for two word commands with flags", function()
+        assert.are.equal(true, has_options("git stash show -p", { "-p" }))
+    end)
 end)

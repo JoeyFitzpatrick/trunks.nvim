@@ -1,3 +1,7 @@
+---@class trunks.Pager
+---@field type "prefix" | "postfix"
+---@field command string
+
 ---@class trunks.Command
 ---@field base string | nil
 ---@field _prefix string[]
@@ -5,7 +9,7 @@
 ---@field _prefix_args string[]
 ---@field _postfix_args string[]
 ---@field _env_vars string[]
----@field _pager string?
+---@field _pager trunks.Pager?
 ---@field add_args fun(self: trunks.Command, args: string): trunks.Command
 ---@field add_prefix_args fun(self: trunks.Command, args: string): trunks.Command
 ---@field add_postfix_args fun(self: trunks.Command, args: string): trunks.Command
@@ -27,7 +31,15 @@ local PAGER_COMMANDS = {
     diff = true,
     grep = true,
     show = true,
+    stash = { "-p" },
     log = { "-p" },
+}
+
+---@type table<string, trunks.Pager>
+local PAGERS = {
+    delta = { type = "postfix", command = "delta --paging=never" },
+    ["diff-so-fancy"] = { type = "postfix", command = "diff-so-fancy" },
+    difft = { type = "prefix", command = "-c diff.external=difft" },
 }
 
 ---@param cmd? string
@@ -53,12 +65,15 @@ local function get_pager(cmd)
     end
 
     local cmd_pager = vim.tbl_get(require("trunks._core.configuration"), "DATA", base_cmd, "pager")
-    if cmd_pager then
-        return cmd_pager
+    if cmd_pager and PAGERS[cmd_pager] then
+        return PAGERS[cmd_pager]
     end
 
     local default_pager = vim.tbl_get(require("trunks._core.configuration"), "DATA", "pager")
-    return default_pager
+    if PAGERS[default_pager] then
+        return PAGERS[default_pager]
+    end
+    return nil
 end
 
 Command.__index = Command
@@ -106,6 +121,15 @@ function Command:add_env_var(args)
 end
 
 function Command:build()
+    local pager = self._pager
+    if pager then
+        if pager.type == "postfix" and not vim.tbl_contains(self._postfix_args, pager.command) then
+            self:add_postfix_args("| " .. pager.command)
+        elseif pager.type == "prefix" and not vim.tbl_contains(self._prefix_args, pager.command) then
+            self:add_prefix_args(pager.command)
+        end
+    end
+
     local unpack = unpack or table.unpack
     local cmd_parts
     if #self._env_vars > 0 then
@@ -121,12 +145,6 @@ function Command:build()
     table_insert_if_exists(cmd_parts, self._postfix_args)
     local built_cmd = table.concat(cmd_parts, " ")
 
-    if self._pager then
-        local adapter = require("trunks._core.pagers")[self._pager]
-        if adapter then
-            built_cmd = adapter(built_cmd)
-        end
-    end
     return built_cmd
 end
 

@@ -35,11 +35,18 @@ describe("command", function()
         )
     end)
 
-    it("can add a pager to a command", function()
+    it("can add a postfix pager to a command", function()
         local Command = require("trunks._core.command")
         local cmd = Command.base_command("log")
-        cmd._pager = "delta"
+        cmd._pager = { command = "delta --paging=never", type = "postfix" }
         assert.are.equal("git --no-pager log | delta --paging=never", cmd:build())
+    end)
+
+    it("can add a prefix pager to a command", function()
+        local Command = require("trunks._core.command")
+        local cmd = Command.base_command("log")
+        cmd._pager = { command = "-c diff.external=difft", type = "prefix" }
+        assert.are.equal("git --no-pager -c diff.external=difft log", cmd:build())
     end)
 end)
 
