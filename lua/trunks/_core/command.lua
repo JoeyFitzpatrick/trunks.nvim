@@ -42,12 +42,13 @@ local function get_pager(cmd)
         return nil
     end
 
-    if not PAGER_COMMANDS[base_cmd] then
+    local pager_opts = PAGER_COMMANDS[base_cmd]
+    if not pager_opts then
         return nil
     end
 
     -- Some commands should only use a pager if they have a specific flag
-    if not require("trunks._core.texter").has_options(cmd, PAGER_COMMANDS[base_cmd]) then
+    if type(pager_opts) == "table" and not require("trunks._core.texter").has_options(cmd, pager_opts) then
         return nil
     end
 

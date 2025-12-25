@@ -9,6 +9,7 @@
 ---@field set_keymaps? fun(bufnr: integer)
 ---@field win? integer
 ---@field ui_types? string[]
+---@field display_strategy? trunks.DisplayStrategy
 
 local M = {}
 
@@ -91,7 +92,7 @@ end
 function M.create_and_render_buffer(tab)
     local bufnr = require("trunks._ui.elements").new_buffer({})
     local ui_render = tab_render_map[tab]
-    ui_render(bufnr, { set_keymaps = set_keymaps })
+    ui_render(bufnr, { set_keymaps = set_keymaps, display_strategy = "full" })
 end
 
 function M.open()

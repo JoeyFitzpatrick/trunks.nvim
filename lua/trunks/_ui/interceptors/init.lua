@@ -5,6 +5,17 @@ local cmd_ui_map = {
     blame = function(command_builder)
         require("trunks._ui.interceptors.blame").render(command_builder)
     end,
+    branch = function(command_builder)
+        local strategy = require("trunks._constants.command_strategies").get_strategy(command_builder:build())
+        if strategy.pty then
+            local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
+            require("trunks._ui.home_options.branch").render(bufnr, {
+                command_builder = command_builder,
+                ui_types = { "branch" },
+            })
+        end
+        return nil
+    end,
     difftool = function(command_builder)
         require("trunks._ui.interceptors.difftool").render(command_builder)
     end,
@@ -41,12 +52,6 @@ local cmd_ui_map = {
     end,
 }
 
--- Keeping these out of the UI map, so that commands like "stash list" don't render UI
-local stash_render = function()
-    local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = os.tmpname() .. "/TrunksStash" })
-    return require("trunks._ui.home_options.stash").render(bufnr, { ui_types = { "stash" } })
-end
-
 local standard_output_commands = {
     "diff",
     "show",
@@ -56,47 +61,6 @@ for _, command in ipairs(standard_output_commands) do
     cmd_ui_map[command] = function(command_builder)
         require("trunks._ui.interceptors.standard_interceptor").render(command_builder, command)
     end
-end
-
-local BRANCH_UI_OPTIONS = {
-    "branch",
-    "--color",
-    "--no-color",
-    "-i",
-    "--ignore-case",
-    "--omit-empty",
-    "--no-column",
-    "-r",
-    "--remotes",
-    "-a",
-    "--all",
-    "-l",
-    "--list",
-    "--contains",
-    "--no-contains",
-    "--merged",
-    "--no-merged",
-    "--sort",
-    "--points-at",
-}
-
---- Some branch commands, like `git branch new-branch old-branch`,
---- should not open the special branch UI, and just run in terminal mode.
----@param command_builder trunks.Command
----@return function | nil
-local function branch_interceptor(command_builder)
-    local has_only_ui_options = require("trunks._core.texter").only_has_options(command_builder, BRANCH_UI_OPTIONS)
-    if has_only_ui_options then
-        return function(branch_command_builder)
-            require("trunks._ui.home_options.branch").render({
-                command_builder = branch_command_builder,
-                ui_types = { "branch" },
-            })
-            -- By default branch UI "q" map will go back to last buffer, but in a split we just want to close it
-            -- require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
-        end
-    end
-    return nil
 end
 
 ---@param command_builder trunks.Command
@@ -121,13 +85,6 @@ function M.get_ui(command_builder)
         return cmd_ui_map.help
     end
 
-    if cmd:match("^stash%s*$") then
-        return stash_render
-    end
-    if vim.startswith(cmd, "branch") then
-        -- If this is nil, fall back to terminal mode
-        return branch_interceptor(command_builder)
-    end
     return cmd_ui_map[subcommand]
 end
 

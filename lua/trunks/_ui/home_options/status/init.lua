@@ -307,7 +307,6 @@ function M.render(bufnr, opts)
                 return
             end
             return Command.base_command(get_diff_cmd(line_data.status, line_data.safe_filename)):build()
-                .. "|delta --paging=never"
         end,
         get_current_diff = function()
             local ok, line_data = pcall(M.get_line, bufnr)

@@ -214,7 +214,7 @@ function M.render(bufnr, opts)
     local term = require("trunks._ui.elements").terminal(
         bufnr,
         command_builder:build(),
-        { enter = true, display_strategy = "full" }
+        { enter = true, display_strategy = opts.display_strategy }
     )
     local win = term.win
 

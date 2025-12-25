@@ -1,4 +1,4 @@
----@alias trunks.DisplayStrategy "above" | "below" | "right" | "left" | "full" | "quiet"
+---@alias trunks.DisplayStrategy "above" | "below" | "right" | "left" | "full"
 ---@alias trunks.DisplayStrategyParser fun(cmd: string[]): trunks.DisplayStrategy
 ---@alias trunks.DisplayStrategyBoolParser fun(cmd: string[]): boolean
 
@@ -12,9 +12,16 @@
 
 local M = {}
 
-local function tbls_overlap(t1, t2)
-    for _, item in ipairs(t2) do
-        if vim.tbl_contains(t1, item) then
+---@param cmd string[]
+---@param options string[]
+---@return boolean
+function M._cmd_contains_options(cmd, options)
+    for _, option in ipairs(options) do
+        if
+            vim.tbl_contains(cmd, function(cmd_part)
+                return vim.startswith(cmd_part, option)
+            end, { predicate = true })
+        then
             return true
         end
     end
@@ -29,7 +36,7 @@ local function is_full_screen_command(cmd)
         "--interactive",
         "-p",
     }
-    return tbls_overlap(cmd, full_screen_options)
+    return M._cmd_contains_options(cmd, full_screen_options)
 end
 
 ---@param cmd string
@@ -98,7 +105,29 @@ M.annotate = { insert = true }
 ---@type trunks.Strategy
 M.branch = {
     display_strategy = M.STRATEGIES.BELOW,
-    pty = true,
+    pty = function(cmd)
+        local branch_pty_options = {
+            "--color",
+            "--no-color",
+            "-i",
+            "--ignore-case",
+            "--omit-empty",
+            "--no-column",
+            "-r",
+            "--remotes",
+            "-a",
+            "--all",
+            "-l",
+            "--list",
+            "--contains",
+            "--no-contains",
+            "--merged",
+            "--no-merged",
+            "--sort",
+            "--points-at",
+        }
+        return cmd[#cmd] == "branch" or M._cmd_contains_options(cmd, branch_pty_options)
+    end,
     trigger_redraw = function(cmd)
         local args_that_trigger_redraw = {
             "-d",
@@ -109,7 +138,7 @@ M.branch = {
             "-c",
             "--copy",
         }
-        return tbls_overlap(args_that_trigger_redraw, cmd)
+        return M._cmd_contains_options(cmd, args_that_trigger_redraw)
     end,
 }
 
@@ -138,7 +167,7 @@ M.commit = {
             "-m",
             "-z",
         }
-        return not tbls_overlap(cmd, should_not_enter_insert_options)
+        return not M._cmd_contains_options(cmd, should_not_enter_insert_options)
     end,
 }
 
@@ -150,7 +179,7 @@ M.log = {
         local non_pty_options = {
             "-p",
         }
-        return not tbls_overlap(cmd, non_pty_options)
+        return not M._cmd_contains_options(cmd, non_pty_options)
     end,
 }
 M.merge = { insert = true, trigger_redraw = true }
@@ -160,7 +189,7 @@ M.notes = {
     insert = function(cmd)
         local should_not_enter_insert_options =
             { "--message", "-m", "copy", "get-ref", "list", "merge", "prune", "remove", "show" }
-        return not tbls_overlap(cmd, should_not_enter_insert_options)
+        return not M._cmd_contains_options(cmd, should_not_enter_insert_options)
     end,
 }
 
@@ -175,7 +204,7 @@ M.stage = { trigger_redraw = true }
 M.stash = {
     trigger_redraw = function(cmd)
         local read_only_commands = { "list", "show" }
-        if tbls_overlap(cmd, read_only_commands) then
+        if M._cmd_contains_options(cmd, read_only_commands) then
             return false
         end
         return true
