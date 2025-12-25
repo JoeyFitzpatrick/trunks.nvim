@@ -5,8 +5,11 @@
 ---
 ---@module 'trunks.types'
 
+---@alias trunks.Pager "delta" | "diff-so-fancy"
+
 ---@class trunks.Configuration
 ---@field prevent_nvim_inception? boolean
+---@field pager? trunks.Pager
 ---@field auto_display? trunks.AutoDisplayConfiguration
 ---@field blame? trunks.BlameConfiguration
 ---@field home? trunks.HomeConfiguration

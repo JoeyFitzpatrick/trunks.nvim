@@ -23,6 +23,13 @@ local function table_insert_if_exists(tbl, strs)
     end
 end
 
+local PAGER_COMMANDS = {
+    diff = true,
+    grep = true,
+    show = true,
+    log = { "-p" },
+}
+
 ---@param cmd? string
 ---@return string?
 local function get_pager(cmd)
@@ -31,11 +38,22 @@ local function get_pager(cmd)
     end
 
     local base_cmd = require("trunks._core.texter").get_base_cmd(cmd)
-    if base_cmd then
-        local cmd_pager = vim.tbl_get(require("trunks._core.configuration"), "DATA", base_cmd, "pager")
-        if cmd_pager then
-            return cmd_pager
-        end
+    if not base_cmd then
+        return nil
+    end
+
+    if not PAGER_COMMANDS[base_cmd] then
+        return nil
+    end
+
+    -- Some commands should only use a pager if they have a specific flag
+    if not require("trunks._core.texter").has_options(cmd, PAGER_COMMANDS[base_cmd]) then
+        return nil
+    end
+
+    local cmd_pager = vim.tbl_get(require("trunks._core.configuration"), "DATA", base_cmd, "pager")
+    if cmd_pager then
+        return cmd_pager
     end
 
     local default_pager = vim.tbl_get(require("trunks._core.configuration"), "DATA", "pager")

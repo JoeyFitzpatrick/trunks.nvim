@@ -8,8 +8,7 @@
 ---@field trigger_redraw? boolean | trunks.DisplayStrategyBoolParser
 ---@field enter? boolean
 ---@field win_size? number
----@field term? boolean
----@field pty? boolean
+---@field pty? boolean | trunks.DisplayStrategyBoolParser
 
 local M = {}
 
@@ -79,7 +78,7 @@ M.default = {
     display_strategy = M.STRATEGIES.BELOW,
     insert = false,
     trigger_redraw = false,
-    pty = true,
+    pty = false,
 }
 
 ---@type trunks.Strategy
@@ -99,6 +98,7 @@ M.annotate = { insert = true }
 ---@type trunks.Strategy
 M.branch = {
     display_strategy = M.STRATEGIES.BELOW,
+    pty = true,
     trigger_redraw = function(cmd)
         local args_that_trigger_redraw = {
             "-d",
@@ -119,7 +119,6 @@ M["checkout-index"] = { trigger_redraw = true }
 ---@type trunks.Strategy
 M.commit = {
     trigger_redraw = true,
-    pty = false,
     insert = function(cmd)
         local should_not_enter_insert_options = {
             "--allow-empty",
@@ -144,8 +143,16 @@ M.commit = {
 }
 
 M.config = { insert = true }
-M.diff = { display_strategy = M.STRATEGIES.RIGHT, insert = false, pty = false }
+M.diff = { display_strategy = M.STRATEGIES.RIGHT, insert = false }
 M.fetch = { display_strategy = M.STRATEGIES.BELOW, trigger_redraw = true }
+M.log = {
+    pty = function(cmd)
+        local non_pty_options = {
+            "-p",
+        }
+        return not tbls_overlap(cmd, non_pty_options)
+    end,
+}
 M.merge = { insert = true, trigger_redraw = true }
 
 M.notes = {
@@ -162,7 +169,7 @@ M.push = { trigger_redraw = true }
 M.rebase = { insert = true, trigger_redraw = true }
 M.reset = { trigger_redraw = true }
 M.revert = { trigger_redraw = true }
-M.show = { display_strategy = M.STRATEGIES.FULL, insert = true, pty = false }
+M.show = { display_strategy = M.STRATEGIES.FULL, insert = true }
 M.stage = { trigger_redraw = true }
 
 M.stash = {
@@ -175,6 +182,7 @@ M.stash = {
     end,
 }
 
+M.status = { pty = true }
 M.switch = { trigger_redraw = true }
 M.whatchanged = { insert = true }
 

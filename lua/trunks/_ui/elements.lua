@@ -78,6 +78,7 @@ end
 ---@param strategy trunks.Strategy
 ---@return { win: integer, channel_id: integer, exit_code: integer }
 local function open_terminal_buffer(cmd, bufnr, strategy)
+    vim.bo[bufnr].scrollback = 1000000
     local run_command_result = run_terminal_command(cmd, bufnr, strategy)
 
     local strategies = require("trunks._constants.command_strategies").STRATEGIES
