@@ -100,12 +100,16 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
                 win = vim.api.nvim_open_win(bufnr, enter, { split = display_strategy, width = width })
             end
         else
-            win = vim.api.nvim_open_win(bufnr, enter, { split = display_strategy })
+            -- Use golden ratio for above/below splits to create smaller split
+            if vim.tbl_contains({ "above", "below" }, display_strategy) then
+                local current_win_height = vim.api.nvim_win_get_height(win)
+                local golden_ratio = (1 + math.sqrt(5)) / 2
+                local height = math.floor(current_win_height / (1 + golden_ratio))
+                win = vim.api.nvim_open_win(bufnr, enter, { split = display_strategy, height = height })
+            else
+                win = vim.api.nvim_open_win(bufnr, enter, { split = display_strategy })
+            end
         end
-        local direction_to_win_cmd = { left = "H", below = "J", above = "K", right = "L" }
-        vim.api.nvim_win_call(win, function()
-            vim.cmd("wincmd " .. direction_to_win_cmd[display_strategy])
-        end)
     elseif display_strategy == strategies.FULL then
         vim.api.nvim_win_set_buf(0, bufnr)
     else

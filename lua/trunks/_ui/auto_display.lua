@@ -189,6 +189,11 @@ function M.create_auto_display(bufnr, ui_type, auto_display_opts)
     -- We need this check to ensure that we have an "auto_display_on" toggle in config
     assert(require("trunks._core.configuration").DATA[ui_type], "Couldn't find config for ui type: " .. ui_type)
 
+    if auto_display_opts.strategy.display_strategy == "below" and not auto_display_opts.strategy.win_size then
+        local golden_ratio = 0.618
+        auto_display_opts.strategy.win_size = golden_ratio
+    end
+
     local buf = require("trunks._core.register").buffers[bufnr]
     if buf then
         clear_state(buf.state, ui_type)
