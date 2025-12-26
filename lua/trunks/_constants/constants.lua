@@ -6,4 +6,6 @@ M.AUTOCMD = {
     RERENDER = "trunks-rerender",
 }
 
+M.GOLDEN_RATIO = 0.618
+
 return M
