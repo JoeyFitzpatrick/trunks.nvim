@@ -18,7 +18,7 @@ describe("setup_auto_display", function()
         opts.set_autocmds = function(_bufnr, auto_display_opts)
             set_autocmds_result = auto_display_opts
         end
-        setup_auto_display(-1, opts)
+        setup_auto_display(0, opts)
         assert.are.equal(true, set_keymaps_called)
         assert.are.equal(opts.auto_display_opts, set_autocmds_result)
     end)
@@ -33,7 +33,7 @@ describe("setup_auto_display", function()
         for _, test in ipairs(test_map) do
             local opts = default_opts
             opts.auto_display_config = test.config
-            local auto_display_open = setup_auto_display(-1, opts).open_auto_display
+            local auto_display_open = setup_auto_display(0, opts).open_auto_display
             assert.are.equal(test.expected, auto_display_open)
         end
     end)
@@ -42,22 +42,22 @@ describe("setup_auto_display", function()
         local golden_ratio = require("trunks._constants.constants").GOLDEN_RATIO
         local test_map = {
             { strategy = { win_size = 0.12 }, expected = { display_strategy = "below", win_size = 0.12 } },
-            -- { strategy = {}, expected = { display_strategy = "below", win_size = golden_ratio } },
-            -- {
-            --     strategy = { display_strategy = "below" },
-            --     expected = { display_strategy = "below", win_size = golden_ratio },
-            -- },
-            -- {
-            --     strategy = { display_strategy = "below", win_size = 0.2 },
-            --     expected = { display_strategy = "below", win_size = 0.2 },
-            -- },
-            -- { strategy = { display_strategy = "right" }, expected = { display_strategy = "right", win_size = 0.5 } },
+            { strategy = {}, expected = { display_strategy = "below", win_size = golden_ratio } },
+            {
+                strategy = { display_strategy = "below" },
+                expected = { display_strategy = "below", win_size = golden_ratio },
+            },
+            {
+                strategy = { display_strategy = "below", win_size = 0.2 },
+                expected = { display_strategy = "below", win_size = 0.2 },
+            },
+            { strategy = { display_strategy = "right" }, expected = { display_strategy = "right", win_size = 0.5 } },
         }
         for _, test in ipairs(test_map) do
             local opts = default_opts
             opts.auto_display_opts.strategy = test.strategy
-            local win_size = setup_auto_display(-1, opts).win_size
-            local display_strategy = setup_auto_display(-1, opts).display_strategy
+            local win_size = setup_auto_display(0, opts).win_size
+            local display_strategy = setup_auto_display(0, opts).display_strategy
             assert.are.equal(test.expected.win_size, win_size)
             assert.are.equal(test.expected.display_strategy, display_strategy)
         end
