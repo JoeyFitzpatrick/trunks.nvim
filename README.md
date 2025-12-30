@@ -121,7 +121,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                 },
             },
             log = {
-                default_format = "--pretty='%C(yellow)%h %Cblue%>(12)%ad %Cgreen%<(7)%aN%Cred%d %Creset%s'",
+                default_format = "--pretty='%C(yellow)%h%x09%Cblue%ar%x09%Cgreen%aN%x09%Creset%s'",
                 keymaps = {
                     checkout = "c", -- Checkout commmit under cursor
                     commit_details = "<enter>",
