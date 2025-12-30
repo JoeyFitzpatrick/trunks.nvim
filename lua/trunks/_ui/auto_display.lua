@@ -7,19 +7,29 @@ local M = {}
 
 ---@class trunks.AutoDisplayState
 ---@field diff_bufnr integer
+---@field diff_channel_id integer
 ---@field current_diff string
 ---@field show_auto_display boolean
 
 ---@param bufnr integer
+---@return trunks.AutoDisplayState
+local function get_state(bufnr)
+    return vim.b[bufnr].trunks_auto_display_state
+end
+
+---@param bufnr integer
+---@param state table<string, any>
+local function set_state(bufnr, state)
+    vim.b[bufnr].trunks_auto_display_state = vim.tbl_extend("force", vim.b[bufnr].trunks_auto_display_state, state)
+end
+
+---@param bufnr integer
 function M.close_auto_display(bufnr)
-    local state = vim.b[bufnr].trunks_auto_display_state
-    if not state then
-        return
-    end
+    local state = get_state(bufnr)
     if state.diff_bufnr and vim.api.nvim_buf_is_valid(state.diff_bufnr) then
         vim.api.nvim_buf_delete(state.diff_bufnr, { force = true })
     end
-    vim.b[bufnr].trunks_auto_display_state.show_auto_display = false
+    vim.b[bufnr].trunks_auto_display_state = { show_auto_display = state.show_auto_display }
 end
 
 ---@param diff_bufnr integer
@@ -79,7 +89,8 @@ function M._render_auto_display(bufnr, auto_display_opts)
     if not vim.api.nvim_buf_is_valid(bufnr) then
         return
     end
-    local state = vim.b[bufnr].trunks_auto_display_state or {}
+    local state = get_state(bufnr)
+
     local current_diff = auto_display_opts.get_current_diff(bufnr)
     if not current_diff then
         M.close_auto_display(bufnr)
@@ -88,20 +99,17 @@ function M._render_auto_display(bufnr, auto_display_opts)
     if current_diff == state.current_diff then
         return
     end
+
     local diff_cmd = auto_display_opts.generate_cmd(bufnr)
     if not diff_cmd then
         return
     end
 
     state.current_diff = current_diff
-    if state.diff_bufnr then
-        if vim.api.nvim_buf_is_valid(state.diff_bufnr) then
-            vim.api.nvim_buf_delete(state.diff_bufnr, { force = true })
-        end
-        state.diff_bufnr = nil
+    if state.diff_bufnr and vim.api.nvim_buf_is_valid(state.diff_bufnr) then
+        vim.api.nvim_buf_delete(state.diff_bufnr, { force = true })
     end
     state.diff_bufnr = vim.api.nvim_create_buf(false, true)
-    state.show_auto_display = true
     local win = vim.api.nvim_get_current_win()
     local term = require("trunks._ui.elements").terminal(state.diff_bufnr, diff_cmd, auto_display_opts.strategy)
     state.diff_channel_id = term.chan
@@ -121,8 +129,8 @@ local function set_autocmds(bufnr, auto_display_opts)
         desc = "Diff the file under the cursor",
         buffer = bufnr,
         callback = function()
-            local state = vim.b[bufnr].trunks_auto_display_state
-            if not state or not state.show_auto_display then
+            local state = get_state(bufnr)
+            if not state.show_auto_display then
                 return
             end
             -- We want to wait here, because if this is called while closing another window,
@@ -146,14 +154,12 @@ local function set_keymaps(bufnr, auto_display_opts)
     end
 
     set("n", keymaps.toggle_auto_display, function()
-        local state = vim.b[bufnr].trunks_auto_display_state
-        if not state then
-            vim.b[bufnr].trunks_auto_display_state = { show_auto_display = true }
-            M._render_auto_display(bufnr, auto_display_opts)
-        elseif not state.show_auto_display then
-            vim.b[bufnr].trunks_auto_display_state.show_auto_display = true
+        local state = get_state(bufnr)
+        if not state.show_auto_display then
+            set_state(bufnr, { show_auto_display = true })
             M._render_auto_display(bufnr, auto_display_opts)
         else
+            set_state(bufnr, { show_auto_display = false })
             M.close_auto_display(bufnr)
         end
     end, keymap_opts)
@@ -221,7 +227,6 @@ end
 ---@param ui_type string
 ---@param auto_display_opts trunks.AutoDisplayOpts
 function M.create_auto_display(bufnr, ui_type, auto_display_opts)
-    M.close_auto_display(bufnr)
     ---@type trunks.SetupAutoDisplayOpts
     local setup_auto_display_opts = {
         set_keymaps = set_keymaps,
@@ -229,8 +234,8 @@ function M.create_auto_display(bufnr, ui_type, auto_display_opts)
         auto_display_config = require("trunks._core.configuration").DATA[ui_type],
         auto_display_opts = auto_display_opts,
     }
-    local setup_result = M._setup_auto_display(bufnr, setup_auto_display_opts)
-    if setup_result.open_auto_display then
+    local result = M._setup_auto_display(bufnr, setup_auto_display_opts)
+    if result.open_auto_display then
         M._render_auto_display(bufnr, auto_display_opts)
     end
 end
