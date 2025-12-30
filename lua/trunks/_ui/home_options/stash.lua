@@ -91,7 +91,7 @@ function M.render(bufnr, opts)
             end
             return line_data.stash_index
         end,
-        strategy = { display_strategy = "right", insert = false, trigger_redraw = false, pty = false },
+        strategy = { display_strategy = "below", insert = false, trigger_redraw = false, pty = false },
     })
 
     set_keymaps(bufnr)

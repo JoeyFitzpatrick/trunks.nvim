@@ -174,7 +174,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                 },
             },
             status = {
-                auto_display_on = false,
+                auto_display_on = true,
                 keymaps = {
                     commit_popup = "c",
                     diff_file = "D",
