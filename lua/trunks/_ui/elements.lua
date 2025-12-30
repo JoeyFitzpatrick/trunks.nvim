@@ -143,6 +143,7 @@ end
 ---@param strategy? trunks.Strategy
 ---@return { bufnr: integer, win: integer, chan: integer, exit_code: integer } | nil
 function M.terminal(bufnr, cmd, strategy)
+    require("trunks._ui.auto_display").close_open_auto_displays()
     -- Buffer local variable that makes any editors opened from this terminal,
     -- such as the commit editor, use the current nvim instance instead of a nested one.
     vim.b[bufnr].trunks_use_nested_nvim = true

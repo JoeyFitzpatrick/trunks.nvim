@@ -10,10 +10,14 @@ local M = {}
 ---@field diff_channel_id integer
 ---@field current_diff string
 ---@field show_auto_display boolean
+---@field suppress_next_render boolean
 
 ---@param bufnr integer
 ---@return trunks.AutoDisplayState
 local function get_state(bufnr)
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+        return nil
+    end
     return vim.b[bufnr].trunks_auto_display_state
 end
 
@@ -30,6 +34,16 @@ function M.close_auto_display(bufnr)
         vim.api.nvim_buf_delete(state.diff_bufnr, { force = true })
     end
     vim.b[bufnr].trunks_auto_display_state = { show_auto_display = state.show_auto_display }
+end
+
+function M.close_open_auto_displays()
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_is_loaded(buf) and vim.b[buf].trunks_auto_display_state then
+            M.close_auto_display(buf)
+            -- Set flag to suppress the next scheduled render
+            set_state(buf, { suppress_next_render = true })
+        end
+    end
 end
 
 ---@param diff_bufnr integer
@@ -135,9 +149,18 @@ local function set_autocmds(bufnr, auto_display_opts)
             end
             -- We want to wait here, because if this is called while closing another window,
             -- An error is thrown. This way, we wait until that close happens (if one does happen).
-            vim.defer_fn(function()
+            vim.schedule(function()
+                local current_state = get_state(bufnr)
+                if not current_state then
+                    return
+                end
+                -- Check if rendering should be suppressed (e.g., after closing from popup action)
+                if current_state.suppress_next_render then
+                    set_state(bufnr, { suppress_next_render = false })
+                    return
+                end
                 M._render_auto_display(bufnr, auto_display_opts)
-            end, 10)
+            end)
         end,
         group = vim.api.nvim_create_augroup("TrunksShowAutoDisplay", { clear = true }),
     })
@@ -215,7 +238,10 @@ function M._setup_auto_display(bufnr, opts)
     opts.auto_display_opts.strategy.display_strategy = result.display_strategy
     opts.auto_display_opts.strategy.win_size = result.win_size
 
-    vim.b[bufnr].trunks_auto_display_state = { show_auto_display = result.open_auto_display }
+    vim.b[bufnr].trunks_auto_display_state = {
+        show_auto_display = result.open_auto_display,
+        suppress_next_render = false,
+    }
     opts.set_keymaps(bufnr, opts.auto_display_opts)
     opts.set_autocmds(bufnr, opts.auto_display_opts)
 
