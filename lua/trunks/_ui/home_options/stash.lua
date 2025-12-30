@@ -70,7 +70,7 @@ function M.render(bufnr, opts)
     local term = require("trunks._ui.elements").terminal(
         bufnr,
         command_builder:build(),
-        { enter = true, display_strategy = "full", trigger_redraw = false }
+        { enter = true, display_strategy = "full", trigger_redraw = false, pty = true }
     )
 
     require("trunks._ui.auto_display").create_auto_display(bufnr, "stash", {
