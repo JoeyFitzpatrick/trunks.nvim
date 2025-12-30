@@ -219,11 +219,6 @@ function M.render(bufnr, opts)
     local win = term.win
 
     set_keymaps(bufnr)
-    require("trunks._core.register").register_buffer(bufnr, {
-        render_fn = function()
-            M.render(bufnr, opts)
-        end,
-    })
     if opts.set_keymaps then
         opts.set_keymaps(bufnr)
     end

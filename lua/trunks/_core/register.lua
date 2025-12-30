@@ -1,36 +1,10 @@
----@class trunks.RegisterOpts
----@field render_fn? fun()
----@field state? table<string, any>
----@field win? integer
-
----@class trunks.RegisterOptsWithState
----@field render_fn? fun()
----@field state table<string, any>
----@field win? integer
-
 ---@class trunks.DeregisterOpts
 ---@field delete_win_buffers? boolean
 
 local M = {}
 
----@type table<integer, trunks.RegisterOptsWithState>
-M.buffers = {}
-
 ---@type table<integer, integer>
 M.last_non_trunks_buffer_for_win = {}
-
----@param bufnr integer
----@param opts trunks.RegisterOpts
-function M.register_buffer(bufnr, opts)
-    if not opts.state then
-        opts.state = {}
-    end
-    if not opts.win then
-        opts.win = vim.api.nvim_get_current_win()
-    end
-    ---@diagnostic disable-next-line: assign-type-mismatch
-    M.buffers[bufnr] = opts
-end
 
 ---@param win integer
 function M._delete_trunks_buffers_for_win(win)
@@ -49,7 +23,6 @@ function M.deregister_buffer(bufnr, opts)
     end
 
     opts = opts or {}
-    M.buffers[bufnr] = nil
     if not vim.api.nvim_buf_is_valid(bufnr) then
         return
     end

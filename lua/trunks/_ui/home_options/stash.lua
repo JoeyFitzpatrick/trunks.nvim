@@ -99,12 +99,6 @@ function M.render(bufnr, opts)
         opts.set_keymaps(bufnr)
     end
 
-    require("trunks._core.register").register_buffer(bufnr, {
-        render_fn = function()
-            M.render(bufnr, opts)
-        end,
-        state = { display_auto_display = true },
-    })
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "stash" })
     return bufnr, term.win
 end

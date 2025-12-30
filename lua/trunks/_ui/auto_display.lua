@@ -60,10 +60,7 @@ local function set_diff_buffer_autocmds(diff_bufnr, original_bufnr, win)
         desc = "Close open diffs and clean up diff variables",
         buffer = original_bufnr,
         callback = function()
-            local buf = require("trunks._core.register").buffers[original_bufnr]
-            if buf then
-                M.close_auto_display(original_bufnr)
-            end
+            M.close_auto_display(original_bufnr)
             require("trunks._core.register").deregister_buffer(diff_bufnr, { delete_win_buffers = false })
         end,
         group = vim.api.nvim_create_augroup("TrunksCloseAutoDisplay", { clear = true }),

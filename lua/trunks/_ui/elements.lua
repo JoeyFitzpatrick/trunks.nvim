@@ -244,9 +244,6 @@ function M.new_buffer(opts)
     end
     vim.bo[bufnr].modifiable = false
 
-    local register = require("trunks._core.register")
-    register.register_buffer(bufnr, { win = win })
-
     return bufnr, win
 end
 
