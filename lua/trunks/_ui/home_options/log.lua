@@ -1,5 +1,7 @@
 local M = {}
 
+local Command = require("trunks._core.command")
+
 ---@param bufnr integer
 ---@param line_num? integer
 ---@return { hash: string } | nil
@@ -18,7 +20,7 @@ end
 vim.tbl_get(require("trunks._core.configuration"), "DATA", "log", "default_format")
 local log_format = vim.tbl_get(require("trunks._core.configuration"), "DATA", "log", "default_format") or ""
 
-M.NATIVE_OUTPUT_OPTIONS = {
+M.GIT_FILETYPE_OPTIONS = {
     "-p",
     "-L",
     "--pretty",
@@ -34,38 +36,27 @@ local function contains_option(command, option)
 end
 
 ---@param command_builder? trunks.Command
----@return { cmd: string, use_native_output: boolean, show_head: boolean }
+---@return { cmd: string, use_git_filetype_keymaps: boolean }
 function M._parse_log_cmd(command_builder)
     -- if command has no args, the default command is "git log" with special format
-    if not command_builder then
-        command_builder = require("trunks._core.command").base_command("log"):add_args(log_format)
-        return { cmd = command_builder:build(), use_native_output = false, show_head = true }
+    local command_has_no_args = not command_builder or not command_builder.base or command_builder.base:match("log%s-$")
+
+    if command_has_no_args then
+        command_builder = Command.base_command("log"):add_args(log_format)
+        return { cmd = command_builder:build(), use_git_filetype_keymaps = false }
     end
 
+    local git_filetype_output = { cmd = command_builder:build(), use_git_filetype_keymaps = true }
     local args = command_builder.base
-    if not args or args:match("log%s-$") then
-        command_builder:add_args(log_format)
-        return { cmd = command_builder:build(), use_native_output = false, show_head = true }
-    end
-
-    local native_output = { cmd = command_builder:build(), use_native_output = true, show_head = false }
-    for _, option in ipairs(M.NATIVE_OUTPUT_OPTIONS) do
+    for _, option in ipairs(M.GIT_FILETYPE_OPTIONS) do
         if contains_option(args, option) then
-            return native_output
+            return git_filetype_output
         end
     end
 
-    local args_without_log_prefix = args:sub(5)
-    local cmd_with_format = string.format("git log %s %s", log_format, args_without_log_prefix)
+    command_builder:add_args(log_format)
 
-    -- This checks whether a flag that starts with "-" is present
-    -- If not, we're probably just using log on a branch or commit,
-    -- so showing the branch being logged is desired.
-    local show_head = false
-    if not args:match("^log.-%s%-") then
-        show_head = true
-    end
-    return { cmd = cmd_with_format, use_native_output = false, show_head = show_head }
+    return { cmd = command_builder:build(), use_git_filetype_keymaps = false }
 end
 
 ---@param bufnr integer
@@ -229,7 +220,7 @@ function M.render(bufnr, opts)
     local cmd_tbl = M._parse_log_cmd(opts.command_builder)
     require("trunks._ui.elements").terminal(bufnr, cmd_tbl.cmd, { enter = true, display_strategy = "full" })
 
-    if cmd_tbl.use_native_output then
+    if cmd_tbl.use_git_filetype_keymaps then
         require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
     else
         local get_line_fn = base_get_line

@@ -5,27 +5,25 @@ local PREFIX = "G"
 ---@param input_args vim.api.keyset.create_user_command.command_args
 local function run_git_command(input_args)
     local cmd = require("trunks._core.parse_command").parse(input_args)
-    local cmd_with_git_dir_flag = require("trunks._core.parse_command").add_git_dir_flag(cmd)
-    local cmd_with_git_prefix = "git " .. cmd_with_git_dir_flag
+    local Command = require("trunks._core.command")
+    local command_builder = Command.base_command(cmd)
 
     if input_args.bang then
         local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
         require("trunks._ui.elements").terminal(
             bufnr,
-            cmd_with_git_prefix,
+            command_builder:build(),
             { display_strategy = "full", insert = true }
         )
         return
     end
 
-    local Command = require("trunks._core.command")
-    local command_builder = Command.base_command(cmd)
     local ui_function = require("trunks._ui.interceptors").get_ui(command_builder)
     if ui_function then
         ui_function(command_builder)
     else
         local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
-        require("trunks._ui.elements").terminal(bufnr, cmd_with_git_prefix)
+        require("trunks._ui.elements").terminal(bufnr, command_builder:build())
     end
 end
 
