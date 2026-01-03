@@ -236,16 +236,18 @@ function M.new_buffer(opts)
         vim.api.nvim_set_option_value("filetype", opts.filetype, { buf = bufnr })
     end
 
+    local moved_to_existing_buffer = false
     if opts.buffer_name then
         local ok = pcall(vim.api.nvim_buf_set_name, bufnr, opts.buffer_name)
         if not ok then
             vim.cmd("e " .. opts.buffer_name)
-        else
-            if opts.lines then
-                vim.bo[bufnr].modifiable = true
-                vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, opts.lines(bufnr))
-            end
+            moved_to_existing_buffer = true
         end
+    end
+
+    if opts.lines and not moved_to_existing_buffer then
+        vim.bo[bufnr].modifiable = true
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, opts.lines(bufnr))
     end
     vim.bo[bufnr].modifiable = false
 
