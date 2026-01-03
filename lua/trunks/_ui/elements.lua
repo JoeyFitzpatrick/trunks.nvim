@@ -157,11 +157,16 @@ function M.terminal(bufnr, cmd, strategy)
     if not channel_id then
         return
     end
+
+    if strategy.tail then
+        vim.cmd("$")
+    end
     if strategy.insert then
         vim.cmd("startinsert")
     else
         vim.cmd("stopinsert")
     end
+
     require("trunks._ui.keymaps.base").set_keymaps(bufnr, { terminal_channel_id = channel_id })
     set_terminal_autocmds_and_state(cmd, bufnr, strategy)
     return { bufnr = bufnr, win = win, chan = channel_id, exit_code = exit_code }

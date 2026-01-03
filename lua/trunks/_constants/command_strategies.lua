@@ -9,6 +9,7 @@
 ---@field enter? boolean
 ---@field win_size? number
 ---@field pty? boolean | trunks.DisplayStrategyBoolParser
+---@field tail? boolean
 
 local M = {}
 
@@ -148,6 +149,7 @@ M["checkout-index"] = { trigger_redraw = true }
 ---@type trunks.Strategy
 M.commit = {
     trigger_redraw = true,
+    tail = true,
     insert = function(cmd)
         local should_not_enter_insert_options = {
             "--allow-empty",
@@ -193,8 +195,8 @@ M.notes = {
     end,
 }
 
-M.pull = { trigger_redraw = true }
-M.push = { trigger_redraw = true }
+M.pull = { trigger_redraw = true, tail = true }
+M.push = { trigger_redraw = true, tail = true }
 M.rebase = { insert = true, trigger_redraw = true }
 M.reset = { trigger_redraw = true }
 M.revert = { trigger_redraw = true }
