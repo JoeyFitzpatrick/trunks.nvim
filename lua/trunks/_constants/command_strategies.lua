@@ -174,7 +174,7 @@ M.commit = {
 }
 
 M.config = { insert = true }
-M.diff = { display_strategy = M.STRATEGIES.RIGHT, insert = false }
+M.diff = { display_strategy = M.STRATEGIES.FULL }
 M.fetch = { display_strategy = M.STRATEGIES.BELOW, trigger_redraw = true }
 M.log = {
     pty = function(cmd)
@@ -200,7 +200,7 @@ M.push = { trigger_redraw = true, tail = true }
 M.rebase = { insert = true, trigger_redraw = true }
 M.reset = { trigger_redraw = true }
 M.revert = { trigger_redraw = true }
-M.show = { display_strategy = M.STRATEGIES.FULL, insert = true }
+M.show = { display_strategy = M.STRATEGIES.FULL }
 M.stage = { trigger_redraw = true }
 
 M.stash = {
