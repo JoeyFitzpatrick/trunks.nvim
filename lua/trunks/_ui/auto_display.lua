@@ -7,7 +7,7 @@ local M = {}
 
 ---@class trunks.AutoDisplayState
 ---@field diff_bufnr integer
----@field diff_channel_id integer
+---@field diff_win integer
 ---@field current_diff string
 ---@field show_auto_display boolean
 ---@field suppress_next_render boolean
@@ -123,7 +123,7 @@ function M._render_auto_display(bufnr, auto_display_opts)
     state.diff_bufnr = vim.api.nvim_create_buf(false, true)
     local win = vim.api.nvim_get_current_win()
     local term = require("trunks._ui.elements").terminal(state.diff_bufnr, diff_cmd, auto_display_opts.strategy)
-    state.diff_channel_id = term.chan
+    state.diff_win = term.win
     set_diff_buffer_autocmds(state.diff_bufnr, bufnr, win)
     set_diff_buffer_keymaps(state.diff_bufnr, bufnr)
     vim.api.nvim_set_current_win(win)
@@ -186,15 +186,28 @@ local function set_keymaps(bufnr, auto_display_opts)
 
     set("n", keymaps.scroll_diff_down, function()
         local state = vim.b[bufnr].trunks_auto_display_state
-        if state.diff_bufnr and vim.b[bufnr].trunks_auto_display_state.diff_channel_id then
-            pcall(vim.api.nvim_chan_send, state.diff_channel_id, "jj")
+        if state.diff_bufnr and state.diff_win then
+            vim.api.nvim_win_call(state.diff_win, function()
+                local win_height = vim.api.nvim_win_get_height(0)
+                local num_lines_in_buffer = vim.api.nvim_buf_line_count(state.diff_bufnr)
+                local win_view = vim.fn.winsaveview()
+                local is_at_last_line = win_view.topline > num_lines_in_buffer - win_height
+                if not is_at_last_line then
+                    win_view.topline = win_view.topline + 2
+                    vim.fn.winrestview(win_view)
+                end
+            end)
         end
     end, keymap_opts)
 
     set("n", keymaps.scroll_diff_up, function()
         local state = vim.b[bufnr].trunks_auto_display_state
-        if state.diff_bufnr and state.diff_channel_id then
-            pcall(vim.api.nvim_chan_send, state.diff_channel_id, "kk")
+        if state.diff_bufnr and state.diff_win then
+            vim.api.nvim_win_call(state.diff_win, function()
+                local win_view = vim.fn.winsaveview()
+                win_view.topline = win_view.topline - 2
+                vim.fn.winrestview(win_view)
+            end)
         end
     end, keymap_opts)
 end
