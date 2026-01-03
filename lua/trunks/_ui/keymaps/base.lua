@@ -164,16 +164,17 @@ function M.git_show_keymap_fn(bufnr, get_line, filename)
         if not ok or not line_data then
             return
         end
-        local float_bufnr = vim.api.nvim_create_buf(false, true)
-        local float_win = require("trunks._ui.elements").float(float_bufnr, { title = "Git show " .. line_data.hash })
+        local elements = require("trunks._ui.elements")
+        local float_bufnr = elements.new_buffer({})
+        local float_win = elements.float(float_bufnr, { title = "Git show " .. line_data.hash })
 
         local command = require("trunks._core.command").base_command("show " .. line_data.hash, filename):build()
-        local _, term_bufnr =
-            require("trunks._ui.elements").terminal(command, { display_strategy = "full", insert = true })
+        elements.terminal(float_bufnr, command, { display_strategy = "full" })
 
         require("trunks._ui.keymaps.set").safe_set_keymap("t", "q", function()
             vim.api.nvim_win_close(float_win, true)
-        end, { buffer = term_bufnr, noremap = true })
+            require("trunks._core.register").deregister_buffer(float_bufnr)
+        end, { buffer = float_bufnr, noremap = true })
     end
 end
 
