@@ -28,6 +28,7 @@ local cmd_map = {
     ["browse"] = function(cmd, input_args)
         require("trunks._ui.trunks_commands.browse").browse(cmd, input_args)
     end,
+
     ["commit-drop"] = function(cmd)
         local hash = vim.split(cmd, " ")[2]
         local output, exit_code = commit_drop(hash)
@@ -70,6 +71,7 @@ local cmd_map = {
     vdiff = function(cmd)
         require("trunks._ui.interceptors.split_diff").split_diff(cmd, "right")
     end,
+
     hdiff = function(cmd)
         require("trunks._ui.interceptors.split_diff").split_diff(cmd, "below")
     end,

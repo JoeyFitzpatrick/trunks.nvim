@@ -93,7 +93,27 @@ end
 ---@return trunks.CommitDetailsLineData | nil
 function M.get_line(bufnr, line_num)
     line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
-    local line = vim.api.nvim_buf_get_lines(bufnr, line_num - 1, line_num, false)[1]
+
+    -- Commits have a structure like this:
+    --"commit ea8a7c50e380d5d6e09dd69562f73c6242e27401",
+    --"",
+    --"    feat: fix diff and show commands",
+    --"",
+    --" 4 files changed, 6 insertions(+), 397 deletions(-)",
+    --" lua/trunks/_constants/command_strategies.lua         |   4 +-",
+    --
+    -- We can check if a given line is a file by seeing if there are any whitespace-only
+    -- lines from the bottom of the file to the line we're on. But the "4 files changed"
+    -- line would also pass this check, so we also need to check the line before the current line.
+    local line_before_zero_indexed_line_num = math.max(line_num - 2, 0)
+    local lines = vim.api.nvim_buf_get_lines(bufnr, line_before_zero_indexed_line_num, -1, false)
+    for i = #lines, 1, -1 do
+        if lines[i] == "" then
+            return nil
+        end
+    end
+
+    local line = lines[2]
     local filename = line:match("^.(%S+)", 1)
     if not filename then
         return nil
@@ -190,7 +210,7 @@ end
 ---@param commit string
 ---@param opts trunks.CommitDetailsRenderOpts
 function M.render(commit, opts)
-    local bufnr, win = require("trunks._ui.elements").new_buffer({ filetype = "git" })
+    local bufnr, win = require("trunks._ui.elements").new_buffer({ filetype = "git", show = true })
     M.set_lines(bufnr, commit, opts)
 
     require("trunks._ui.auto_display").create_auto_display(bufnr, "commit_details", {
