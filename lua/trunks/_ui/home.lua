@@ -89,16 +89,24 @@ local function set_keymaps(bufnr)
 end
 
 ---@param tab trunks.TabOption
-function M.create_and_render_buffer(tab)
+---@param existing_bufnr? integer
+function M.create_and_render_buffer(tab, existing_bufnr)
     local bufnr = require("trunks._ui.elements").new_buffer({})
     local ui_render = tab_render_map[tab]
     ui_render(bufnr, { set_keymaps = set_keymaps, display_strategy = "full" })
+
+    if existing_bufnr and vim.api.nvim_buf_is_valid(existing_bufnr) then
+        vim.api.nvim_buf_delete(existing_bufnr, {})
+        local current_win = vim.api.nvim_get_current_win()
+        require("trunks._core.register").last_non_trunks_buffer_for_win[current_win] = nil
+    end
 end
 
 function M.open()
     vim.cmd("tabnew")
-    tabs:set_current(1) -- TODO: move this into on-close autocmd once we have that
-    M.create_and_render_buffer(tabs.current_option)
+    local existing_bufnr = vim.api.nvim_get_current_buf()
+    tabs:set_current(1)
+    M.create_and_render_buffer(tabs.current_option, existing_bufnr)
 end
 
 return M

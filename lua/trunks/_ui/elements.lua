@@ -167,7 +167,7 @@ function M.terminal(bufnr, cmd, strategy)
         vim.cmd("stopinsert")
     end
 
-    require("trunks._ui.keymaps.base").set_keymaps(bufnr, { terminal_channel_id = channel_id })
+    require("trunks._ui.keymaps.base").set_keymaps(bufnr)
     set_terminal_autocmds_and_state(cmd, bufnr, strategy)
     return { bufnr = bufnr, win = win, chan = channel_id, exit_code = exit_code }
 end
