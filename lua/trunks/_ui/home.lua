@@ -88,6 +88,15 @@ local function set_keymaps(bufnr)
     end, { buffer = bufnr })
 end
 
+---@param bufnr? integer
+local function remove_leftover_new_tab_buffer(bufnr)
+    if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_delete(bufnr, {})
+        local current_win = vim.api.nvim_get_current_win()
+        require("trunks._core.register").last_non_trunks_buffer_for_win[current_win] = nil
+    end
+end
+
 ---@param tab trunks.TabOption
 ---@param existing_bufnr? integer
 function M.create_and_render_buffer(tab, existing_bufnr)
@@ -95,11 +104,7 @@ function M.create_and_render_buffer(tab, existing_bufnr)
     local ui_render = tab_render_map[tab]
     ui_render(bufnr, { set_keymaps = set_keymaps, display_strategy = "full" })
 
-    if existing_bufnr and vim.api.nvim_buf_is_valid(existing_bufnr) then
-        vim.api.nvim_buf_delete(existing_bufnr, {})
-        local current_win = vim.api.nvim_get_current_win()
-        require("trunks._core.register").last_non_trunks_buffer_for_win[current_win] = nil
-    end
+    remove_leftover_new_tab_buffer(existing_bufnr)
 end
 
 function M.open()

@@ -2,6 +2,7 @@ local M = {}
 
 ---@param bufnr integer
 ---@param ui_types string[] | nil
+---@return string[] | nil
 function M.show(bufnr, ui_types)
     if not ui_types then
         return
@@ -12,7 +13,7 @@ function M.show(bufnr, ui_types)
     if line == keymaps_string then
         return
     end
-    require("trunks._ui.utils.buffer_text").set(bufnr, { keymaps_string, "" }, 0, 0)
+    require("trunks._ui.utils.buffer_text").set(bufnr, { keymaps_string }, 0, 0)
 
     -- Highlight
     local mapping_hlgroup = "Keyword"
@@ -25,6 +26,7 @@ function M.show(bufnr, ui_types)
         require("trunks._ui.highlight").highlight_line(bufnr, mapping_hlgroup, 0, mapping_start, mapping_end)
         pipe_index = keymaps_string:find("|", pipe_index + 1, true)
     end
+    return { keymaps_string }
 end
 
 return M

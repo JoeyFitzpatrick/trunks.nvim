@@ -1,15 +1,27 @@
-vim.cmd("tabnew")
-local status = "git --no-pager status -s"
-local log = "git --no-pager log --pretty='%C(yellow)%h %Cblue%>(12)%ad %Cgreen%<(7)%aN%Cred%d %Creset%s'"
-local branch = "git --no-pager branch"
-local diff = "git --no-pager diff | delta --paging=never"
-local commit = "git commit"
+-- vim.cmd("tabnew")
+-- local buf = vim.api.nvim_create_buf(false, true)
+-- vim.api.nvim_win_set_buf(0, buf)
+-- local ns_id = vim.api.nvim_create_namespace("trunks_home_header")
+--
+-- vim.api.nvim_buf_set_extmark(buf, ns_id, 0, 0, {
+--     virt_lines = {
+--         { "hello", "Comment" },
+--     },
+--     virt_lines_above = true,
+-- })
 
-local buf = vim.api.nvim_create_buf(false, true)
-local chan = vim.api.nvim_open_term(buf, {})
-vim.api.nvim_win_set_buf(0, buf)
+local api = vim.api
 
-local esc = string.char(27)
-vim.api.nvim_chan_send(chan, "first")
-vim.api.nvim_chan_send(chan, esc .. "[H") -- go home
-vim.api.nvim_chan_send(chan, "second")
+local bnr = vim.fn.bufnr("%")
+local ns_id = api.nvim_create_namespace("demo")
+api.nvim_open_term(bnr, {})
+
+local line_num = 5
+local col_num = 5
+
+local opts = {
+    virt_text = { { "demo", "IncSearch" } },
+    virt_lines_above = true,
+}
+
+local mark_id = api.nvim_buf_set_extmark(bnr, ns_id, 0, 0, opts)
