@@ -291,13 +291,15 @@ end
 function M.render(bufnr, opts)
     opts = opts or {}
     local Command = require("trunks._core.command")
-    local command_builder = Command.base_command("status -s")
+
+    local command_builder = Command.base_command("status -s --untracked")
 
     local term = require("trunks._ui.elements").terminal(
         bufnr,
         command_builder:build(),
         { enter = true, display_strategy = "full" }
     )
+
     local win = term.win
     require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
         generate_cmd = function()

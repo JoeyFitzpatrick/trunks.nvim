@@ -111,7 +111,13 @@ function Command:add_env_var(args)
     return self
 end
 
-function Command:build()
+---@class trunks.CommandBuildOpts
+---@field skip_prefix? boolean
+
+---@param opts? trunks.CommandBuildOpts
+---@return string
+function Command:build(opts)
+    opts = opts or {}
     local pager = self._pager
     if pager then
         if pager.type == "postfix" and not vim.tbl_contains(self._postfix_args, pager.command) then
@@ -128,7 +134,9 @@ function Command:build()
     else
         cmd_parts = { unpack(self._prefix) }
     end
-    table_insert_if_exists(cmd_parts, self._prefix_args)
+    if not opts.skip_prefix then
+        table_insert_if_exists(cmd_parts, self._prefix_args)
+    end
     if self.base then
         table.insert(cmd_parts, self.base)
     end

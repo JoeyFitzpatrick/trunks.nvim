@@ -120,8 +120,10 @@ function M._render_auto_display(bufnr, auto_display_opts)
     if state.diff_bufnr and vim.api.nvim_buf_is_valid(state.diff_bufnr) then
         vim.api.nvim_buf_delete(state.diff_bufnr, { force = true })
     end
-    state.diff_bufnr = vim.api.nvim_create_buf(false, true)
+    state.diff_bufnr = require("trunks._ui.elements").new_buffer({})
     local win = vim.api.nvim_get_current_win()
+    vim.wo[win].number = false
+    vim.wo[win].relativenumber = false
     local term = require("trunks._ui.elements").terminal(state.diff_bufnr, diff_cmd, auto_display_opts.strategy)
     state.diff_win = term.win
     set_diff_buffer_autocmds(state.diff_bufnr, bufnr, win)
