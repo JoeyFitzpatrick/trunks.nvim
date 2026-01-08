@@ -6,7 +6,7 @@ function M.render(command_builder, command_type)
     local cmd = command_builder:build()
     local base_cmd = vim.split(cmd, " ")[1]
     local bufnr = require("trunks._ui.elements").new_buffer({})
-    require("trunks._ui.elements").terminal(bufnr, cmd)
+    require("trunks._ui.elements").terminal(bufnr, cmd, { display_strategy = "full" })
 
     -- For diff commands, parse and store the refs being compared
     if command_type == "diff" then
