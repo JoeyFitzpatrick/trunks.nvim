@@ -25,7 +25,6 @@ end
 
 local PAGER_COMMANDS = {
     diff = true,
-    grep = true,
     show = true,
     stash = { "-p" },
     log = { "-p" },
