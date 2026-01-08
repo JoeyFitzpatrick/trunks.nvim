@@ -12,7 +12,6 @@ trunks-special-commands	trunks.txt	/*trunks-special-commands*
 trunks-special-commands-blame	trunks.txt	/*trunks-special-commands-blame*
 trunks-special-commands-branch	trunks.txt	/*trunks-special-commands-branch*
 trunks-special-commands-commit	trunks.txt	/*trunks-special-commands-commit*
-trunks-special-commands-difftool	trunks.txt	/*trunks-special-commands-difftool*
 trunks-special-commands-grep	trunks.txt	/*trunks-special-commands-grep*
 trunks-special-commands-help-commands	trunks.txt	/*trunks-special-commands-help-commands*
 trunks-special-commands-log	trunks.txt	/*trunks-special-commands-log*

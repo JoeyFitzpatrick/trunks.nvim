@@ -1,4 +1,4 @@
-*trunks.txt*         For Neovim >= 0.11.0         Last change: 2026 January 07
+*trunks.txt*         For Neovim >= 0.11.0         Last change: 2026 January 08
 
 ==============================================================================
 Table of Contents                                   *trunks-table-of-contents*
@@ -11,7 +11,6 @@ Table of Contents                                   *trunks-table-of-contents*
   - Blame                                      |trunks-special-commands-blame|
   - Branch                                    |trunks-special-commands-branch|
   - Commit                                    |trunks-special-commands-commit|
-  - Difftool                                |trunks-special-commands-difftool|
   - Grep                                        |trunks-special-commands-grep|
   - Log                                          |trunks-special-commands-log|
   - Mergetool                              |trunks-special-commands-mergetool|
@@ -128,9 +127,6 @@ able to lazy load it however you normally lazy load plugins.
                         previous_hunk = "K",
                         stage = "s", -- Stage hunk in normal mode, stage selected lines in visual mode
                     },
-                },
-                difftool = {
-                    auto_display_on = true,
                 },
                 git_filetype = {
                     keymaps = {
@@ -270,9 +266,9 @@ Some git commands benefit from a tighter integration with the editor. These are
 handled differently than just running the command in terminal mode. This
 typically means opening a buffer that serves as a UI for the command, but not
 always (for instance, `mergetool` and `grep` open the quickfix list). Here are
-the special commands: `:G blame` `:G branch` `:G commit` `:G difftool` `:G
-grep` `:G log` `:G mergetool` `:G reflog` `:G show` `:G stash list` `:G
-{command} -h` `:G {command} --help`
+the special commands: `:G blame` `:G branch` `:G commit` `:G grep` `:G log` `:G
+mergetool` `:G reflog` `:G show` `:G stash list` `:G {command} -h` `:G
+{command} --help`
 
 Note that for any command that brings up a UI: You can close the UI by pressing
 `q`, in addition to the normal methods, such as `:q` The jumplist still works
@@ -317,20 +313,6 @@ instance. You can write and quit the editor (`:wq`) to apply the message, or
 simply close the editor without saving to abort the commit due to an empty
 commit message. If the commit message editor doesn’t need to open, the
 command will just run in terminal mode like most other commands.
-
-
-DIFFTOOL                                    *trunks-special-commands-difftool*
-
-Trunks’s `difftool` command, e.g. `:G difftool abc123` or `:G difftool
-abc123..def456`, will open a UI that allows for seeing the diff introduced by a
-commit, or the diff between two commits. Note that if a commit range is given,
-e.g. `abc123..def456`, using the open-file keymaps will use the latter commit.
-So in this example, using `oh` to open a file in a horizontal split would use
-commit `def456`.
-
-When used without arguments, `difftool` uses `HEAD` as the commit to diff
-against, e.g. `:G difftool` is the same as `:G difftool HEAD`. This is useful
-for diffing the working tree against HEAD.
 
 
 GREP                                            *trunks-special-commands-grep*
