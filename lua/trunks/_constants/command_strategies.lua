@@ -198,6 +198,7 @@ M.notes = {
 M.pull = { trigger_redraw = true, tail = true }
 M.push = { trigger_redraw = true, tail = true }
 M.rebase = { insert = true, trigger_redraw = true }
+M.reflog = { display_strategy = M.STRATEGIES.FULL }
 M.reset = { trigger_redraw = true }
 M.revert = { trigger_redraw = true }
 M.show = { display_strategy = M.STRATEGIES.FULL }
