@@ -87,9 +87,6 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     stage = "s", -- Stage hunk in normal mode, stage selected lines in visual mode
                 },
             },
-            difftool = {
-                auto_display_on = true,
-            },
             git_filetype = {
                 keymaps = {
                     show_details = "<enter>", -- Show details for item under cursor
@@ -208,7 +205,6 @@ Some git commands benefit from a tighter integration with the editor. These are 
 * `:G blame`
 * `:G branch`
 * `:G commit`
-* `:G difftool`
 * `:G grep`
 * `:G log`
 * `:G mergetool`
@@ -245,11 +241,6 @@ e.g. `git commit` (no message, opens the editor) vs `git commit -m "some message
 When the commit message editor is opened, Trunks opens it in the current Neovim instance.
 You can write and quit the editor (`:wq`) to apply the message, or simply close the editor without saving to abort the commit due to an empty commit message.
 If the commit message editor doesn't need to open, the command will just run in terminal mode like most other commands.
-
-## Difftool
-Trunks's `difftool` command, e.g. `:G difftool abc123` or `:G difftool abc123..def456`, will open a UI that allows for seeing the diff introduced by a commit, or the diff between two commits. Note that if a commit range is given, e.g. `abc123..def456`, using the open-file keymaps will use the latter commit. So in this example, using `oh` to open a file in a horizontal split would use commit `def456`.
-
-When used without arguments, `difftool` uses `HEAD` as the commit to diff against, e.g. `:G difftool` is the same as `:G difftool HEAD`. This is useful for diffing the working tree against HEAD.
 
 ## Grep
 Trunks's `:G grep` command is pretty simple. It just opens a quickfix list with the results of the grep command. Note that while `git grep` supports grepping across past revisions, `:G grep` currently only supports grepping the working tree.

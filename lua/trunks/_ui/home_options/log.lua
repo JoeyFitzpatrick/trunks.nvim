@@ -148,7 +148,7 @@ local function set_keymaps(bufnr, get_line, opts)
         if not ok or not line_data then
             return
         end
-        vim.cmd("G difftool " .. line_data.hash)
+        vim.cmd("G diff " .. line_data.hash)
     end, keymap_opts)
 
     set("n", keymaps.commit_drop, function()

@@ -66,9 +66,6 @@ return {
             stage = "s", -- Stage hunk in normal mode, stage selected lines in visual mode
         },
     },
-    difftool = {
-        auto_display_on = true,
-    },
     git_filetype = {
         keymaps = {
             show_details = "<enter>", -- Show details for item under cursor
