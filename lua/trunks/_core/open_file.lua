@@ -32,7 +32,8 @@ end
 ---@param opts trunks.OpenFileOpts
 local function setup_git_file(bufnr, filename, commit, opts)
     local lines, error_code = require("trunks._core.run_cmd").run_cmd(
-        string.format("show %s:%s", commit, require("trunks._core.texter").surround_with_quotes(filename))
+        string.format("show %s:%s", commit, require("trunks._core.texter").surround_with_quotes(filename)),
+        { no_pager = true }
     )
     if error_code ~= 0 then
         lines = { "" }
