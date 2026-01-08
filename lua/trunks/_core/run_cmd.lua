@@ -3,6 +3,7 @@
 ---@field rerender? boolean
 ---@field error_codes_to_ignore? integer[]
 ---@field raw_cmd? boolean -- Run a string command without parsing with command builder
+---@field no_pager? boolean -- Run a command without a pager (e.g. delta, diff-so-fancy, etc.)
 
 local M = {}
 
@@ -22,9 +23,16 @@ M.run_cmd = function(cmd, opts)
             if vim.startswith(cmd, "git ") then
                 cmd = cmd:sub(5)
             end
-            final_command = require("trunks._core.command").base_command(cmd):build()
+            local base_command = require("trunks._core.command").base_command(cmd)
+            if opts.no_pager then
+                base_command._pager = nil
+            end
+            final_command = base_command:build()
         end
     else
+        if opts.no_pager then
+            cmd._pager = nil
+        end
         final_command = cmd:build()
     end
 

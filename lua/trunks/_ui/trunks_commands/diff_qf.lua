@@ -90,7 +90,8 @@ end
 local function get_qf_locations(commit)
     local cmd = commit and ("diff " .. commit) or "diff"
     local command_builder = Command.base_command(cmd)
-    local diff_output = require("trunks._core.run_cmd").run_cmd(command_builder)
+    local diff_output = require("trunks._core.run_cmd").run_cmd(command_builder, { no_pager = true })
+    vim.print(diff_output)
 
     return M._parse_diff_output(diff_output)
 end
@@ -177,14 +178,14 @@ function M.render(commit)
             if split_bufnr then
                 split_win = vim.api.nvim_open_win(split_bufnr, false, { split = "right" })
             else
-                if commit then
-                    vim.cmd("Trunks vdiff " .. commit)
-                else
-                    vim.cmd("Trunks vdiff")
-                end
-                vim.b[bufnr].split_bufnr = vim.api.nvim_get_current_buf()
-                split_win = vim.api.nvim_get_current_win()
-                vim.cmd("wincmd p")
+                -- if commit then
+                --     vim.cmd("Trunks vdiff " .. commit)
+                -- else
+                --     vim.cmd("Trunks vdiff")
+                -- end
+                -- vim.b[bufnr].split_bufnr = vim.api.nvim_get_current_buf()
+                -- split_win = vim.api.nvim_get_current_win()
+                -- vim.cmd("wincmd p")
             end
 
             -- Close any wins aside from splits and things like qflist
@@ -198,7 +199,7 @@ function M.render(commit)
                     vim.api.nvim_win_close(win, false)
                 elseif is_diff_win then
                     -- When vdiff buffers are hidden, they turn off diff mode, so we need to re enable it
-                    vim.fn.win_execute(win, "diffthis", true)
+                    -- vim.fn.win_execute(win, "diffthis", true)
                 end
             end
         end,
