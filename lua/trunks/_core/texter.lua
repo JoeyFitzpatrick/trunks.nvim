@@ -42,8 +42,10 @@ function M.has_options(cmd, options)
     for word in cmd:gmatch("%-%-%S+") do
         table.insert(parsed_options, word)
     end
-    for word in cmd:gmatch("%-%a") do
-        table.insert(parsed_options, word)
+    for word in cmd:gmatch("%S+") do
+        if word:match("^%-[%a]$") then
+            table.insert(parsed_options, word)
+        end
     end
     for _, opt in ipairs(parsed_options) do
         if vim.tbl_contains(options, opt) then
