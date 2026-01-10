@@ -125,14 +125,85 @@ local function format_qf(info)
     return result
 end
 
+---Parse commit range from difftool arguments using git to resolve revisions
+---@param cmd string The full command string
+---@return string|nil left_commit The left side of the diff (nil for working tree)
+---@return string|nil right_commit The right side of the diff (nil for working tree)
+local function parse_diff_revisions(cmd)
+    local run_cmd = require("trunks._core.run_cmd").run_cmd
+
+    -- Extract arguments after 'difftool'
+    local args = cmd:match("difftool%s+(.+)")
+    if not args or args == "" then
+        -- No args: diff working tree against HEAD
+        return "HEAD", nil
+    end
+
+    -- Trim whitespace
+    args = args:match("^%s*(.-)%s*$")
+
+    -- Check if this is a range (contains ..)
+    if args:match("%.%.%.") then
+        -- Three-dot range: A...B means merge-base(A,B)..B
+        local left, right = args:match("^(.-)%.%.%.(.+)$")
+        if left and right then
+            -- Resolve the merge-base
+            local merge_base_output = run_cmd("git merge-base " .. left .. " " .. right)
+            if merge_base_output and #merge_base_output > 0 then
+                local merge_base = merge_base_output[1]:match("^%s*(.-)%s*$")
+                -- Resolve the right side
+                local right_resolved_output = run_cmd("git rev-parse " .. right)
+                local right_resolved = right_resolved_output and right_resolved_output[1]:match("^%s*(.-)%s*$")
+                return merge_base, right_resolved
+            end
+        end
+    elseif args:match("%.%.") then
+        -- Two-dot range: A..B means diff between A and B
+        local left, right = args:match("^(.-)%.%.(.+)$")
+        if left and right then
+            local left_resolved_output = run_cmd("git rev-parse " .. left)
+            local right_resolved_output = run_cmd("git rev-parse " .. right)
+            local left_resolved = left_resolved_output and left_resolved_output[1]:match("^%s*(.-)%s*$")
+            local right_resolved = right_resolved_output and right_resolved_output[1]:match("^%s*(.-)%s*$")
+            return left_resolved, right_resolved
+        end
+    else
+        -- Could be: single commit, two commits, or complex ref
+        -- Split on whitespace to check for multiple commits
+        local tokens = vim.split(args, "%s+")
+        tokens = vim.tbl_filter(function(t) return t ~= "" end, tokens)
+
+        if #tokens == 0 then
+            return "HEAD", nil
+        elseif #tokens == 1 then
+            -- Single commit: diff commit against its parent
+            local commit = tokens[1]
+            local resolved_output = run_cmd("git rev-parse " .. commit)
+            local resolved = resolved_output and resolved_output[1]:match("^%s*(.-)%s*$")
+            if resolved then
+                -- Get parent commit
+                local parent_output = run_cmd("git rev-parse " .. resolved .. "^")
+                local parent = parent_output and parent_output[1]:match("^%s*(.-)%s*$")
+                return parent, resolved
+            end
+        elseif #tokens >= 2 then
+            -- Two commits: diff first against second
+            local left_resolved_output = run_cmd("git rev-parse " .. tokens[1])
+            local right_resolved_output = run_cmd("git rev-parse " .. tokens[2])
+            local left_resolved = left_resolved_output and left_resolved_output[1]:match("^%s*(.-)%s*$")
+            local right_resolved = right_resolved_output and right_resolved_output[1]:match("^%s*(.-)%s*$")
+            return left_resolved, right_resolved
+        end
+    end
+
+    -- Fallback
+    return "HEAD", nil
+end
+
 ---@param command_builder trunks.Command
 function M.render(command_builder)
     local cmd = command_builder.base or ""
-    local _, args_start = cmd:find(" ", 1, true)
-    local commit = nil
-    if args_start then
-        commit = cmd:sub(args_start)
-    end
+    local left_commit, right_commit = parse_diff_revisions(cmd)
 
     local qf_locations = get_qf_locations(command_builder)
     if #qf_locations == 0 then
@@ -176,9 +247,14 @@ function M.render(command_builder)
             if split_bufnr then
                 split_win = vim.api.nvim_open_win(split_bufnr, false, { split = "right" })
             else
-                if commit then
-                    vim.cmd("Trunks vdiff " .. commit)
+                if right_commit then
+                    -- Diff between two specific commits
+                    vim.cmd("Trunks vdiff " .. left_commit .. " " .. right_commit)
+                elseif left_commit then
+                    -- Diff commit against working tree
+                    vim.cmd("Trunks vdiff " .. left_commit)
                 else
+                    -- No commits specified, diff against working tree
                     vim.cmd("Trunks vdiff")
                 end
                 vim.b[bufnr].split_bufnr = vim.api.nvim_get_current_buf()
