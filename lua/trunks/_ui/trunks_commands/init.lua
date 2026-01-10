@@ -42,17 +42,6 @@ local cmd_map = {
         require("trunks._ui.trunks_commands.commit_instant_fixup").commit_instant_fixup(hash)
     end,
 
-    ["diff-qf"] = function(cmd)
-        local _, args_start = cmd:find(" ", 1, true)
-        local commit = nil
-        if args_start then
-            commit = cmd:sub(args_start)
-        end
-        local output, exit_code = require("trunks._ui.trunks_commands.diff_qf").render(commit)
-        local error_text = output or ("Unable to display diff for " .. (commit or "unknown commit"))
-        utils.handle_output(nil, error_text, exit_code)
-    end,
-
     ["time-machine"] = function(cmd)
         local filename = vim.split(cmd, " ")[2]
         local output, exit_code = require("trunks._ui.trunks_commands.time_machine").render(filename)

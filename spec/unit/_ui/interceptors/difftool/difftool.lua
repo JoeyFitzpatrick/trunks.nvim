@@ -1,5 +1,5 @@
-describe("diff-qf diff output parser", function()
-    local parse_diff_output = require("trunks._ui.trunks_commands.diff_qf")._parse_diff_output
+describe("difftool diff output parser", function()
+    local parse_diff_output = require("trunks._ui.interceptors.difftool")._parse_diff_output
 
     it("returns a file locations for multiple hunks", function()
         local result = parse_diff_output({

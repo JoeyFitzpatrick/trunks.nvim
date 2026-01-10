@@ -4,7 +4,6 @@ M.options = {
     ["browse"] = {},
     ["commit-drop"] = {},
     ["commit-instant-fixup"] = {},
-    ["diff-qf"] = {},
     hdiff = { completion_type = "branch" },
     vdiff = { completion_type = "branch" },
     ["time-machine"] = { completion_type = "filepath" },
