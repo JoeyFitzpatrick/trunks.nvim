@@ -138,8 +138,14 @@ local function highlight_qf_buffer(bufnr)
     end)
 end
 
----@param commit? string
-function M.render(commit)
+---@param command_builder trunks.Command
+function M.render(command_builder)
+    local cmd = command_builder.base or ""
+    local _, args_start = cmd:find(" ", 1, true)
+    local commit = nil
+    if args_start then
+        commit = cmd:sub(args_start)
+    end
     vim.cmd.tabnew()
     local diff_qf_tab_id = vim.api.nvim_get_current_tabpage()
 

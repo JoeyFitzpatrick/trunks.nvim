@@ -16,6 +16,9 @@ local cmd_ui_map = {
         end
         return nil
     end,
+    difftool = function(command_builder)
+        require("trunks._ui.interceptors.difftool").render(command_builder)
+    end,
     grep = function(command_builder)
         require("trunks._ui.interceptors.grep").render(command_builder)
     end,
