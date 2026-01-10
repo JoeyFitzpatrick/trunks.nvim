@@ -13,8 +13,6 @@
 
 local M = {}
 
-local Command = require("trunks._core.command")
-
 ---@param lines string[]
 ---@return trunks.DiffQfHunk[]
 function M._parse_diff_output(lines)
@@ -86,11 +84,10 @@ function M._parse_diff_output(lines)
     return qf_locations
 end
 
----@param commit? string
-local function get_qf_locations(commit)
-    local cmd = commit and ("diff " .. commit) or "diff"
-    local command_builder = Command.base_command(cmd)
-    local diff_output = require("trunks._core.run_cmd").run_cmd(command_builder, { no_pager = true })
+---@param command_builder trunks.Command
+local function get_qf_locations(command_builder)
+    local cmd = command_builder:build():gsub("difftool", "diff", 1)
+    local diff_output = require("trunks._core.run_cmd").run_cmd(cmd, { no_pager = true })
 
     return M._parse_diff_output(diff_output)
 end
@@ -128,16 +125,6 @@ local function format_qf(info)
     return result
 end
 
-local function highlight_qf_buffer(bufnr)
-    vim.api.nvim_buf_call(bufnr, function()
-        vim.cmd([[
-            syntax clear
-            syntax match Function /^\S\+/
-            syntax match Comment /┃\zs[^┃]*\ze┃/
-        ]])
-    end)
-end
-
 ---@param command_builder trunks.Command
 function M.render(command_builder)
     local cmd = command_builder.base or ""
@@ -146,10 +133,16 @@ function M.render(command_builder)
     if args_start then
         commit = cmd:sub(args_start)
     end
+
+    local qf_locations = get_qf_locations(command_builder)
+    if #qf_locations == 0 then
+        vim.notify("trunks: no diffs found for difftool", vim.log.levels.ERROR)
+        return
+    end
+
     vim.cmd.tabnew()
     local diff_qf_tab_id = vim.api.nvim_get_current_tabpage()
 
-    local qf_locations = get_qf_locations(commit)
     local flattened_qf_locations = {}
     local found_filenames = {}
     local filenames = {}
@@ -226,7 +219,6 @@ function M.render(command_builder)
         quickfixtextfunc = format_qf,
     })
     vim.cmd.copen()
-    highlight_qf_buffer(vim.api.nvim_get_current_buf())
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "quickfix", ui_name = "diff_qf" })
 end
 
