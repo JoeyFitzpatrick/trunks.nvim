@@ -222,6 +222,9 @@ function M.render(bufnr, opts)
     if opts.set_keymaps then
         opts.set_keymaps(bufnr)
     end
+
+    require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, { "branch" })
+
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "branch" })
     return bufnr, win
 end
