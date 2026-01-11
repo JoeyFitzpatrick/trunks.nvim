@@ -204,7 +204,7 @@ describe("difftool diff output parser", function()
 end)
 
 describe("parse commit range", function()
-    local parse_commit_range = require("trunks._ui.trunks_commands.diff_qf")._parse_commit_range
+    local parse_commit_range = require("trunks._ui.interceptors.difftool")._parse_commit_range
 
     local params = {
         { desc = "working_tree, HEAD for an empty commit range", { left = "working_tree", right = "HEAD" }, nil },

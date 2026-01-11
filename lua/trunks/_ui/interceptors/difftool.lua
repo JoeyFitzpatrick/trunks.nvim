@@ -171,7 +171,9 @@ local function parse_diff_revisions(cmd)
         -- Could be: single commit, two commits, or complex ref
         -- Split on whitespace to check for multiple commits
         local tokens = vim.split(args, "%s+")
-        tokens = vim.tbl_filter(function(t) return t ~= "" end, tokens)
+        tokens = vim.tbl_filter(function(t)
+            return t ~= ""
+        end, tokens)
 
         if #tokens == 0 then
             return "HEAD", nil
