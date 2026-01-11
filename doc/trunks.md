@@ -205,6 +205,7 @@ Some git commands benefit from a tighter integration with the editor. These are 
 * `:G blame`
 * `:G branch`
 * `:G commit`
+* `:G difftool`
 * `:G grep`
 * `:G log`
 * `:G mergetool`
@@ -241,6 +242,9 @@ e.g. `git commit` (no message, opens the editor) vs `git commit -m "some message
 When the commit message editor is opened, Trunks opens it in the current Neovim instance.
 You can write and quit the editor (`:wq`) to apply the message, or simply close the editor without saving to abort the commit due to an empty commit message.
 If the commit message editor doesn't need to open, the command will just run in terminal mode like most other commands.
+
+## Difftool
+`:G difftool` runs `git diff`, populates the quickfix list with the positions of the diffs, and opens a new tab. In that tab, navigating to a location from the quickfix list will automatically open the diff in a vertical split. This also works for multiple commits or branches: if you run `:G difftool my-branch some-other-branch`, the left split will be the file at `mh-branch`, and the right split will be the file at `some-other-branch`. This can be useful for PR review workflows, or just general diffing.
 
 ## Grep
 Trunks's `:G grep` command is pretty simple. It just opens a quickfix list with the results of the grep command. Note that while `git grep` supports grepping across past revisions, `:G grep` currently only supports grepping the working tree.
