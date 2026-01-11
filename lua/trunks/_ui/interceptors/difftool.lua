@@ -214,21 +214,34 @@ function M.render(command_builder)
     vim.cmd.tabnew()
     local diff_qf_tab_id = vim.api.nvim_get_current_tabpage()
 
+    local virtual_buffers = require("trunks._core.virtual_buffers")
     local flattened_qf_locations = {}
     local found_filenames = {}
     local filenames = {}
 
     for _, location in ipairs(qf_locations) do
         for _, line in ipairs(location.lines) do
+            -- Use virtual URI if right_commit is set (comparing two commits, not working tree)
+            local qf_filename
+            if right_commit then
+                qf_filename = virtual_buffers.create_uri(right_commit, location.filename)
+            else
+                qf_filename = location.filename
+            end
+
             table.insert(flattened_qf_locations, {
-                filename = location.filename,
+                filename = qf_filename,
                 lnum = line.line_num,
                 text = line.text,
-                user_data = { filename = location.filename },
+                user_data = {
+                    filename = location.filename,
+                    left_commit = left_commit,
+                    right_commit = right_commit,
+                },
             })
-            if not found_filenames[location.filename] then
-                table.insert(filenames, location.filename)
-                found_filenames[location.filename] = true
+            if not found_filenames[qf_filename] then
+                table.insert(filenames, qf_filename)
+                found_filenames[qf_filename] = true
             end
         end
     end
@@ -241,17 +254,31 @@ function M.render(command_builder)
                 return
             end
             local bufnr = args.buf
+            local bufname = vim.api.nvim_buf_get_name(bufnr)
             local current_win = vim.api.nvim_get_current_win()
             local split_win
             local split_bufnr = vim.b[bufnr].split_bufnr
+
+            -- Extract the real filepath for vdiff command
+            local filepath
+            if virtual_buffers.is_virtual_uri(bufname) then
+                local _, extracted_path = virtual_buffers.parse_uri(bufname)
+                filepath = extracted_path
+            else
+                filepath = bufname
+            end
+
             if split_bufnr then
                 split_win = vim.api.nvim_open_win(split_bufnr, false, { split = "right" })
             else
                 if right_commit then
                     -- Diff between two specific commits
-                    vim.cmd("Trunks vdiff " .. left_commit .. " " .. right_commit)
+                    -- We're already viewing right_commit, so open left_commit in the split
+                    local left_uri = virtual_buffers.create_uri(left_commit, filepath)
+                    vim.cmd.vsplit(left_uri)
                 elseif left_commit then
                     -- Diff commit against working tree
+                    -- Current buffer is working tree, open commit in split
                     vim.cmd("Trunks vdiff " .. left_commit)
                 else
                     -- No commits specified, diff against working tree
