@@ -276,8 +276,7 @@ function M.render(command_builder)
                 if right_commit then
                     -- Diff between two specific commits
                     -- We're already viewing right_commit, so open left_commit in the split
-                    local left_uri = virtual_buffers.create_uri(left_commit, filepath)
-                    vim.cmd.vsplit(left_uri)
+                    require("trunks._core.open_file").open_file_in_split(filepath, left_commit, "right", {})
                 elseif left_commit then
                     -- Diff commit against working tree
                     -- Current buffer is working tree, open commit in split

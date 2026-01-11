@@ -30,6 +30,53 @@ function M.is_virtual_uri(bufname)
     return vim.startswith(bufname, "trunks://")
 end
 
+---Load content for a virtual buffer
+---@param bufnr integer
+---@param uri string
+---@return boolean success
+local function load_virtual_buffer_content(bufnr, uri)
+    local commit, filepath = M.parse_uri(uri)
+
+    if not commit or not filepath then
+        vim.notify("Invalid trunks:// URI: " .. uri, vim.log.levels.ERROR)
+        return false
+    end
+
+    -- Run git command to get file content
+    local cmd = string.format("git show %s:%s", commit, filepath)
+    local output = require("trunks._core.run_cmd").run_cmd(cmd, { no_pager = true })
+
+    if not output or #output == 0 then
+        vim.notify(
+            string.format("Failed to read file %s at commit %s", filepath, commit:sub(1, 7)),
+            vim.log.levels.ERROR
+        )
+        return false
+    end
+
+    -- Clear the buffer and populate with git output
+    vim.bo[bufnr].modifiable = true
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, output)
+
+    -- Set buffer options
+    vim.bo[bufnr].modified = false
+    vim.bo[bufnr].modifiable = false
+    vim.bo[bufnr].buftype = "nofile"
+    vim.bo[bufnr].bufhidden = "hide"
+
+    -- Set filetype for syntax highlighting
+    local ft = vim.filetype.match({ filename = filepath })
+    if ft then
+        vim.bo[bufnr].filetype = ft
+    end
+
+    -- Store metadata for later use
+    vim.b[bufnr].trunks_commit = commit
+    vim.b[bufnr].trunks_filepath = filepath
+
+    return true
+end
+
 ---Setup autocommands to handle virtual buffer URIs
 function M.setup()
     local group = vim.api.nvim_create_augroup("TrunksVirtualBuffers", { clear = true })
@@ -39,47 +86,25 @@ function M.setup()
         group = group,
         pattern = "trunks://*",
         callback = function(args)
-            local uri = args.file
-            local commit, filepath = M.parse_uri(uri)
-
-            if not commit or not filepath then
-                vim.notify("Invalid trunks:// URI: " .. uri, vim.log.levels.ERROR)
-                return
-            end
-
-            -- Run git command to get file content
-            local cmd = string.format("git show %s:%s", commit, filepath)
-            local output = require("trunks._core.run_cmd").run_cmd(cmd, { no_pager = true })
-
-            if not output or #output == 0 then
-                vim.notify(
-                    string.format("Failed to read file %s at commit %s", filepath, commit:sub(1, 7)),
-                    vim.log.levels.ERROR
-                )
-                return
-            end
-
-            -- Clear the buffer and populate with git output
-            vim.bo[args.buf].modifiable = true
-            vim.api.nvim_buf_set_lines(args.buf, 0, -1, false, output)
-
-            -- Set buffer options
-            vim.bo[args.buf].modified = false
-            vim.bo[args.buf].modifiable = false
-            vim.bo[args.buf].buftype = "nofile"
-            vim.bo[args.buf].bufhidden = "hide"
-
-            -- Set filetype for syntax highlighting
-            local ft = vim.filetype.match({ filename = filepath })
-            if ft then
-                vim.bo[args.buf].filetype = ft
-            end
-
-            -- Store metadata for later use
-            vim.b[args.buf].trunks_commit = commit
-            vim.b[args.buf].trunks_filepath = filepath
+            load_virtual_buffer_content(args.buf, args.file)
         end,
         desc = "Trunks: Load virtual buffer content from git",
+    })
+
+    -- Fallback: ensure content is loaded when buffer is displayed in a window
+    vim.api.nvim_create_autocmd("BufWinEnter", {
+        group = group,
+        pattern = "trunks://*",
+        callback = function(args)
+            -- Only load if buffer is empty (content wasn't loaded yet)
+            local line_count = vim.api.nvim_buf_line_count(args.buf)
+            local first_line = vim.api.nvim_buf_get_lines(args.buf, 0, 1, false)[1]
+
+            if line_count == 1 and (first_line == "" or first_line == nil) then
+                load_virtual_buffer_content(args.buf, args.file)
+            end
+        end,
+        desc = "Trunks: Ensure virtual buffer content is loaded",
     })
 
     -- Handle write attempts (disallow writing to past commits)

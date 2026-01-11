@@ -24,6 +24,18 @@ local function delete_existing_buffer(name)
     end
 end
 
+--- Ensures a virtual buffer's content is loaded by explicitly triggering BufReadCmd if empty
+---@param bufnr integer
+local function ensure_buffer_loaded(bufnr)
+    vim.schedule(function()
+        local line_count = vim.api.nvim_buf_line_count(bufnr)
+        local first_line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
+        if line_count == 1 and (first_line == "" or first_line == nil) then
+            vim.api.nvim_exec_autocmds("BufReadCmd", { buffer = bufnr })
+        end
+    end)
+end
+
 --- This function assumes that we've already checked to see if there's
 --- an open buffer for this file/commit.
 ---@param bufnr integer
@@ -54,8 +66,10 @@ local split_to_vim_cmd = {
 function M.open_file_in_split(filename, commit, split, opts)
     delete_existing_buffer(get_filename(filename, commit))
     local file_at_commit_uri = require("trunks._core.virtual_buffers").create_uri(commit, filename)
+    vim.print(file_at_commit_uri)
     vim.cmd(split_to_vim_cmd[split] .. " " .. file_at_commit_uri)
     local bufnr = vim.api.nvim_get_current_buf()
+    ensure_buffer_loaded(bufnr)
     setup_git_file(bufnr, filename, commit, opts)
     return bufnr
 end
@@ -70,6 +84,7 @@ function M.open_file_in_tab(filename, commit, opts)
     local file_at_commit_uri = require("trunks._core.virtual_buffers").create_uri(commit, filename)
     vim.cmd("e " .. file_at_commit_uri)
     local bufnr = vim.api.nvim_get_current_buf()
+    ensure_buffer_loaded(bufnr)
     setup_git_file(bufnr, filename, commit, opts)
     return bufnr
 end
@@ -83,6 +98,7 @@ function M.open_file_in_current_window(filename, commit, opts)
     local file_at_commit_uri = require("trunks._core.virtual_buffers").create_uri(commit, filename)
     vim.cmd("e " .. file_at_commit_uri)
     local bufnr = vim.api.nvim_get_current_buf()
+    ensure_buffer_loaded(bufnr)
     setup_git_file(bufnr, filename, commit, opts)
     return bufnr
 end
