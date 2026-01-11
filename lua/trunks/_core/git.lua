@@ -52,13 +52,13 @@ end
 ---@param commit_range? string
 ---@return trunks.CommitRange?
 M.parse_commit_range = function(commit_range)
-    if not commit_range then
-        return { left = "working_tree", right = "HEAD" }
+    if not commit_range or commit_range == "" then
+        return { left = require("trunks._constants.constants").WORKING_TREE, right = "HEAD" }
     end
 
     local is_single_commit = not commit_range:find("[%. ]")
     if is_single_commit then
-        return { left = "working_tree", right = commit_range }
+        return { left = require("trunks._constants.constants").WORKING_TREE, right = commit_range }
     end
 
     local is_spaced_commit_range = commit_range:find("%s")

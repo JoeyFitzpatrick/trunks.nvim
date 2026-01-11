@@ -11,22 +11,15 @@ local M = {}
 ---@param cmd string
 ---@return trunks.SplitDiffParams
 function M._parse_split_diff_args(cmd)
-    local args = cmd and cmd:sub(SUBCOMMAND_LENGTH) or ""
+    local args = cmd and cmd:sub(SUBCOMMAND_LENGTH + 1) or ""
     local filepath = vim.b[vim.api.nvim_get_current_buf()].original_filename or vim.fn.expand("%")
 
-    -- Parse up to two commits from arguments
-    local tokens = vim.split(args, "%s+")
-    tokens = vim.tbl_filter(function(t)
-        return t ~= ""
-    end, tokens)
-
-    local left_commit = tokens[1]
-    local right_commit = tokens[2]
+    local commits = require("trunks._core.git").parse_commit_range(args)
 
     return {
         filepath = filepath,
-        left_commit = left_commit or "HEAD",
-        right_commit = right_commit,
+        left_commit = commits.left,
+        right_commit = commits.right,
     }
 end
 
