@@ -12,7 +12,7 @@ local M = {}
 ---@return trunks.SplitDiffParams
 function M._parse_split_diff_args(cmd)
     local args = cmd and cmd:sub(SUBCOMMAND_LENGTH + 1) or ""
-    local filepath = vim.b[vim.api.nvim_get_current_buf()].original_filename or vim.fn.expand("%")
+    local filepath = vim.b[vim.api.nvim_get_current_buf()].original_filename or vim.fn.expand("%:~:.")
 
     local commits = require("trunks._core.git").parse_commit_range(args)
 
@@ -28,7 +28,7 @@ end
 function M.split_diff(cmd, split_type)
     local params = M._parse_split_diff_args(cmd)
 
-    if params.right_commit then
+    if params.left_commit ~= require("trunks._constants.constants").WORKING_TREE then
         -- Two commits specified: open both versions and diff them
         require("trunks._core.open_file").open_file_in_current_window(params.filepath, params.left_commit, {})
         local left_bufnr = vim.api.nvim_get_current_buf()
@@ -54,7 +54,7 @@ function M.split_diff(cmd, split_type)
         local bufnr = vim.api.nvim_get_current_buf()
 
         vim.cmd("diffthis")
-        require("trunks._core.open_file").open_file_in_split(params.filepath, params.left_commit, split_type, {})
+        require("trunks._core.open_file").open_file_in_split(params.filepath, params.right_commit, split_type, {})
         local split_bufnr = vim.api.nvim_get_current_buf()
         vim.cmd("diffthis")
 

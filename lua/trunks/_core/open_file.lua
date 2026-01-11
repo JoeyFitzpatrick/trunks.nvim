@@ -31,20 +31,6 @@ end
 ---@param commit string
 ---@param opts trunks.OpenFileOpts
 local function setup_git_file(bufnr, filename, commit, opts)
-    local lines, error_code = require("trunks._core.run_cmd").run_cmd(
-        string.format("show %s:%s", commit, require("trunks._core.texter").surround_with_quotes(filename)),
-        { no_pager = true }
-    )
-    if error_code ~= 0 then
-        lines = { "" }
-    end
-    vim.bo[bufnr].modifiable = true
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-    vim.bo[bufnr].modifiable = false
-
-    local commit_filename = get_filename(filename, commit)
-    vim.api.nvim_buf_set_name(bufnr, commit_filename)
-
     vim.bo[bufnr].filetype = vim.filetype.match({ buf = bufnr }) or ""
 
     vim.b[bufnr].original_filename = opts.original_filename or filename
@@ -53,6 +39,13 @@ local function setup_git_file(bufnr, filename, commit, opts)
     require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
 end
 
+local split_to_vim_cmd = {
+    above = "aboveleft split",
+    below = "rightbelow split",
+    right = "rightbelow vsplit",
+    left = "aboveleft vsplit",
+}
+
 ---@param filename string
 ---@param commit string
 ---@param split "above" | "below" | "right" | "left"
@@ -60,7 +53,9 @@ end
 ---@return integer -- bufnr of created buffer
 function M.open_file_in_split(filename, commit, split, opts)
     delete_existing_buffer(get_filename(filename, commit))
-    local bufnr = require("trunks._ui.elements").new_buffer({ win_config = { split = split } })
+    local file_at_commit_uri = require("trunks._core.virtual_buffers").create_uri(commit, filename)
+    vim.cmd(split_to_vim_cmd[split] .. " " .. file_at_commit_uri)
+    local bufnr = vim.api.nvim_get_current_buf()
     setup_git_file(bufnr, filename, commit, opts)
     return bufnr
 end
@@ -72,7 +67,9 @@ end
 function M.open_file_in_tab(filename, commit, opts)
     vim.cmd("tabnew")
     delete_existing_buffer(get_filename(filename, commit))
-    local bufnr = require("trunks._ui.elements").new_buffer({})
+    local file_at_commit_uri = require("trunks._core.virtual_buffers").create_uri(commit, filename)
+    vim.cmd("e " .. file_at_commit_uri)
+    local bufnr = vim.api.nvim_get_current_buf()
     setup_git_file(bufnr, filename, commit, opts)
     return bufnr
 end
@@ -83,7 +80,9 @@ end
 ---@return integer -- bufnr of created buffer
 function M.open_file_in_current_window(filename, commit, opts)
     delete_existing_buffer(get_filename(filename, commit))
-    local bufnr = require("trunks._ui.elements").new_buffer({})
+    local file_at_commit_uri = require("trunks._core.virtual_buffers").create_uri(commit, filename)
+    vim.cmd("e " .. file_at_commit_uri)
+    local bufnr = vim.api.nvim_get_current_buf()
     setup_git_file(bufnr, filename, commit, opts)
     return bufnr
 end
