@@ -11,6 +11,7 @@ local M = {}
 ---@field current_diff string
 ---@field show_auto_display boolean
 ---@field suppress_next_render boolean
+---@field auto_display_opts trunks.AutoDisplayOpts
 
 ---@param bufnr integer
 ---@return trunks.AutoDisplayState
@@ -33,7 +34,10 @@ function M.close_auto_display(bufnr)
     if state.diff_bufnr and vim.api.nvim_buf_is_valid(state.diff_bufnr) then
         vim.api.nvim_buf_delete(state.diff_bufnr, { force = true })
     end
-    vim.b[bufnr].trunks_auto_display_state = { show_auto_display = state.show_auto_display }
+    vim.b[bufnr].trunks_auto_display_state = {
+        show_auto_display = state.show_auto_display,
+        auto_display_opts = state.auto_display_opts,
+    }
 end
 
 function M.close_open_auto_displays()
@@ -44,6 +48,17 @@ function M.close_open_auto_displays()
             set_state(buf, { suppress_next_render = true })
         end
     end
+end
+
+---@param bufnr integer
+function M.refresh(bufnr)
+    local state = get_state(bufnr)
+    if not state or not state.show_auto_display then
+        return
+    end
+    set_state(bufnr, { current_diff = nil })
+    M.close_auto_display(bufnr)
+    M._render_auto_display(bufnr, state.auto_display_opts)
 end
 
 ---@param diff_bufnr integer
@@ -253,6 +268,7 @@ function M._setup_auto_display(bufnr, opts)
     vim.b[bufnr].trunks_auto_display_state = {
         show_auto_display = result.open_auto_display,
         suppress_next_render = false,
+        auto_display_opts = opts.auto_display_opts,
     }
     opts.set_keymaps(bufnr, opts.auto_display_opts)
     opts.set_autocmds(bufnr, opts.auto_display_opts)

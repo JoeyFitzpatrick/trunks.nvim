@@ -1,13 +1,13 @@
----@class trunks.StatusLineData
----@field filename string
----@field safe_filename string
----@field status string
-
 local M = {}
 
 local function get_status(line)
     return line:sub(1, 2)
 end
+
+---@class trunks.StatusLineData
+---@field filename string
+---@field safe_filename string
+---@field status string
 
 ---@param bufnr integer
 ---@param line_num? integer
@@ -245,6 +245,7 @@ function M.set_keymaps(bufnr)
                 )
             end
             if statuses.untracked ~= "" then
+                --
                 require("trunks._core.run_cmd").run_hidden_cmd(
                     "git clean -f -- " .. statuses.untracked,
                     { rerender = true }
@@ -256,33 +257,48 @@ function M.set_keymaps(bufnr)
     set("n", keymaps.stash_popup, function()
         require("trunks._ui.popups.stash_popup").render()
     end, keymap_opts)
+
+    set("n", "<S-Tab>", function()
+        local ok, line_data = pcall(M.get_line, bufnr)
+        if not ok or not line_data then
+            return
+        end
+        if require("trunks._core.git").is_modified(line_data.status) then
+            if vim.b[bufnr].trunks_show_unstaged_for == line_data.filename then
+                vim.b[bufnr].trunks_show_unstaged_for = nil
+            else
+                vim.b[bufnr].trunks_show_unstaged_for = line_data.filename
+            end
+            require("trunks._ui.auto_display").refresh(bufnr)
+        end
+    end, keymap_opts)
 end
 
 ---@param status string
----@param filename string
+---@param safe_filename string
+---@param raw_filename string
+---@param bufnr integer
 ---@return string
-local function get_diff_cmd(status, filename)
+local function get_diff_cmd(status, safe_filename, raw_filename, bufnr)
     local status_checks = require("trunks._core.git")
     if status_checks.is_untracked(status) then
-        return "diff --no-index /dev/null -- " .. filename
+        return "diff --no-index /dev/null -- " .. safe_filename
     end
     if status_checks.is_modified(status) then
-        return string.format(
-            "(echo '### STAGED CHANGES ###';"
-                .. " git diff --cached -- %s;"
-                .. " echo '\n### UNSTAGED CHANGES ###'; git diff -- %s)"
-                .. " | $(git config --get core.pager || echo less)",
-            filename,
-            filename
-        )
+        local show_unstaged = vim.b[bufnr].trunks_show_unstaged_for == raw_filename
+        if show_unstaged then
+            return "diff -- " .. safe_filename
+        else
+            return "diff --staged -- " .. safe_filename
+        end
     end
     if status_checks.is_staged(status) then
-        return "diff --staged -- " .. filename
+        return "diff --staged -- " .. safe_filename
     end
     if status_checks.is_deleted(status) then
-        return "diff -- " .. filename
+        return "diff -- " .. safe_filename
     end
-    return "diff -- " .. filename
+    return "diff -- " .. safe_filename
 end
 
 ---@param bufnr integer
@@ -307,7 +323,15 @@ function M.render(bufnr, opts)
             if not ok or not line_data then
                 return
             end
-            return Command.base_command(get_diff_cmd(line_data.status, line_data.safe_filename)):build()
+            local last_file = vim.b[bufnr].trunks_last_file
+            if last_file ~= line_data.filename then
+                vim.b[bufnr].trunks_show_unstaged_for = nil
+                vim.b[bufnr].trunks_last_file = line_data.filename
+            end
+            return Command.base_command(
+                get_diff_cmd(line_data.status, line_data.safe_filename, line_data.filename, bufnr)
+            )
+                :build()
         end,
         get_current_diff = function()
             local ok, line_data = pcall(M.get_line, bufnr)

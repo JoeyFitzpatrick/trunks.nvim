@@ -220,8 +220,11 @@ Note that for any command that brings up a UI:
 * The jumplist still works like normal `<C-i>` and `<C-o>`
 * You can view keymaps by pressing `g?`
 
-Using the `:G` command renders a home ui, that will display some status info. This includes the git status of all changed files,
-a diff split to display these changes, and some keymaps to manipulate these files.
+Using the `:G` command renders a home ui, that will display some status info. This includes the git status of all changed files, a diff split to display these changes, and some keymaps to manipulate these files.
+
+### Staged and unstaged changes
+Note: when a file has both staged and unstaged changes, the diff split will display the staged changes. To see the unstaged changes, press `<shift-tab>` (i.e. `<S-Tab>`). Press that again to switch back to staged changes.
+
 Use `h` and `l` to then display the UI for  `git branch`, `git log`, and `git stash`, all of which are further detailed below.
 
 ## Blame
@@ -352,7 +355,7 @@ When Trunks opens a UI, this will typically either open a new buffer in the curr
 In either case, the window can be closed with the `q` keymap, which will return you to the last buffer that was open.
 
 If you want to open something in a non-standard ui, this is supported natively via command mode:
-Open `G status` in a left split instead of a full window: `split | G status`
+Open `G diff` in a horizontal split instead of a full window: `split | G diff`
 Open `G branch` in a right split instead of a full window `rightbelow vsplit | G branch`
 Note that this functionality can be used in both command mode and in keymaps.
 
