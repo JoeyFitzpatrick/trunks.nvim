@@ -33,4 +33,8 @@ describe("has_options", function()
         assert.are.equal(false, has_options("git grep --no-pager", { "--no" }))
         assert.are.equal(false, has_options("git grep --no-pager", { "-n" }))
     end)
+
+    it("should return true for for flags that partially match with an =", function()
+        assert.are.equal(true, has_options("git log --format=short", { "--format" }))
+    end)
 end)

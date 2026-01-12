@@ -41,6 +41,11 @@ function M.has_options(cmd, options)
     local parsed_options = {}
     for word in cmd:gmatch("%-%-%S+") do
         table.insert(parsed_options, word)
+        -- If the option contains =, also add the part before =
+        local prefix = word:match("^([^=]+)=")
+        if prefix then
+            table.insert(parsed_options, prefix)
+        end
     end
     for word in cmd:gmatch("%S+") do
         if word:match("^%-[%a]$") then

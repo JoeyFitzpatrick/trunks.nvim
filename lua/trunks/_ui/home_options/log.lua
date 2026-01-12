@@ -23,17 +23,14 @@ local log_format = vim.tbl_get(require("trunks._core.configuration"), "DATA", "l
 M.GIT_FILETYPE_OPTIONS = {
     "-p",
     "-L",
-    "--pretty",
-    "--format",
     "--encoding",
 }
 
----@param command string
----@param option string
----@return boolean
-local function contains_option(command, option)
-    return command:match("%s+" .. option:gsub("%-", "%-"))
-end
+M.OVERRIDE_DEFAULT_FORMAT_OPTIONS = {
+    "--pretty",
+    "--format",
+    "--oneline",
+}
 
 ---@param command_builder? trunks.Command
 ---@return { cmd: string, use_git_filetype_keymaps: boolean }
@@ -48,13 +45,14 @@ function M._parse_log_cmd(command_builder)
 
     local git_filetype_output = { cmd = command_builder:build(), use_git_filetype_keymaps = true }
     local args = command_builder.base
-    for _, option in ipairs(M.GIT_FILETYPE_OPTIONS) do
-        if contains_option(args, option) then
-            return git_filetype_output
-        end
+    local has_options = require("trunks._core.texter").has_options
+    if has_options(args, M.GIT_FILETYPE_OPTIONS) then
+        return git_filetype_output
     end
 
-    command_builder:add_args(log_format)
+    if not has_options(args, M.OVERRIDE_DEFAULT_FORMAT_OPTIONS) then
+        command_builder:add_args(log_format)
+    end
 
     return { cmd = command_builder:build(), use_git_filetype_keymaps = false }
 end
