@@ -5,7 +5,7 @@ local Command = require("trunks._core.command")
 ---@param bufnr integer
 ---@param line_num? integer
 ---@return { hash: string } | nil
-local function base_get_line(bufnr, line_num)
+local function get_line(bufnr, line_num)
     line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
     local line = vim.api.nvim_buf_get_lines(bufnr, line_num - 1, line_num, false)[1]
     if line == "" then
@@ -104,9 +104,8 @@ local function confirm_command(params)
 end
 
 ---@param bufnr integer
----@param get_line fun(bufnr: integer, line_num?: integer): { hash: string } | nil
 ---@param opts trunks.UiRenderOpts
-local function set_keymaps(bufnr, get_line, opts)
+local function set_keymaps(bufnr, opts)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "log", {})
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
@@ -171,7 +170,7 @@ local function set_keymaps(bufnr, get_line, opts)
             return
         end
         confirm_command({
-            cmd = "G rebase -i ",
+            cmd = "G rebase -i " .. line_data.hash,
             command_name = "rebase",
             current_branch = current_branch,
             log_branch = log_branch,
@@ -223,8 +222,7 @@ function M.render(bufnr, opts)
     if cmd_tbl.use_git_filetype_keymaps then
         require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
     else
-        local get_line_fn = base_get_line
-        set_keymaps(bufnr, get_line_fn, opts)
+        set_keymaps(bufnr, opts)
     end
     if opts.set_keymaps then
         opts.set_keymaps(bufnr)
