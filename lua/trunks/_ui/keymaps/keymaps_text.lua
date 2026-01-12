@@ -50,18 +50,9 @@ function M.show_in_cmdline(bufnr, ui_types)
     end
 
     local keymaps_string = require("trunks._constants.keymap_descriptions").get_short_descriptions_as_string(ui_types)
-
     display_keymaps_in_cmdline(keymaps_string)
 
     local augroup = vim.api.nvim_create_augroup("TrunksCmdline_" .. bufnr, { clear = true })
-    vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-        group = augroup,
-        buffer = bufnr,
-        callback = function()
-            display_keymaps_in_cmdline(keymaps_string)
-        end,
-    })
-
     vim.api.nvim_create_autocmd({ "BufLeave", "BufWinLeave" }, {
         group = augroup,
         buffer = bufnr,

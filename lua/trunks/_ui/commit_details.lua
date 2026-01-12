@@ -260,6 +260,7 @@ function M.render(commit, opts)
     end
 
     set_keymaps(bufnr, commit)
+    require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, { "commit_details" })
 end
 
 return M

@@ -278,6 +278,7 @@ function M.render(filename)
 
     cache_commits_with_filename(filename)
     set_keymaps(bufnr, filename)
+    require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, { "time_machine", "auto_display", "open_files" })
 
     require("trunks._ui.auto_display").create_auto_display(bufnr, "time_machine", {
         generate_cmd = function()

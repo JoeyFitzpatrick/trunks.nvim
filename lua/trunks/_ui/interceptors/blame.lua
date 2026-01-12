@@ -265,6 +265,7 @@ M.render = function(command_builder)
     local filename = vim.fn.fnamemodify(current_filename, ":~:.")
     set_keymaps(bufnr, filename)
     set_autocmds(bufnr, original_win, blame_buffer_name)
+    require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, { "blame" })
 
     local ok = pcall(function()
         local blame_win_initial_line = file_win_line_num + vim.wo[original_win].scrolloff
