@@ -37,4 +37,8 @@ describe("has_options", function()
     it("should return true for for flags that partially match with an =", function()
         assert.are.equal(true, has_options("git log --format=short", { "--format" }))
     end)
+
+    it("should return false for for filepath flags (-- somefile.txt)", function()
+        assert.are.equal(false, has_options("git log -- somefile.txt", { "--format", "--pretty" }))
+    end)
 end)

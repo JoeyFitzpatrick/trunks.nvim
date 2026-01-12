@@ -9,6 +9,7 @@
 ---@field add_args fun(self: trunks.Command, args: string): trunks.Command
 ---@field add_prefix_args fun(self: trunks.Command, args: string): trunks.Command
 ---@field add_postfix_args fun(self: trunks.Command, args: string): trunks.Command
+---@field add_post_command_args fun(self: trunks.Command, command: string, replacement: string): trunks.Command
 ---@field add_env_var fun(self: trunks.Command, args: string): trunks.Command
 ---@field build fun(self: trunks.Command): string
 local Command = {}
@@ -102,6 +103,20 @@ end
 
 function Command:add_postfix_args(args)
     table.insert(self._postfix_args, args)
+    return self
+end
+
+local function literalize(str)
+    return str:gsub("[%(%)%.%%%+%-%*%?%[%]%^%$]", function(c)
+        return "%" .. c
+    end)
+end
+
+function Command:add_post_command_args(command, replacement)
+    if not self.base then
+        return self
+    end
+    self.base = self.base:gsub(command, command .. " " .. literalize(replacement), 1)
     return self
 end
 

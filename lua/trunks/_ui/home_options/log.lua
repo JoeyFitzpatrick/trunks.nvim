@@ -34,12 +34,12 @@ M.OVERRIDE_DEFAULT_FORMAT_OPTIONS = {
 
 ---@param command_builder? trunks.Command
 ---@return { cmd: string, use_git_filetype_keymaps: boolean }
-function M._parse_log_cmd(command_builder)
+function M._parse_log_cmd(command_builder, format)
     -- if command has no args, the default command is "git log" with special format
     local command_has_no_args = not command_builder or not command_builder.base or command_builder.base:match("log%s-$")
 
     if command_has_no_args then
-        command_builder = Command.base_command("log"):add_args(log_format)
+        command_builder = Command.base_command("log"):add_args(format)
         return { cmd = command_builder:build(), use_git_filetype_keymaps = false }
     end
 
@@ -51,7 +51,7 @@ function M._parse_log_cmd(command_builder)
     end
 
     if not has_options(args, M.OVERRIDE_DEFAULT_FORMAT_OPTIONS) then
-        command_builder:add_args(log_format)
+        command_builder:add_post_command_args("log", format)
     end
 
     return { cmd = command_builder:build(), use_git_filetype_keymaps = false }
@@ -162,7 +162,7 @@ end
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
-    local cmd_tbl = M._parse_log_cmd(opts.command_builder)
+    local cmd_tbl = M._parse_log_cmd(opts.command_builder, log_format)
     require("trunks._ui.elements").terminal(bufnr, cmd_tbl.cmd, { enter = true, display_strategy = "full" })
 
     if cmd_tbl.use_git_filetype_keymaps then
