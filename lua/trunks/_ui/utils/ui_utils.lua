@@ -26,11 +26,15 @@ function M.get_visual_selection()
 end
 
 function M.get_start_line(bufnr)
-    return vim.b[bufnr].trunks_start_line or 0
+    if vim.api.nvim_buf_is_valid(bufnr) then
+        return vim.b[bufnr].trunks_start_line or 0
+    end
 end
 
 function M.set_start_line(bufnr, line_num)
-    vim.b[bufnr].trunks_start_line = line_num
+    if vim.api.nvim_buf_is_valid(bufnr) then
+        vim.b[bufnr].trunks_start_line = line_num
+    end
 end
 
 return M

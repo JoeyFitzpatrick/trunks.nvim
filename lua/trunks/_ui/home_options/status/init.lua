@@ -308,19 +308,6 @@ local function get_diff_cmd(status, safe_filename, raw_filename, bufnr)
     return "diff -- " .. safe_filename
 end
 
----@param channel_id integer
----@param bufnr integer
-local function display_extra_info(channel_id, bufnr)
-    elements.term_controls.go_home(channel_id)
-    local current_head = require("trunks._ui.utils.get_current_head").get_current_head()
-    elements.term_controls.add_line(channel_id, current_head)
-
-    local lines_changed_cmd = "diff --staged --shortstat"
-    local lines_changed_line = require("trunks._core.run_cmd").run_cmd(lines_changed_cmd, {})[1] or "No staged changes"
-    elements.term_controls.add_line(channel_id, lines_changed_line)
-    ui_utils.set_start_line(bufnr, 2)
-end
-
 ---@param bufnr integer
 ---@param opts? trunks.UiRenderOpts
 ---@return integer, integer -- bufnr, win
@@ -328,7 +315,7 @@ function M.render(bufnr, opts)
     opts = opts or {}
 
     local term = elements.terminal(bufnr, "git status -s", { enter = true, display_strategy = "full" })
-    display_extra_info(term.chan, bufnr)
+    require("trunks._ui.utils.display_extra_info").display_extra_info(term.chan, bufnr)
 
     local win = term.win
     local Command = require("trunks._core.command")
@@ -370,7 +357,7 @@ function M.render(bufnr, opts)
     local original_rerender_fn = vim.b[bufnr].trunks_rerender_fn
     vim.b[bufnr].trunks_rerender_fn = function()
         original_rerender_fn()
-        display_extra_info(term.chan, bufnr)
+        require("trunks._ui.utils.display_extra_info").display_extra_info(term.chan, bufnr)
     end
 
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "status" })
