@@ -11,9 +11,20 @@
 local M = {}
 
 local esc = string.char(27)
+M.term_controls = {
+    go_home = function(chan_id)
+        pcall(vim.api.nvim_chan_send, chan_id, esc .. "[H")
+    end,
+    clear_from_cursor = function(chan_id)
+        pcall(vim.api.nvim_chan_send, chan_id, esc .. "[J")
+    end,
+    clear_to_end_of_line = function(chan_id)
+        pcall(vim.api.nvim_chan_send, chan_id, esc .. "[K")
+    end,
+}
 
 M._pty_on_stdout = function(channel_id)
-    vim.api.nvim_chan_send(channel_id, esc .. "[H") -- go home
+    M.term_controls.go_home(channel_id)
     local is_first_line = true
     return function(_, data, _)
         for _, line in ipairs(data) do
@@ -49,7 +60,7 @@ local function run_terminal_command(cmd, bufnr, strategy)
 
     local on_stdout = nil
     if strategy.pty then
-        vim.api.nvim_chan_send(channel_id, esc .. "[H") -- go home
+        M.term_controls.go_home(channel_id)
         on_stdout = M._pty_on_stdout(channel_id)
     end
 
