@@ -1,5 +1,7 @@
 local M = {}
 
+local elements = require("trunks._ui.elements")
+
 local function get_status(line)
     return line:sub(1, 2)
 end
@@ -73,7 +75,8 @@ function M.set_keymaps(bufnr)
 
     set("n", keymaps.stage_all, function()
         local should_stage = require("trunks._ui.home_options.status.status_utils").should_stage_files(
-            vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            -- First line shows changed lines, it's not a file, so skip it
+            vim.api.nvim_buf_get_lines(bufnr, 1, -1, false)
         )
         if should_stage then
             require("trunks._core.run_cmd").run_hidden_cmd("git add -A", { rerender = true })
@@ -301,6 +304,15 @@ local function get_diff_cmd(status, safe_filename, raw_filename, bufnr)
     return "diff -- " .. safe_filename
 end
 
+local function display_extra_info(channel_id)
+    local lines_changed_cmd = "diff --staged --shortstat"
+    local lines_changed_line = require("trunks._core.run_cmd").run_cmd(lines_changed_cmd, {})[1] or "No staged changes"
+    elements.term_controls.go_home(channel_id)
+    vim.api.nvim_chan_send(channel_id, lines_changed_line)
+    elements.term_controls.clear_to_end_of_line(channel_id)
+    vim.api.nvim_chan_send(channel_id, "\r\n")
+end
+
 ---@param bufnr integer
 ---@param opts? trunks.UiRenderOpts
 ---@return integer, integer -- bufnr, win
@@ -308,13 +320,8 @@ function M.render(bufnr, opts)
     opts = opts or {}
     local Command = require("trunks._core.command")
 
-    local command_builder = Command.base_command("status -s --untracked")
-
-    local term = require("trunks._ui.elements").terminal(
-        bufnr,
-        command_builder:build(),
-        { enter = true, display_strategy = "full" }
-    )
+    local term = elements.terminal(bufnr, "git status -s", { enter = true, display_strategy = "full" })
+    display_extra_info(term.chan)
 
     local win = term.win
     require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
@@ -352,6 +359,11 @@ function M.render(bufnr, opts)
         table.insert(ui_types, 1, "home")
     end
     require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, ui_types)
+    local original_rerender_fn = vim.b[bufnr].trunks_rerender_fn
+    vim.b[bufnr].trunks_rerender_fn = function()
+        original_rerender_fn()
+        display_extra_info(term.chan)
+    end
 
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "status" })
     return bufnr, win
