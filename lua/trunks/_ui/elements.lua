@@ -21,6 +21,13 @@ M.term_controls = {
     clear_to_end_of_line = function(chan_id)
         pcall(vim.api.nvim_chan_send, chan_id, esc .. "[K")
     end,
+    add_line = function(chan_id, line)
+        pcall(function()
+            vim.api.nvim_chan_send(chan_id, line)
+            vim.api.nvim_chan_send(chan_id, esc .. "[K")
+            vim.api.nvim_chan_send(chan_id, "\r\n")
+        end)
+    end,
 }
 
 M._pty_on_stdout = function(channel_id)

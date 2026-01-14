@@ -311,13 +311,14 @@ end
 ---@param channel_id integer
 ---@param bufnr integer
 local function display_extra_info(channel_id, bufnr)
+    elements.term_controls.go_home(channel_id)
+    local current_head = require("trunks._ui.utils.get_current_head").get_current_head()
+    elements.term_controls.add_line(channel_id, current_head)
+
     local lines_changed_cmd = "diff --staged --shortstat"
     local lines_changed_line = require("trunks._core.run_cmd").run_cmd(lines_changed_cmd, {})[1] or "No staged changes"
-    elements.term_controls.go_home(channel_id)
-    vim.api.nvim_chan_send(channel_id, lines_changed_line)
-    elements.term_controls.clear_to_end_of_line(channel_id)
-    vim.api.nvim_chan_send(channel_id, "\r\n")
-    ui_utils.set_start_line(bufnr, 1)
+    elements.term_controls.add_line(channel_id, lines_changed_line)
+    ui_utils.set_start_line(bufnr, 2)
 end
 
 ---@param bufnr integer
@@ -325,12 +326,12 @@ end
 ---@return integer, integer -- bufnr, win
 function M.render(bufnr, opts)
     opts = opts or {}
-    local Command = require("trunks._core.command")
 
     local term = elements.terminal(bufnr, "git status -s", { enter = true, display_strategy = "full" })
     display_extra_info(term.chan, bufnr)
 
     local win = term.win
+    local Command = require("trunks._core.command")
     require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
         generate_cmd = function()
             local ok, line_data = pcall(M.get_line, bufnr)
