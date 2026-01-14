@@ -1,6 +1,7 @@
 local M = {}
 
 local elements = require("trunks._ui.elements")
+local ui_utils = require("trunks._ui.utils.ui_utils")
 
 local function get_status(line)
     return line:sub(1, 2)
@@ -16,6 +17,10 @@ end
 ---@return trunks.StatusLineData | nil
 function M.get_line(bufnr, line_num)
     line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
+    if line_num <= ui_utils.get_start_line(bufnr) then
+        return nil
+    end
+
     local line = vim.api.nvim_buf_get_lines(bufnr, line_num - 1, line_num, false)[1]
     if not line or not line:match("^%s?[%w%?]") then
         return nil
@@ -75,8 +80,7 @@ function M.set_keymaps(bufnr)
 
     set("n", keymaps.stage_all, function()
         local should_stage = require("trunks._ui.home_options.status.status_utils").should_stage_files(
-            -- First line shows changed lines, it's not a file, so skip it
-            vim.api.nvim_buf_get_lines(bufnr, 1, -1, false)
+            vim.api.nvim_buf_get_lines(bufnr, ui_utils.get_start_line(bufnr), -1, false)
         )
         if should_stage then
             require("trunks._core.run_cmd").run_hidden_cmd("git add -A", { rerender = true })
@@ -304,13 +308,16 @@ local function get_diff_cmd(status, safe_filename, raw_filename, bufnr)
     return "diff -- " .. safe_filename
 end
 
-local function display_extra_info(channel_id)
+---@param channel_id integer
+---@param bufnr integer
+local function display_extra_info(channel_id, bufnr)
     local lines_changed_cmd = "diff --staged --shortstat"
     local lines_changed_line = require("trunks._core.run_cmd").run_cmd(lines_changed_cmd, {})[1] or "No staged changes"
     elements.term_controls.go_home(channel_id)
     vim.api.nvim_chan_send(channel_id, lines_changed_line)
     elements.term_controls.clear_to_end_of_line(channel_id)
     vim.api.nvim_chan_send(channel_id, "\r\n")
+    ui_utils.set_start_line(bufnr, 1)
 end
 
 ---@param bufnr integer
@@ -321,7 +328,7 @@ function M.render(bufnr, opts)
     local Command = require("trunks._core.command")
 
     local term = elements.terminal(bufnr, "git status -s", { enter = true, display_strategy = "full" })
-    display_extra_info(term.chan)
+    display_extra_info(term.chan, bufnr)
 
     local win = term.win
     require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
@@ -362,7 +369,7 @@ function M.render(bufnr, opts)
     local original_rerender_fn = vim.b[bufnr].trunks_rerender_fn
     vim.b[bufnr].trunks_rerender_fn = function()
         original_rerender_fn()
-        display_extra_info(term.chan)
+        display_extra_info(term.chan, bufnr)
     end
 
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "status" })

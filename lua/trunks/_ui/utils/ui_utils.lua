@@ -25,4 +25,12 @@ function M.get_visual_selection()
     return text
 end
 
+function M.get_start_line(bufnr)
+    return vim.b[bufnr].trunks_start_line or 0
+end
+
+function M.set_start_line(bufnr, line_num)
+    vim.b[bufnr].trunks_start_line = line_num
+end
+
 return M
