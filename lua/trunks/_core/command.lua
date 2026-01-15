@@ -127,13 +127,14 @@ end
 
 ---@class trunks.CommandBuildOpts
 ---@field skip_prefix? boolean
+---@field no_pager? boolean
 
 ---@param opts? trunks.CommandBuildOpts
 ---@return string
 function Command:build(opts)
     opts = opts or {}
     local pager = self._pager
-    if pager then
+    if pager and not opts.no_pager then
         if pager.type == "postfix" and not vim.tbl_contains(self._postfix_args, pager.command) then
             self:add_postfix_args("| " .. pager.command)
         elseif pager.type == "prefix" and not vim.tbl_contains(self._prefix_args, pager.command) then

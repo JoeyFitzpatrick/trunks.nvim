@@ -48,7 +48,7 @@ function M.display_extra_info(channel_id, bufnr)
     end)
 
     -- Async fetch staged changes
-    local diff_cmd = Command.base_command("diff --staged --shortstat"):build()
+    local diff_cmd = Command.base_command("diff --staged --shortstat"):build({ no_pager = true })
     vim.system(vim.split(diff_cmd, " "), {}, function(obj)
         vim.schedule(function()
             if obj.code == 0 and obj.stdout and obj.stdout ~= "" then
