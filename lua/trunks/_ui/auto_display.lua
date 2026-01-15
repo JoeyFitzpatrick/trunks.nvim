@@ -62,9 +62,10 @@ function M.refresh(bufnr)
 end
 
 ---@param diff_bufnr integer
+---@param diff_win integer
 ---@param original_bufnr integer
 ---@param win integer
-local function set_diff_buffer_autocmds(diff_bufnr, original_bufnr, win)
+local function set_diff_buffer_autocmds(diff_bufnr, diff_win, original_bufnr, win)
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
         desc = "Stop insert mode on buf enter",
         buffer = diff_bufnr,
@@ -93,6 +94,29 @@ local function set_diff_buffer_autocmds(diff_bufnr, original_bufnr, win)
             end)
         end,
         group = vim.api.nvim_create_augroup("TrunksHideAutoDisplay", { clear = true }),
+    })
+    local original_cursorline = vim.o.cursorline
+    vim.wo[diff_win].cursorline = false
+    local cursorline_augroup = vim.api.nvim_create_augroup("TrunksAutoDisplayCursorline", { clear = true })
+    vim.api.nvim_create_autocmd({ "BufEnter" }, {
+        desc = "Turn on cursorline when entering diff buffer",
+        buffer = diff_bufnr,
+        callback = function()
+            if vim.api.nvim_win_is_valid(diff_win) then
+                vim.wo[diff_win].cursorline = original_cursorline
+            end
+        end,
+        group = cursorline_augroup,
+    })
+    vim.api.nvim_create_autocmd({ "BufLeave" }, {
+        desc = "Turn off cursorline when leaving diff buffer",
+        buffer = diff_bufnr,
+        callback = function()
+            if vim.api.nvim_win_is_valid(diff_win) then
+                vim.wo[diff_win].cursorline = false
+            end
+        end,
+        group = cursorline_augroup,
     })
 end
 
@@ -141,7 +165,7 @@ function M._render_auto_display(bufnr, auto_display_opts)
     vim.wo[win].relativenumber = false
     local term = require("trunks._ui.elements").terminal(state.diff_bufnr, diff_cmd, auto_display_opts.strategy)
     state.diff_win = term.win
-    set_diff_buffer_autocmds(state.diff_bufnr, bufnr, win)
+    set_diff_buffer_autocmds(state.diff_bufnr, state.diff_win, bufnr, win)
     set_diff_buffer_keymaps(state.diff_bufnr, bufnr)
     vim.api.nvim_set_current_win(win)
     vim.b[bufnr].trunks_auto_display_state = state
@@ -211,6 +235,7 @@ local function set_keymaps(bufnr, auto_display_opts)
                 local is_at_last_line = win_view.topline > num_lines_in_buffer - win_height
                 if not is_at_last_line then
                     win_view.topline = win_view.topline + 2
+                    win_view.lnum = win_view.topline + vim.o.scrolloff
                     vim.fn.winrestview(win_view)
                 end
             end)
@@ -223,6 +248,7 @@ local function set_keymaps(bufnr, auto_display_opts)
             vim.api.nvim_win_call(state.diff_win, function()
                 local win_view = vim.fn.winsaveview()
                 win_view.topline = win_view.topline - 2
+                win_view.lnum = win_view.topline + vim.o.scrolloff
                 vim.fn.winrestview(win_view)
             end)
         end
