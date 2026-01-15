@@ -27,7 +27,7 @@ function M.display_extra_info(channel_id, bufnr)
 
             if obj.code == 0 and obj.stdout and obj.stdout ~= "" then
                 local branch_name = vim.trim(obj.stdout)
-                results.head = purple .. "HEAD:" .. blue .. " " .. branch_name .. reset
+                results.head = purple .. "Head:" .. blue .. " " .. branch_name .. reset
                 render_if_ready()
             else
                 -- Detached head fallback
@@ -36,9 +36,9 @@ function M.display_extra_info(channel_id, bufnr)
                     vim.schedule(function()
                         if hash_obj.code == 0 and hash_obj.stdout and hash_obj.stdout ~= "" then
                             local hash = vim.trim(hash_obj.stdout)
-                            results.head = purple .. "HEAD:" .. blue .. " " .. hash .. " (detached head)" .. reset
+                            results.head = purple .. "Head:" .. blue .. " " .. hash .. " (detached head)" .. reset
                         else
-                            results.head = purple .. "HEAD:" .. blue .. " Unable to find current HEAD" .. reset
+                            results.head = purple .. "Head:" .. blue .. " Unable to find current HEAD" .. reset
                         end
                         render_if_ready()
                     end)

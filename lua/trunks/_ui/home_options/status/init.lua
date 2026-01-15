@@ -316,6 +316,7 @@ function M.render(bufnr, opts)
 
     local term = elements.terminal(bufnr, "git status -s", { enter = true, display_strategy = "full" })
     require("trunks._ui.utils.display_extra_info").display_extra_info(term.chan, bufnr)
+    vim.api.nvim_win_set_cursor(term.win, { 3, 0 })
 
     local win = term.win
     local Command = require("trunks._core.command")
@@ -354,6 +355,7 @@ function M.render(bufnr, opts)
         table.insert(ui_types, 1, "home")
     end
     require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, ui_types)
+
     local original_rerender_fn = vim.b[bufnr].trunks_rerender_fn
     vim.b[bufnr].trunks_rerender_fn = function()
         original_rerender_fn()
