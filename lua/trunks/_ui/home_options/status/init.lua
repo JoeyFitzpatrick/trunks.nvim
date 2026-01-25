@@ -315,7 +315,7 @@ function M.render(bufnr, opts)
     opts = opts or {}
 
     local term = elements.terminal(bufnr, "git status -s", { enter = true, display_strategy = "full" })
-    require("trunks._ui.utils.display_extra_info").display_extra_info(term.chan, bufnr)
+    require("trunks._ui.utils.display_extra_info").display_extra_info(bufnr)
     vim.api.nvim_win_set_cursor(term.win, { 3, 0 })
 
     local win = term.win
@@ -359,7 +359,7 @@ function M.render(bufnr, opts)
     local original_rerender_fn = vim.b[bufnr].trunks_rerender_fn
     vim.b[bufnr].trunks_rerender_fn = function()
         original_rerender_fn()
-        require("trunks._ui.utils.display_extra_info").display_extra_info(term.chan, bufnr)
+        require("trunks._ui.utils.display_extra_info").display_extra_info(bufnr)
     end
 
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "status" })

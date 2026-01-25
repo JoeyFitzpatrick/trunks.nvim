@@ -1,8 +1,8 @@
 local M = {}
 
----@param channel_id integer
 ---@param bufnr integer
-function M.display_extra_info(channel_id, bufnr)
+function M.display_extra_info(bufnr)
+    local channel_id = vim.b[bufnr].trunks_channel_id
     local elements = require("trunks._ui.elements")
     local ui_utils = require("trunks._ui.utils.ui_utils")
     local Command = require("trunks._core.command")

@@ -54,16 +54,22 @@ M._pty_on_stdout = function(channel_id)
     end
 end
 
+local function get_current_ui_opts()
+    return {
+        number = vim.o.number,
+        relativenumber = vim.o.relativenumber,
+        signcolumn = vim.o.signcolumn,
+    }
+end
+
 ---@param cmd string
 ---@param bufnr integer
 ---@param strategy trunks.Strategy
 ---@return { channel_id: integer, exit_code: integer }
 local function run_terminal_command(cmd, bufnr, strategy)
-    local channel_id
-    if strategy.pty then
-        channel_id = vim.b[bufnr].channel_id or vim.api.nvim_open_term(bufnr, {})
-    end
-    vim.b[bufnr].channel_id = channel_id
+    local current_ui_opts = get_current_ui_opts()
+    local channel_id = vim.api.nvim_open_term(bufnr, {})
+    vim.b[bufnr].trunks_channel_id = channel_id
 
     local on_stdout = nil
     if strategy.pty then
@@ -73,6 +79,7 @@ local function run_terminal_command(cmd, bufnr, strategy)
 
     local new_channel_id
     local term_exit_code
+    vim.bo[bufnr].modified = false
     vim.api.nvim_buf_call(bufnr, function()
         new_channel_id = vim.fn.jobstart(cmd, {
             pty = strategy.pty,
@@ -87,6 +94,9 @@ local function run_terminal_command(cmd, bufnr, strategy)
                 end
             end,
         })
+        for opt, value in pairs(current_ui_opts) do
+            vim.o[opt] = value
+        end
     end)
     return { channel_id = channel_id or new_channel_id, exit_code = term_exit_code }
 end
@@ -133,7 +143,6 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
     else
         error("Unable to determine display strategy", vim.log.levels.ERROR)
     end
-    vim.opt_local.number = false
     return { win = win, channel_id = run_command_result.channel_id, exit_code = run_command_result.exit_code }
 end
 
@@ -151,7 +160,10 @@ local function set_terminal_autocmds_and_state(cmd, bufnr, strategy)
     end
     if strategy.pty and not strategy.trigger_redraw then
         vim.b[bufnr].trunks_rerender_fn = function()
+            local cursor = vim.api.nvim_win_get_cursor(0)
+            require("trunks._ui.utils.buffer_text").set(bufnr, {})
             run_terminal_command(cmd, bufnr, strategy)
+            pcall(vim.api.nvim_win_set_cursor, 0, cursor)
         end
     end
 end
@@ -171,7 +183,6 @@ function M.terminal(bufnr, cmd, strategy)
     local open_term_result = open_terminal_buffer(cmd, bufnr, strategy)
     local win = open_term_result.win
     local channel_id = open_term_result.channel_id
-    local exit_code = open_term_result.exit_code
     if not channel_id then
         return
     end
@@ -187,7 +198,7 @@ function M.terminal(bufnr, cmd, strategy)
 
     require("trunks._ui.keymaps.base").set_keymaps(bufnr)
     set_terminal_autocmds_and_state(cmd, bufnr, strategy)
-    return { bufnr = bufnr, win = win, chan = channel_id, exit_code = exit_code }
+    return { bufnr = bufnr, win = win, chan = channel_id, exit_code = open_term_result.exit_code }
 end
 
 ---@param bufnr integer

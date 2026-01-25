@@ -161,9 +161,10 @@ function M._render_auto_display(bufnr, auto_display_opts)
     end
     state.diff_bufnr = require("trunks._ui.elements").new_buffer({})
     local win = vim.api.nvim_get_current_win()
-    vim.wo[win].number = false
-    vim.wo[win].relativenumber = false
     local term = require("trunks._ui.elements").terminal(state.diff_bufnr, diff_cmd, auto_display_opts.strategy)
+    vim.wo[term.win].number = false
+    vim.wo[term.win].relativenumber = false
+
     state.diff_win = term.win
     set_diff_buffer_autocmds(state.diff_bufnr, state.diff_win, bufnr, win)
     set_diff_buffer_keymaps(state.diff_bufnr, bufnr)
