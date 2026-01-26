@@ -154,36 +154,44 @@ if not is_empty(config.home.keymaps.previous) and not is_empty(config.home.keyma
         { string.format("%s/%s Change UI", config.home.keymaps.previous, config.home.keymaps.next) }
 end
 
-add_description("status", "commit_popup", "Commit")
-add_description("status", "stash_popup", "Stash")
-add_description("status", "restore", "Discard")
+add_description("blame", "commit_details", "Commit details")
+add_description("blame", "diff_file", "Diff")
+add_description("blame", "reblame", "Reblame")
 
-add_description("branch", "switch", "Switch")
-add_description("branch", "new_branch", "New branch")
-add_description("branch", "log", "Commits")
-add_description("branch", "rename", "Rename")
 add_description("branch", "delete", "Delete")
+add_description("branch", "log", "Commits")
+add_description("branch", "new_branch", "New branch")
+add_description("branch", "rename", "Rename")
+add_description("branch", "switch", "Switch")
 
+add_description("commit_details", "edit_file", "Edit file")
+add_description("commit_details", "restore_popup", "Restore")
+add_description("commit_details", "show_all_changes", "Show commit")
+
+add_description("commit_instant_fixup", "", "Select commit to fixup", "<enter>")
+
+add_description("log", "checkout", "Checkout")
 add_description("log", "commit_details", "Details")
+add_description("log", "diff_commit_against_head", "Diff")
 add_description("log", "rebase", "Rebase")
 add_description("log", "revert", "Revert")
-add_description("log", "checkout", "Checkout")
-add_description("log", "diff_commit_against_head", "Diff")
 
 add_description("reflog", "checkout", "Checkout")
 add_description("reflog", "commit_details", "Details")
 add_description("reflog", "recover", "Recover as branch")
 
 add_description("stash", "apply", "Apply")
-add_description("stash", "pop", "Pop")
 add_description("stash", "drop", "Drop")
+add_description("stash", "pop", "Pop")
 add_description("stash", "show", "Details")
 
-add_description("time_machine", "commit_details", "Details")
-add_description("time_machine", "diff_against_previous_commit", "Diff")
-add_description("time_machine", "diff_against_head", "Diff against HEAD")
+add_description("status", "commit_popup", "Commit")
+add_description("status", "restore", "Discard")
+add_description("status", "stash_popup", "Stash")
 
-add_description("commit_instant_fixup", "", "Select commit to fixup", "<enter>")
+add_description("time_machine", "commit_details", "Details")
+add_description("time_machine", "diff_against_head", "Diff against HEAD")
+add_description("time_machine", "diff_against_previous_commit", "Diff")
 
 ---@param ui_types string[]
 ---@return string
