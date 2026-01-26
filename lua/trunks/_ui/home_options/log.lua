@@ -178,7 +178,10 @@ function M.render(bufnr, opts)
     if opts.set_keymaps then
         table.insert(ui_types, 1, "home")
     end
-    require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, ui_types)
+
+    if opts.show_keymaps ~= false then
+        require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, ui_types)
+    end
 
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "log" })
 end

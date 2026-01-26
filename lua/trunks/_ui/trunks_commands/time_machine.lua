@@ -74,7 +74,7 @@ end
 function M._get_line(bufnr, start_line, line_num)
     start_line = start_line or START_LINE
     line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
-    if line_num <= start_line then
+    if line_num < start_line then
         return nil
     end
     local line = vim.api.nvim_buf_get_lines(bufnr, line_num - 1, line_num, false)[1]
@@ -271,9 +271,9 @@ function M.render(filename)
     local command_builder = Command.base_command("log --follow " .. filename, filename)
 
     -- Use the same lines that the log UI uses
-    require("trunks._ui.home_options.log").set_lines(
+    require("trunks._ui.home_options.log").render(
         bufnr,
-        { command_builder = command_builder, ui_types = { "time_machine" } }
+        { command_builder = command_builder, ui_types = { "time_machine" }, show_keymaps = false }
     )
 
     cache_commits_with_filename(filename)
@@ -314,7 +314,7 @@ function M.render(filename)
             end
             return line_data.hash
         end,
-        strategy = { display_strategy = "below", win_size = 0.67, insert = false, enter = false },
+        strategy = { display_strategy = "below", insert = false, enter = false },
     })
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "time_machine" })
 end

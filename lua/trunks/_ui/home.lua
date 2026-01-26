@@ -10,6 +10,7 @@
 ---@field win? integer
 ---@field ui_types? string[]
 ---@field display_strategy? trunks.DisplayStrategy
+---@field show_keymaps? boolean
 
 local M = {}
 
