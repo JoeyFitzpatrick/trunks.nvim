@@ -36,13 +36,18 @@ end
 ---@param command_type "G" | "Trunks"
 ---@return string[]
 M.complete_command = function(arglead, cmdline, command_type)
-    -- Check that we have a valid git command
+    -- Find where the command (G or Trunks) appears in cmdline and extract args after it
+    -- This handles cases like ":tab G diff" or ":vertical Trunks status"
+    -- Match the command name followed by whitespace, then capture everything after
+    local args_str = cmdline:match(command_type .. "%s+(.*)") or ""
+
+    -- Parse the arguments
     local words = {}
-    for word in cmdline:gmatch("%S+") do
+    for word in args_str:gmatch("%S+") do
         table.insert(words, word)
     end
 
-    local command, subcommand = words[2], words[3]
+    local command, subcommand = words[1], words[2]
 
     if not command then
         if command_type == "G" then
