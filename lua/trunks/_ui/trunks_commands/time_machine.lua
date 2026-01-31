@@ -87,8 +87,7 @@ function M._get_line(bufnr, start_line, line_num)
         return nil
     end
 
-    -- commits start on line 3, 0-indexed to line 2
-    return { hash = hash, time_machine_index = line_num - 2 }
+    return { hash = hash, time_machine_index = line_num }
 end
 
 ---@param old_bufnr integer
@@ -139,14 +138,15 @@ local function set_file_keymaps(bufnr)
     local safe_set_keymap = require("trunks._ui.keymaps.set").safe_set_keymap
 
     safe_set_keymap("n", keymaps.commit_details, function()
-        local commit = vim.b.commit
+        local commit = vim.b.trunks_commit
         if commit then
             require("trunks._ui.commit_details").render(commit, {})
         end
     end, keymap_opts)
 
     safe_set_keymap("n", keymaps.diff_against_previous_commit, function()
-        local commit = vim.b.commit
+        local commit = vim.b.trunks_commit
+        vim.print("here")
         if commit then
             time_machine_split(bufnr, commit)
         end
@@ -239,8 +239,10 @@ local function set_keymaps(bufnr, filename)
             return
         end
 
-        open_file(bufnr, filename, "window")
-        vim.cmd("Trunks vdiff " .. line_data.hash .. "^")
+        local opened_file_bufnr = open_file(bufnr, filename, "window")
+        if opened_file_bufnr then
+            vim.cmd("Trunks vdiff " .. line_data.hash .. "^")
+        end
     end, keymap_opts)
 
     safe_set_keymap("n", keymaps.diff_against_head, function()
@@ -250,7 +252,7 @@ local function set_keymaps(bufnr, filename)
         end
 
         open_file(bufnr, filename, "window")
-        -- vim.cmd("Trunks vdiff")
+        vim.cmd("Trunks vdiff")
     end, keymap_opts)
 
     safe_set_keymap("n", "q", function()
@@ -368,7 +370,7 @@ local function move_through_time_machine(bufnr, direction)
         end
     end
 
-    vim.b[bufnr].commit = time_machine_data.hash
+    vim.b[bufnr].trunks_commit = time_machine_data.hash
 
     local winview = vim.fn.winsaveview()
     local split_args = vim.b[bufnr].time_machine_split_args

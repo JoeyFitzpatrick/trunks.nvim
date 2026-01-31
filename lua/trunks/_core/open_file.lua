@@ -46,7 +46,7 @@ local function setup_git_file(bufnr, filename, commit, opts)
     vim.bo[bufnr].filetype = vim.filetype.match({ buf = bufnr }) or ""
 
     vim.b[bufnr].original_filename = opts.original_filename or filename
-    vim.b[bufnr].commit = commit
+    vim.b[bufnr].trunks_commit = commit
 
     require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
 end
