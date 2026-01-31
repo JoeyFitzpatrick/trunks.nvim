@@ -161,9 +161,16 @@ end
 
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
-function M.render(bufnr, opts)
+function M.set_lines(bufnr, opts)
     local cmd_tbl = M._parse_log_cmd(opts.command_builder, log_format)
     require("trunks._ui.elements").terminal(bufnr, cmd_tbl.cmd, { enter = true, display_strategy = "full" })
+    return cmd_tbl
+end
+
+---@param bufnr integer
+---@param opts trunks.UiRenderOpts
+function M.render(bufnr, opts)
+    local cmd_tbl = M.set_lines(bufnr, opts)
 
     if cmd_tbl.use_git_filetype_keymaps then
         require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
@@ -179,9 +186,7 @@ function M.render(bufnr, opts)
         table.insert(ui_types, 1, "home")
     end
 
-    if opts.show_keymaps ~= false then
-        require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, ui_types)
-    end
+    require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, ui_types)
 
     require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "log" })
 end

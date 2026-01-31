@@ -250,7 +250,7 @@ local function set_keymaps(bufnr, filename)
         end
 
         open_file(bufnr, filename, "window")
-        vim.cmd("Trunks vdiff")
+        -- vim.cmd("Trunks vdiff")
     end, keymap_opts)
 
     safe_set_keymap("n", "q", function()
@@ -271,7 +271,7 @@ function M.render(filename)
     local command_builder = Command.base_command("log --follow " .. filename, filename)
 
     -- Use the same lines that the log UI uses
-    require("trunks._ui.home_options.log").render(
+    require("trunks._ui.home_options.log").set_lines(
         bufnr,
         { command_builder = command_builder, ui_types = { "time_machine" }, show_keymaps = false }
     )
