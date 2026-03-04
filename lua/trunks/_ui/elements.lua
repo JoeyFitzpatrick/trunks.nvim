@@ -161,6 +161,9 @@ local function set_terminal_autocmds_and_state(cmd, bufnr, strategy)
     if not strategy.trigger_redraw then
         vim.b[bufnr].trunks_rerender_fn = function()
             local win = vim.fn.bufwinid(bufnr)
+            if not vim.api.nvim_win_is_valid(win) then
+                return
+            end
             local cursor = vim.api.nvim_win_get_cursor(win)
             local line_num = cursor[1]
             require("trunks._ui.utils.buffer_text").set(bufnr, {})
