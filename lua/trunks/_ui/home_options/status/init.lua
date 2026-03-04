@@ -362,7 +362,6 @@ function M.render(bufnr, opts)
         require("trunks._ui.utils.display_extra_info").display_extra_info(bufnr)
     end
 
-    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "status" })
     return bufnr, win
 end
 

@@ -56,8 +56,6 @@ function M.render(command_builder)
     require("trunks._ui.elements").terminal(bufnr, command_builder:build())
     set_keymaps(bufnr)
     require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, { "reflog" })
-
-    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "reflog" })
 end
 
 return M

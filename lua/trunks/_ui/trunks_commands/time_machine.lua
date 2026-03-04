@@ -318,7 +318,6 @@ function M.render(filename)
         end,
         strategy = { display_strategy = "below", insert = false, enter = false },
     })
-    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "time_machine" })
 end
 
 ---@param bufnr integer

@@ -108,7 +108,6 @@ function M.render()
         set_keymaps()
         KEYMAPS_ARE_SET = true
     end
-    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "quickfix", ui_name = "mergetool" })
 end
 
 return M

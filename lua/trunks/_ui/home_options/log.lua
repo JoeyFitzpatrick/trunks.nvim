@@ -151,8 +151,6 @@ function M.render(bufnr, opts)
     end
 
     require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, ui_types)
-
-    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "buffer", ui_name = "log" })
 end
 
 return M

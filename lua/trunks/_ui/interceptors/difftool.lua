@@ -323,7 +323,6 @@ function M.render(command_builder)
         quickfixtextfunc = format_qf,
     })
     vim.cmd.copen()
-    require("trunks._core.autocmds").execute_user_autocmds({ ui_type = "quickfix", ui_name = "diff_qf" })
 end
 
 return M
