@@ -176,14 +176,6 @@ M.commit = {
 M.config = { insert = true }
 M.diff = { display_strategy = M.STRATEGIES.FULL }
 M.fetch = { display_strategy = M.STRATEGIES.BELOW, trigger_redraw = true }
-M.log = {
-    pty = function(cmd)
-        local non_pty_options = {
-            "-p",
-        }
-        return not M._cmd_contains_options(cmd, non_pty_options)
-    end,
-}
 M.merge = { insert = true, trigger_redraw = true }
 
 M.notes = {

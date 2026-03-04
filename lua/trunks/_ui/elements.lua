@@ -106,7 +106,7 @@ end
 ---@param strategy trunks.Strategy
 ---@return { win: integer, channel_id: integer, exit_code: integer }
 local function open_terminal_buffer(cmd, bufnr, strategy)
-    vim.bo[bufnr].scrollback = 1000000
+    vim.bo[bufnr].scrollback = 1000000 -- Max scrollback as of this writing
     local run_command_result = run_terminal_command(cmd, bufnr, strategy)
 
     local strategies = require("trunks._constants.command_strategies").STRATEGIES
@@ -158,12 +158,20 @@ local function set_terminal_autocmds_and_state(cmd, bufnr, strategy)
             command = "checktime",
         })
     end
-    if strategy.pty and not strategy.trigger_redraw then
+    if not strategy.trigger_redraw then
         vim.b[bufnr].trunks_rerender_fn = function()
-            local cursor = vim.api.nvim_win_get_cursor(0)
+            local win = vim.fn.bufwinid(bufnr)
+            local cursor = vim.api.nvim_win_get_cursor(win)
+            local line_num = cursor[1]
             require("trunks._ui.utils.buffer_text").set(bufnr, {})
             run_terminal_command(cmd, bufnr, strategy)
-            pcall(vim.api.nvim_win_set_cursor, 0, cursor)
+            vim.wait(200, function()
+                return vim.api.nvim_buf_line_count(bufnr) >= line_num
+            end, 200)
+            pcall(vim.api.nvim_win_set_cursor, win, cursor)
+            if not strategy.insert then
+                vim.cmd("stopinsert")
+            end
         end
     end
 end
