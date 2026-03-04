@@ -72,7 +72,6 @@ return {
         },
     },
     log = {
-        default_format = "--pretty='%C(yellow)%h%x09%Cblue%ar%x09%Cgreen%aN%x09%Creset%s'",
         keymaps = {
             checkout = "c", -- Checkout commmit under cursor
             commit_details = "<enter>",

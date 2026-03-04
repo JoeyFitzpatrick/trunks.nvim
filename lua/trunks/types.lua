@@ -54,7 +54,6 @@
 
 ---@class trunks.LogConfiguration
 ---@field keymaps? trunks.LogKeymaps
----@field default_format? string
 
 ---@class trunks.OpenFilesConfiguration
 ---@field keymaps? trunks.OpenFilesKeymaps

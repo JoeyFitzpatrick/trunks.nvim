@@ -1,6 +1,7 @@
 local M = {}
 
 local Command = require("trunks._core.command")
+local texter = require("trunks._core.texter")
 
 ---@param bufnr integer
 ---@param line_num? integer
@@ -15,46 +16,6 @@ local function get_line(bufnr, line_num)
         return { hash = line:match(": (%S+)") }
     end
     return { hash = line:match("%w+") }
-end
-
-vim.tbl_get(require("trunks._core.configuration"), "DATA", "log", "default_format")
-local log_format = vim.tbl_get(require("trunks._core.configuration"), "DATA", "log", "default_format") or ""
-
-M.GIT_FILETYPE_OPTIONS = {
-    "-p",
-    "-L",
-    "--encoding",
-}
-
-M.OVERRIDE_DEFAULT_FORMAT_OPTIONS = {
-    "--pretty",
-    "--format",
-    "--oneline",
-}
-
----@param command_builder? trunks.Command
----@return { cmd: string, use_git_filetype_keymaps: boolean }
-function M._parse_log_cmd(command_builder, format)
-    -- if command has no args, the default command is "git log" with special format
-    local command_has_no_args = not command_builder or not command_builder.base or command_builder.base:match("log%s-$")
-
-    if command_has_no_args then
-        command_builder = Command.base_command("log"):add_args(format)
-        return { cmd = command_builder:build(), use_git_filetype_keymaps = false }
-    end
-
-    local git_filetype_output = { cmd = command_builder:build(), use_git_filetype_keymaps = true }
-    local args = command_builder.base
-    local has_options = require("trunks._core.texter").has_options
-    if has_options(args, M.GIT_FILETYPE_OPTIONS) then
-        return git_filetype_output
-    end
-
-    if not has_options(args, M.OVERRIDE_DEFAULT_FORMAT_OPTIONS) then
-        command_builder:add_post_command_args("log", format)
-    end
-
-    return { cmd = command_builder:build(), use_git_filetype_keymaps = false }
 end
 
 ---@param bufnr integer
@@ -161,18 +122,21 @@ end
 
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
+---@return string -- log command passed to git
 function M.set_lines(bufnr, opts)
-    local cmd_tbl = M._parse_log_cmd(opts.command_builder, log_format)
-    require("trunks._ui.elements").terminal(bufnr, cmd_tbl.cmd, { enter = true, display_strategy = "full" })
-    return cmd_tbl
+    local cmd = opts.command_builder and opts.command_builder:build() or Command.base_command("log"):build()
+    require("trunks._ui.elements").terminal(bufnr, cmd, { enter = true, display_strategy = "full" })
+    return cmd
 end
 
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
-    local cmd_tbl = M.set_lines(bufnr, opts)
+    local cmd = M.set_lines(bufnr, opts)
 
-    if cmd_tbl.use_git_filetype_keymaps then
+    local GIT_FILETYPE_OPTIONS = { "-p", "-L", "--encoding" }
+
+    if texter.has_options(cmd, GIT_FILETYPE_OPTIONS) then
         require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
     else
         set_keymaps(bufnr)
