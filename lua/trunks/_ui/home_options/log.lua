@@ -38,13 +38,21 @@ local function set_keymaps(bufnr)
         end, keymap_opts)
     end
 
-    set("n", keymaps.checkout, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-        vim.cmd("G checkout " .. line_data.hash)
-    end, keymap_opts)
+    local keymap_with_hash_to_command_map = {
+        { keymap = keymaps.checkout, command = "checkout" },
+        { keymap = keymaps.diff_commit_against_head, command = "diff" },
+        { keymap = keymaps.rebase, command = "rebase -i" },
+    }
+
+    for _, mapping in ipairs(keymap_with_hash_to_command_map) do
+        set("n", mapping.keymap, function()
+            local ok, line_data = pcall(get_line, bufnr)
+            if not ok or not line_data then
+                return
+            end
+            vim.cmd("G " .. mapping.command .. " " .. line_data.hash)
+        end, keymap_opts)
+    end
 
     set("n", keymaps.commit_details, function()
         local ok, line_data = pcall(get_line, bufnr)
@@ -52,14 +60,6 @@ local function set_keymaps(bufnr)
             return
         end
         require("trunks._ui.commit_details").render(line_data.hash, {})
-    end, keymap_opts)
-
-    set("n", keymaps.diff_commit_against_head, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-        vim.cmd("G diff " .. line_data.hash)
     end, keymap_opts)
 
     set("n", keymaps.commit_drop, function()
@@ -74,14 +74,6 @@ local function set_keymaps(bufnr)
         then
             vim.cmd("Trunks commit-drop " .. line_data.hash)
         end
-    end, keymap_opts)
-
-    set("n", keymaps.rebase, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-        vim.cmd("G rebase -i " .. line_data.hash)
     end, keymap_opts)
 
     set("n", keymaps.reset, function()
