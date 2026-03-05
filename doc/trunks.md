@@ -366,34 +366,13 @@ Some UIs, such as the status UI, will automatically display another window in a 
 
 To toggle the auto-display, enter the toggle keymap, which by default is `<tab>`.
 
-## User Autocmds
-There is a `TrunksUiOpened` event that fires when a Trunks UI opens. You can use this autocmd to run custom logic whenever a Trunks UI opens. For instance, to set a custom keymap when the log UI opens:
-```lua
-vim.api.nvim_create_autocmd("TrunksUiOpened", {
-    desc = "Your custom autocmd",
-    callback = function(data)
-        local ui_type = data.ui_type -- "buffer" or "quickfix"
-        local ui_name = data.ui_name -- name of UI, "log" in this case
-        if ui_name == "log" then
-            vim.keymap.set("n", "p", function ()
-                vim.print(ui_type, ui_name)
-            end,
-            {buffer = 0}
-            )
-        end
-    end,
-})
-```
 
 # Optional Dependencies
-It is recommended, though not required, to use a tool that improves the output of git commands. Some recommendations:
+If you like, you can use a tool that improves the output of git commands. Supported tools:
 * [delta](https://github.com/dandavison/delta): used in the demos/examples
 * [diff-so-fancy](https://github.com/so-fancy/diff-so-fancy)
+* [difftastic](https://difftastic.wilfred.me.uk/)
 
-# Development and Contributing
-I welcome users of any experience level to contribute to Trunks and improve the project. If you'd like to contribute by writing code, please run `scripts/dev_setup/dev_setup.sh` first, which will set up a pre-commit hook that runs tests and some checks. The same checks run in CI, but this will help you catch issues before pushing up code. Note that you may need to run `chmod +x scripts/dev_setup/dev_setup.sh` first, to set up correct permissions to run the script.
-
-Improvements to the documentation are also welcome. Additionally, there are templates for asking questions, bug reports, and feature requests, all which are also good ways to contribute.
 
 # Tests
 ## Initialization
@@ -438,9 +417,3 @@ from within an nvim terminal, e.g. the commit editor when running `:G commit`.
 
 Thanks to Tim Pope and the maintainers of [vim-fugitive](https://github.com/tpope/vim-fugitive), an absolutely incredible vim 
 plugin that _heavily_ influenced Trunks.
-
-Thanks to Jesse Duffield and the maintainers of [lazygit](https://github.com/jesseduffield/lazygit), a sick terminal
-git TUI that also heavily influenced Trunks.
-
-Thanks to Jonas Bernoulli, Kyle Meyer, and the maintainers of [magit](https://github.com/magit/magit). I've never
-personally used it, but its wonderful documentation inspired both some features and design priniciples of Trunks.
