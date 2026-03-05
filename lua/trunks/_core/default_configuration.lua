@@ -42,7 +42,7 @@ return {
         },
     },
     commit_details = {
-        auto_display_on = true,
+        auto_display_on = false,
         keymaps = {
             edit_file = "e",
             restore_popup = "R",
