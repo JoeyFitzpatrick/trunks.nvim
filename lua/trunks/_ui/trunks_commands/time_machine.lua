@@ -140,7 +140,7 @@ local function set_file_keymaps(bufnr)
     safe_set_keymap("n", keymaps.commit_details, function()
         local commit = vim.b.trunks_commit
         if commit then
-            require("trunks._ui.commit_details").render(commit, {})
+            require("trunks._ui.trunks_commands.commit_details").render(commit, {})
         end
     end, keymap_opts)
 
@@ -230,7 +230,7 @@ local function set_keymaps(bufnr, filename)
         if not ok or not line_data then
             return
         end
-        require("trunks._ui.commit_details").render(line_data.hash, {})
+        require("trunks._ui.trunks_commands.commit_details").render(line_data.hash, {})
     end, keymap_opts)
 
     safe_set_keymap("n", keymaps.diff_against_previous_commit, function()

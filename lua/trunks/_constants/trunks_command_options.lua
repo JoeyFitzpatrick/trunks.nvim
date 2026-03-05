@@ -2,6 +2,7 @@ local M = {}
 
 M.options = {
     ["browse"] = {},
+    ["commit-details"] = {},
     ["commit-drop"] = {},
     ["commit-instant-fixup"] = {},
     hdiff = { completion_type = "branch" },

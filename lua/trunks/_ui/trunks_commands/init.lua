@@ -29,6 +29,11 @@ local cmd_map = {
         require("trunks._ui.trunks_commands.browse").browse(cmd, input_args)
     end,
 
+    ["commit-details"] = function(cmd)
+        local hash = vim.split(cmd, " ")[2]
+        require("trunks._ui.trunks_commands.commit_details").render(hash)
+    end,
+
     ["commit-drop"] = function(cmd)
         local hash = vim.split(cmd, " ")[2]
         local output, exit_code = commit_drop(hash)
@@ -76,7 +81,11 @@ function M.run_trunks_cmd(input_args)
 
     local trunks_command_fn = cmd_map[trunks_command]
     if not trunks_command_fn then
-        vim.notify(require("trunks._core.texter").surround_with_quotes(trunks_command) .. " is not a Trunks command")
+        vim.notify(
+            require("trunks._core.texter").surround_with_quotes(trunks_command) .. " is not a Trunks command",
+            vim.log.levels.ERROR
+        )
+        return
     end
 
     trunks_command_fn(cmd, input_args)

@@ -1,4 +1,4 @@
-local get_line = require("trunks._ui.commit_details").get_line
+local get_line = require("trunks._ui.trunks_commands.commit_details").get_line
 
 describe("commit_details get_line", function()
     local bufnr = nil

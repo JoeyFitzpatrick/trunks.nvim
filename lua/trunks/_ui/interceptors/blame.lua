@@ -39,7 +39,7 @@ local function set_keymaps(bufnr, filename)
             return
         end
         vim.api.nvim_buf_delete(bufnr, { force = true })
-        require("trunks._ui.commit_details").render(line_data.hash, { filename = filename })
+        require("trunks._ui.trunks_commands.commit_details").render(line_data.hash, { filename = filename })
     end, keymap_opts)
 
     local function get_filepath()

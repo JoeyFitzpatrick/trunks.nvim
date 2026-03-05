@@ -210,8 +210,9 @@ local function set_cursor_to_filename(bufnr, win, filename)
 end
 
 ---@param commit string
----@param opts trunks.CommitDetailsRenderOpts
+---@param opts? trunks.CommitDetailsRenderOpts
 function M.render(commit, opts)
+    opts = opts or {}
     local bufnr, win = require("trunks._ui.elements").new_buffer({ filetype = "git", show = true })
     M.set_lines(bufnr, commit, opts)
 

@@ -59,7 +59,7 @@ local function set_keymaps(bufnr)
         if not ok or not line_data then
             return
         end
-        require("trunks._ui.commit_details").render(line_data.hash, {})
+        require("trunks._ui.trunks_commands.commit_details").render(line_data.hash, {})
     end, keymap_opts)
 
     set("n", keymaps.commit_drop, function()

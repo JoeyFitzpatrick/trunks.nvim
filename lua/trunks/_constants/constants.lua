@@ -1,6 +1,6 @@
 local M = {}
 
-M.FILENAME_PREFIX = "trunks.nvim//"
+M.FILENAME_PREFIX = "trunks://"
 
 M.AUTOCMD = {
     RERENDER = "trunks-rerender",
