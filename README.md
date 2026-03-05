@@ -1,19 +1,25 @@
-# Yet Another Neovim Git Client
+# trunks.nvim
 
-| <!-- -->     | <!-- -->                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-|--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Build Status | [![tests](https://img.shields.io/github/actions/workflow/status/JoeyFitzpatrick/trunks.nvim/test.yml?branch=main&style=for-the-badge&label=Unit%20tests)](https://github.com/JoeyFitzpatrick/trunks.nvim/actions/workflows/test.yml)  [![documentation](https://img.shields.io/github/actions/workflow/status/JoeyFitzpatrick/trunks.nvim/documentation.yml?branch=main&style=for-the-badge&label=Documentation)](https://github.com/JoeyFitzpatrick/trunks.nvim/actions/workflows/documentation.yml)  [![luacheck](https://img.shields.io/github/actions/workflow/status/JoeyFitzpatrick/trunks.nvim/luacheck.yml?branch=main&style=for-the-badge&label=Luacheck)](https://github.com/JoeyFitzpatrick/trunks.nvim/actions/workflows/luacheck.yml) [![stylua](https://img.shields.io/github/actions/workflow/status/JoeyFitzpatrick/trunks.nvim/stylua.yml?branch=main&style=for-the-badge&label=Stylua)](https://github.com/JoeyFitzpatrick/trunks.nvim/actions/workflows/stylua.yml)  [![urlchecker](https://img.shields.io/github/actions/workflow/status/JoeyFitzpatrick/trunks.nvim/urlchecker.yml?branch=main&style=for-the-badge&label=URLChecker)](https://github.com/JoeyFitzpatrick/trunks.nvim/actions/workflows/urlchecker.yml)  |
-| License      | [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/JoeyFitzpatrick/trunks.nvim/blob/main/LICENSE)
+Trunks is a Neovim git client. It has some similarities to [vim-fugitive](https://github.com/tpope/vim-fugitive). This plugin ships with two commands:
+- The `:G` command, which invokes an arbitrary git command, e.g. `:G commit`, `:G log --oneline`, etc. You can also run `:G` to open the home UI, which displays a git status buffer and allows for navigation via `h` and `l` to see branch, log, and stash buffers. The `%` character will expand to the current buffer's filename, similar to vim-fugitive, e.g. `:G log -- %` to see commits that changed the current file.
+- The `:Trunks` command, which provides subcommands for git features that aren't already git commands. For example, `:Trunks vdiff` opens a vim diff in a vertical split, `:Trunks time-machine` opens a UI to navigate between revisions of a file, etc.
 
+The main benefits of using Trunks:
+- Most `:G` commands will display their output in terminal mode. This is a powerful concept:
+  - Long running commands will start displaying output immediately, instead of freezing the editor.
+  - Terminal extensions for git, like [delta](https://github.com/dandavison/delta) or [diff-so-fancy](https://github.com/so-fancy/diff-so-fancy), will work just like they do in the terminal.
+  - You can navigate around the output of a git command with your familiar vim motions, because it's just a buffer. Want to use `/` to search for errors in your pre-commit hook, or look through a diff while composing your git commit message? It's just like any other buffer.
+- Autocompletion for git commands, e.g. typing `:G switch` will cause valid branches to be autocompleted.
+- Keymaps for git actions in various git contexts. For example, from the status buffer (via `:G`), you're one or two keys away from pull, push, diff, commit, stash, restore, and staging.
+- UIs always show the up-to-date git state. If you're in a log buffer and run `:G pull`, the buffer will rerender and you'll see the pulled commits.
+- Discoverability: some keymaps will open a popup with various keymap options to use (a la [magit](https://magit.vc/)), and you can always press `g?` to get a floating window with all available keymaps.
 
-# What is Trunks?
-
-Trunks is a Neovim git client. It has some similarities to [vim-fugitive](https://github.com/tpope/vim-fugitive). The main features are:
-- The `:G` command; any valid git command can be called via command-mode, e.g. `:G commit`
-- Autocompletion for those commands, e.g. typing `:G switch` will cause valid branches to be autocompleted
-- The `:Trunks` command; extra git helpers, like `:Trunks time-machine` to navigate through past revisions of a file, or `:Trunks commit-instant-fixup` to apply changes to an arbitrary commit
-- Keymaps for common actions in various git contexts, e.g. `n` to create a new branch from the branch UI
-- UIs always show the up-to-date git state and provide context for available actions
+As mentioned above, there is also the `:Trunks` command, which provides some additional git functionality:
+- `:Trunks vdiff` and `:Trunks hdiff`, which diff the current buffer using a vim diff, in a vertical or horizontal split
+- `:Trunks browse`, to open the current buffer in your hosting provider (currently, GitHub, GitLab, and Bitbucket are supported). Use in visual mode to link to specific lines.
+- `:Trunks commit-drop`: pass a commit hash to it, and that commit is dropped. Use without arguments to open a log buffer to choose a commit.
+- `:Trunks commit-instant-fixup`: similar to `:Trunks commit-drop`, except instead of dropping a commit, apply staged changes to it.
+- `:Trunks time-machine`: in a new tab, display a log buffer with commits that changed the current buffer. Press `<Tab>` to toggle the auto-diff. Use `:Trunks time-machine-next` and `:Trunks time-machine-previous` to cycle the current buffer through revisions, vaguely akin to the emacs [git-timemachine](https://codeberg.org/pidu/git-timemachine) plugin.
 
 Here's an example of running some git commands with Trunks:
 ![trunks_some_commands](https://github.com/user-attachments/assets/a93743fa-056e-4d4d-917d-95e0dc0f2a86)
@@ -30,17 +36,6 @@ Here's an example of running some git commands with Trunks:
 ```
 
 Note: lazy loading is handled internally, so it is not required to lazy load Trunks. With that being said, if you really want to lazy load Trunks, you should be able to lazy load it however you normally lazy load plugins.
-
-# Usage
-To use this plugin, simply call git commands from command mode, using the `:G` command. Many commands will simply call the git command in terminal mode, with some improvements:
-* The terminal can be removed by pressing `<enter>`, to make it convenient to remove the terminal once you're done with the output
-
-There are some advantages to using terminal mode for these commands, as opposed to a regular buffer or printing command output:
-* Command output will sometimes be mangled when translated to a buffer or printed, this is avoided with a terminal
-* Command output keeps it's coloring
-* Existing tools such as `delta` that improve git output can still be leveraged
-
-Note that using the `%` character will expand it to the current buffer's filename, similar to vim-fugitive, e.g. `:G log --follow %` to see commits that changed the current file.
 
 # Configuration
 (These are default values)
