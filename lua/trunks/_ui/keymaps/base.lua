@@ -148,7 +148,8 @@ function M.git_show_keymap_fn(bufnr, get_line, filename)
         local float_bufnr = elements.new_buffer({})
         local float_win = elements.float(float_bufnr, { title = "Git show " .. line_data.hash })
 
-        local command = require("trunks._core.command").base_command("show " .. line_data.hash, filename):build()
+        local command =
+            require("trunks._core.command").base_command("show --format=medium " .. line_data.hash, filename):build()
         elements.terminal(float_bufnr, command, { display_strategy = "full" })
 
         require("trunks._ui.keymaps.set").safe_set_keymap("t", "q", function()
