@@ -67,6 +67,7 @@ end
 ---@param strategy trunks.Strategy
 ---@return { channel_id: integer, exit_code: integer }
 local function run_terminal_command(cmd, bufnr, strategy)
+    local current_buffer_name = vim.api.nvim_buf_get_name(bufnr)
     local current_ui_opts = get_current_ui_opts()
     local channel_id = vim.api.nvim_open_term(bufnr, {})
     vim.b[bufnr].trunks_channel_id = channel_id
@@ -96,6 +97,9 @@ local function run_terminal_command(cmd, bufnr, strategy)
         })
         for opt, value in pairs(current_ui_opts) do
             vim.o[opt] = value
+        end
+        if current_buffer_name then
+            vim.api.nvim_buf_set_name(bufnr, current_buffer_name)
         end
     end)
     return { channel_id = channel_id or new_channel_id, exit_code = term_exit_code }

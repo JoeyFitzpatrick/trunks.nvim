@@ -48,20 +48,34 @@ local tabs = {
     end,
 }
 
+local prefix = require("trunks._constants.constants").FILENAME_PREFIX
+
 ---@type table<trunks.TabOption, fun(bufnr: integer, opts: trunks.UiRenderOpts)>
 local tab_render_map = {
-    Status = function(bufnr, opts)
-        return require("trunks._ui.home_options.status").render(bufnr, opts)
-    end,
-    Branch = function(bufnr, opts)
-        return require("trunks._ui.home_options.branch").render(bufnr, opts)
-    end,
-    Log = function(bufnr, opts)
-        require("trunks._ui.home_options.log").render(bufnr, opts)
-    end,
-    Stash = function(bufnr, opts)
-        require("trunks._ui.home_options.stash").render(bufnr, opts)
-    end,
+    Status = {
+        buffer_name = prefix .. "status",
+        render_fn = function(bufnr, opts)
+            return require("trunks._ui.home_options.status").render(bufnr, opts)
+        end,
+    },
+    Branch = {
+        buffer_name = prefix .. "branch",
+        render_fn = function(bufnr, opts)
+            return require("trunks._ui.home_options.branch").render(bufnr, opts)
+        end,
+    },
+    Log = {
+        buffer_name = prefix .. "log",
+        render_fn = function(bufnr, opts)
+            require("trunks._ui.home_options.log").render(bufnr, opts)
+        end,
+    },
+    Stash = {
+        buffer_name = prefix .. "stash",
+        render_fn = function(bufnr, opts)
+            require("trunks._ui.home_options.stash").render(bufnr, opts)
+        end,
+    },
 }
 
 ---@param bufnr integer
@@ -100,9 +114,9 @@ end
 ---@param tab trunks.TabOption
 ---@param existing_bufnr? integer
 function M.create_and_render_buffer(tab, existing_bufnr)
-    local bufnr = require("trunks._ui.elements").new_buffer({})
-    local ui_render = tab_render_map[tab]
-    ui_render(bufnr, { set_keymaps = set_keymaps, display_strategy = "full" })
+    local ui_opts = tab_render_map[tab]
+    local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = ui_opts.buffer_name })
+    ui_opts.render_fn(bufnr, { set_keymaps = set_keymaps, display_strategy = "full" })
 
     remove_leftover_new_tab_buffer(existing_bufnr)
 end
