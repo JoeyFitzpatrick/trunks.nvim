@@ -1,7 +1,6 @@
 trunks-configuration	trunks.txt	/*trunks-configuration*
 trunks-credits	trunks.txt	/*trunks-credits*
 trunks-custom-commands	trunks.txt	/*trunks-custom-commands*
-trunks-development-and-contributing	trunks.txt	/*trunks-development-and-contributing*
 trunks-installation	trunks.txt	/*trunks-installation*
 trunks-keymaps-for-raw-git-output	trunks.txt	/*trunks-keymaps-for-raw-git-output*
 trunks-miscellaneous-command-changes	trunks.txt	/*trunks-miscellaneous-command-changes*
@@ -24,7 +23,6 @@ trunks-tests	trunks.txt	/*trunks-tests*
 trunks-tests-initialization	trunks.txt	/*trunks-tests-initialization*
 trunks-tests-running	trunks.txt	/*trunks-tests-running*
 trunks-tracking-updates	trunks.txt	/*trunks-tracking-updates*
-trunks-ui-management-(tabs,-windows,-buffers)-user-autocmds	trunks.txt	/*trunks-ui-management-(tabs,-windows,-buffers)-user-autocmds*
 trunks-usage	trunks.txt	/*trunks-usage*
 trunks.AutoDisplayConfiguration	trunks_types.txt	/*trunks.AutoDisplayConfiguration*
 trunks.AutoDisplayKeymaps	trunks_types.txt	/*trunks.AutoDisplayKeymaps*
