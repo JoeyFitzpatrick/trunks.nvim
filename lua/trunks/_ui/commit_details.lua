@@ -50,7 +50,8 @@ end
 function M.set_lines(bufnr, commit, opts)
     local commit_data = {}
     if opts.is_stash then
-        local commit_info_command_builder = require("trunks._core.command").base_command("log -n 1 " .. commit)
+        local commit_info_command_builder =
+            require("trunks._core.command").base_command("log -n 1 --format=medium " .. commit)
         local commit_info = require("trunks._core.run_cmd").run_cmd(commit_info_command_builder)
         for _, line in ipairs(commit_info) do
             table.insert(commit_data, line)
@@ -64,8 +65,9 @@ function M.set_lines(bufnr, commit, opts)
             table.insert(commit_data, line)
         end
     else
-        local command_builder =
-            require("trunks._core.command").base_command("show --stat=10000 --stat-graph-width=40 " .. commit)
+        local command_builder = require("trunks._core.command").base_command(
+            "show --format=medium --stat=10000 --stat-graph-width=40 " .. commit
+        )
 
         commit_data = require("trunks._core.run_cmd").run_cmd(command_builder)
     end
