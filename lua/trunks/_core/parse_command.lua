@@ -2,30 +2,20 @@ local M = {}
 
 ---@param input string
 ---@return string
-local function replace_percent_outside_quotes(input)
-    local in_quotes = false
-    local quote_char = nil
-
-    local parsed_cmd = input:gsub(".", function(c)
-        if not in_quotes then
-            if c == '"' or c == "'" then
-                in_quotes = true
-                quote_char = c
-                return c
-            elseif c == "%" then
-                return vim.api.nvim_buf_get_name(0)
-            else
-                return c
-            end
-        else
-            if c == quote_char then
-                in_quotes = false
-                quote_char = nil
-            end
-            return c
-        end
-    end)
-    return parsed_cmd
+function M.expand_special_characters(input)
+    -- Mirrors fugitive's expand logic: expands %, #, <cword>, etc. with optional
+    -- modifier flags (:p, :h, etc.) and :S for shellescape, while leaving
+    -- quoted strings unexpanded.
+    -- submatch(1)=quoted string, submatch(2)=var, submatch(3)=flags,
+    -- submatch(4)=inner flag group (unused), submatch(5)=:S
+    local var = [[\%(<\%(cword\|cWORD\|cexpr\|cfile\|sfile\|slnum\|afile\|abuf\|amatch\)>\|%\|#<\=\d\+\|##\=\)]]
+    local flag = [[\%(:[p8~.htre]\|:g\=s\(.\).\{-\}\1.\{-\}\1\)]]
+    local quoted = [[\('\%(''\|[^']\)*'\|"\%([^"]\|""\|\\"\)*"\)]]
+    local pattern = quoted .. [[\|\(]] .. var .. [[\)\(]] .. flag .. [=[*\)\(:S\)\=]=]
+    local repl = [[\=empty(submatch(1)) ? (empty(submatch(5)) ? expand(submatch(2).submatch(3)) : ]]
+        .. [[shellescape(expand(submatch(2).submatch(3)))) : ]]
+        .. [[submatch(1)]]
+    return vim.fn.substitute(input, pattern, repl, "g")
 end
 
 ---@param cmd string
@@ -123,7 +113,7 @@ function M.get_git_c_flag(path)
     end
 
     -- If path is "%", expand it to filename
-    path = replace_percent_outside_quotes(path)
+    path = M.expand_special_characters(path)
 
     if is_in_cwd(path) then
         return nil
@@ -141,7 +131,7 @@ end
 ---@param input_args vim.api.keyset.create_user_command.command_args
 ---@return string
 M.parse = function(input_args)
-    local parsed_cmd = replace_percent_outside_quotes(input_args.args)
+    local parsed_cmd = M.expand_special_characters(input_args.args)
     parsed_cmd = parse_subcommand(parsed_cmd)
 
     local is_visual_command = input_args.range == 2
