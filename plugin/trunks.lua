@@ -23,23 +23,26 @@ local function run_git_command(input_args)
         return
     end
 
-    local ui_function = require("trunks._ui.interceptors").get_ui(command_builder)
-    if ui_function then
-        ui_function(command_builder)
-        return
-    end
     local final_cmd = command_builder:build()
-    local display_strategy = require("trunks._constants.command_strategies").get_strategy(final_cmd).display_strategy
+    local strategy = require("trunks._constants.command_strategies").get_strategy(final_cmd)
+    local display_strategy = strategy.display_strategy
     if type(display_strategy) == "function" then
         ---@diagnostic disable-next-line: need-check-nil
         display_strategy = display_strategy(final_cmd)
     end
     if display_strategy == "print" then
         vim.print(vim.fn.system(final_cmd))
-    else
-        local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
-        require("trunks._ui.elements").terminal(bufnr, command_builder:build())
+        return
     end
+
+    local ui_function = require("trunks._ui.interceptors").get_ui(command_builder)
+    if ui_function then
+        ui_function(command_builder)
+        return
+    end
+
+    local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
+    require("trunks._ui.elements").terminal(bufnr, command_builder:build())
 end
 
 ---@param input_args vim.api.keyset.create_user_command.command_args

@@ -61,6 +61,10 @@ function M.get_strategy(cmd, custom_strategy)
         return default_strategy
     end
 
+    if command_strategy.trigger_redraw == true and not command_strategy.display_strategy then
+        command_strategy.display_strategy = M.STRATEGIES.PRINT
+    end
+
     local merged_strategy = vim.tbl_extend("force", M.default, command_strategy, custom_strategy)
     local final_strategy = {}
     for key, value in pairs(merged_strategy) do
@@ -102,11 +106,20 @@ M.add = {
     trigger_redraw = true,
 }
 
-M.annotate = { insert = true }
+M.annotate = { insert = false }
+
+local branch_write_command_args = {
+    "-d",
+    "--delete",
+    "-m",
+    "--move",
+    "-M",
+    "-c",
+    "--copy",
+}
 
 ---@type trunks.Strategy
 M.branch = {
-    display_strategy = M.STRATEGIES.BELOW,
     pty = function(cmd)
         local branch_pty_options = {
             "--color",
@@ -131,16 +144,7 @@ M.branch = {
         return cmd[#cmd] == "branch" or M._cmd_contains_options(cmd, branch_pty_options)
     end,
     trigger_redraw = function(cmd)
-        local args_that_trigger_redraw = {
-            "-d",
-            "--delete",
-            "-m",
-            "--move",
-            "-M",
-            "-c",
-            "--copy",
-        }
-        return M._cmd_contains_options(cmd, args_that_trigger_redraw)
+        return M._cmd_contains_options(cmd, branch_write_command_args)
     end,
 }
 
@@ -150,6 +154,7 @@ M["checkout-index"] = { trigger_redraw = true }
 ---@type trunks.Strategy
 M.commit = {
     trigger_redraw = true,
+    display_strategy = M.STRATEGIES.BELOW,
     tail = true,
     insert = function(cmd)
         local should_not_enter_insert_options = {
@@ -174,9 +179,8 @@ M.commit = {
     end,
 }
 
-M.config = { insert = true }
 M.diff = { display_strategy = M.STRATEGIES.FULL }
-M.fetch = { display_strategy = M.STRATEGIES.BELOW, trigger_redraw = true }
+M.fetch = { trigger_redraw = true }
 M.merge = { insert = true, trigger_redraw = true }
 
 M.notes = {
@@ -188,9 +192,9 @@ M.notes = {
     end,
 }
 
-M.pull = { trigger_redraw = true, tail = true }
-M.push = { trigger_redraw = true, tail = true }
-M.rebase = { insert = true, trigger_redraw = true }
+M.pull = { trigger_redraw = true, display_strategy = M.STRATEGIES.BELOW, tail = true }
+M.push = { trigger_redraw = true, display_strategy = M.STRATEGIES.BELOW, tail = true }
+M.rebase = { insert = true, trigger_redraw = true, display_strategy = M.STRATEGIES.BELOW }
 M.reflog = { display_strategy = M.STRATEGIES.FULL }
 M.reset = { trigger_redraw = true }
 M.revert = { trigger_redraw = true }
@@ -198,6 +202,7 @@ M.show = { display_strategy = M.STRATEGIES.FULL }
 M.stage = { trigger_redraw = true }
 
 M.stash = {
+    display_strategy = M.STRATEGIES.BELOW,
     trigger_redraw = function(cmd)
         local read_only_commands = { "list", "show" }
         if M._cmd_contains_options(cmd, read_only_commands) then
