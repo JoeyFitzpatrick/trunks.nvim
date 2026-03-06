@@ -153,12 +153,9 @@ function M.set_keymaps(bufnr)
     )
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
+    local with_line = require("trunks._ui.keymaps.set").with_line
 
-    set("n", keymaps.show_details, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.show_details, with_line(bufnr, get_line, function(line_data)
         local item_type = line_data.item_type
         if item_type == "commit" then
             require("trunks._ui.trunks_commands.commit_details").render(line_data.commit, {})
@@ -172,19 +169,15 @@ function M.set_keymaps(bufnr)
             open_file_module.open_file_in_split(line_data.filepath, line_data.commit, "right", {})
             vim.cmd("diffthis")
         end
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.open_file_popup, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.open_file_popup, with_line(bufnr, get_line, function(line_data)
         local info = get_open_file_info(line_data)
         if not info then
             return
         end
         require("trunks._ui.popups.open_file_popup").render(info.file_to_open, info.commit_to_use, {})
-    end, keymap_opts)
+    end), keymap_opts)
 end
 
 return M

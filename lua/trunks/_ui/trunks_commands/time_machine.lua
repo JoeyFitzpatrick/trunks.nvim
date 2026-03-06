@@ -208,59 +208,62 @@ local function set_keymaps(bufnr, filename)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "time_machine", { open_file_keymaps = true })
     local keymap_opts = { buffer = bufnr, nowait = true }
     local safe_set_keymap = require("trunks._ui.keymaps.set").safe_set_keymap
+    local with_line = require("trunks._ui.keymaps.set").with_line
 
-    safe_set_keymap("n", keymaps.open_file_popup, function()
-        local ok, line_data = pcall(M._get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-        if not M.cache[filename] or not M.cache[filename][line_data.time_machine_index] then
-            return
-        end
-        local tm_data = M.cache[filename][line_data.time_machine_index]
-        local tm_index = line_data.time_machine_index
-        require("trunks._ui.popups.open_file_popup").render(tm_data.filename, tm_data.hash, {
-            open_file_opts = { original_filename = filename },
-            before_split = function()
-                require("trunks._ui.auto_display").close_auto_display(bufnr, "time_machine")
-            end,
-            after_open = function(new_bufnr)
-                set_file_keymaps(new_bufnr)
-                vim.b[new_bufnr].time_machine_index = tm_index
-                vim.b[new_bufnr].original_filename = filename
-            end,
-        })
-    end, keymap_opts)
+    safe_set_keymap(
+        "n",
+        keymaps.open_file_popup,
+        with_line(bufnr, M._get_line, function(line_data)
+            if not M.cache[filename] or not M.cache[filename][line_data.time_machine_index] then
+                return
+            end
+            local tm_data = M.cache[filename][line_data.time_machine_index]
+            local tm_index = line_data.time_machine_index
+            require("trunks._ui.popups.open_file_popup").render(tm_data.filename, tm_data.hash, {
+                open_file_opts = { original_filename = filename },
+                before_split = function()
+                    require("trunks._ui.auto_display").close_auto_display(bufnr, "time_machine")
+                end,
+                after_open = function(new_bufnr)
+                    set_file_keymaps(new_bufnr)
+                    vim.b[new_bufnr].time_machine_index = tm_index
+                    vim.b[new_bufnr].original_filename = filename
+                end,
+            })
+        end),
+        keymap_opts
+    )
 
-    safe_set_keymap("n", keymaps.commit_details, function()
-        local ok, line_data = pcall(M._get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-        require("trunks._ui.trunks_commands.commit_details").render(line_data.hash, {})
-    end, keymap_opts)
+    safe_set_keymap(
+        "n",
+        keymaps.commit_details,
+        with_line(bufnr, M._get_line, function(line_data)
+            require("trunks._ui.trunks_commands.commit_details").render(line_data.hash, {})
+        end),
+        keymap_opts
+    )
 
-    safe_set_keymap("n", keymaps.diff_against_previous_commit, function()
-        local ok, line_data = pcall(M._get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    safe_set_keymap(
+        "n",
+        keymaps.diff_against_previous_commit,
+        with_line(bufnr, M._get_line, function(line_data)
+            local opened_file_bufnr = open_file(bufnr, filename, "window")
+            if opened_file_bufnr then
+                vim.cmd("Trunks vdiff " .. line_data.hash .. "^")
+            end
+        end),
+        keymap_opts
+    )
 
-        local opened_file_bufnr = open_file(bufnr, filename, "window")
-        if opened_file_bufnr then
-            vim.cmd("Trunks vdiff " .. line_data.hash .. "^")
-        end
-    end, keymap_opts)
-
-    safe_set_keymap("n", keymaps.diff_against_head, function()
-        local ok, line_data = pcall(M._get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-
-        open_file(bufnr, filename, "window")
-        vim.cmd("Trunks vdiff")
-    end, keymap_opts)
+    safe_set_keymap(
+        "n",
+        keymaps.diff_against_head,
+        with_line(bufnr, M._get_line, function()
+            open_file(bufnr, filename, "window")
+            vim.cmd("Trunks vdiff")
+        end),
+        keymap_opts
+    )
 
     safe_set_keymap("n", "q", function()
         time_machine_close(bufnr)
@@ -289,13 +292,9 @@ function M.render(filename)
     set_keymaps(bufnr, filename)
     require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, { "time_machine", "auto_display", "open_files" })
 
+    local with_line = require("trunks._ui.keymaps.set").with_line
     require("trunks._ui.auto_display").create_auto_display(bufnr, "time_machine", {
-        generate_cmd = function()
-            local ok, line_data = pcall(M._get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
-
+        generate_cmd = with_line(bufnr, M._get_line, function(line_data)
             -- Use historical name if found, otherwise fall back to current filename
             local filename_to_use, rename_filename = get_cache_filename(filename, line_data.time_machine_index)
 
@@ -315,14 +314,10 @@ function M.render(filename)
             end
 
             return diff_command_builder:build()
-        end,
-        get_current_diff = function()
-            local ok, line_data = pcall(M._get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
+        end),
+        get_current_diff = with_line(bufnr, M._get_line, function(line_data)
             return line_data.hash
-        end,
+        end),
         strategy = { display_strategy = "below", insert = false, enter = false },
     })
 end

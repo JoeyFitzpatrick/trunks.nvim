@@ -17,35 +17,24 @@ local function set_keymaps(bufnr)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "reflog", {})
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
+    local with_line = require("trunks._ui.keymaps.set").with_line
 
-    set("n", keymaps.checkout, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.checkout, with_line(bufnr, get_line, function(line_data)
         vim.cmd("G checkout " .. line_data.hash)
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.commit_details, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.commit_details, with_line(bufnr, get_line, function(line_data)
         require("trunks._ui.trunks_commands.commit_details").render(line_data.hash, {})
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.recover, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.recover, with_line(bufnr, get_line, function(line_data)
         vim.ui.input({ prompt = "Name for new branch off of " .. line_data.hash .. ": " }, function(input)
             if not input then
                 return
             end
             vim.cmd(string.format("G checkout -b %s %s", input, line_data.hash))
         end)
-    end, keymap_opts)
+    end), keymap_opts)
 
     set("n", keymaps.show, require("trunks._ui.keymaps.base").git_show_keymap_fn(bufnr, get_line), keymap_opts)
 end

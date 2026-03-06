@@ -20,20 +20,13 @@ local function set_keymaps(bufnr)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "stash", { auto_display_keymaps = true })
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
+    local with_line = require("trunks._ui.keymaps.set").with_line
 
-    set("n", keymaps.apply, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.apply, with_line(bufnr, get_line, function(line_data)
         vim.cmd("G stash apply " .. line_data.stash_index)
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.drop, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.drop, with_line(bufnr, get_line, function(line_data)
         if
             require("trunks._ui.utils.confirm").confirm_choice(
                 "Are you sure you want to drop " .. line_data.stash_index .. "?"
@@ -41,23 +34,15 @@ local function set_keymaps(bufnr)
         then
             vim.cmd("G stash drop " .. line_data.stash_index)
         end
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.pop, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.pop, with_line(bufnr, get_line, function(line_data)
         vim.cmd("G stash pop " .. line_data.stash_index)
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.show, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.show, with_line(bufnr, get_line, function(line_data)
         require("trunks._ui.trunks_commands.commit_details").render(line_data.stash_index, { is_stash = true })
-    end, keymap_opts)
+    end), keymap_opts)
 end
 
 ---@param bufnr integer
@@ -73,24 +58,17 @@ function M.render(bufnr, opts)
         { enter = true, display_strategy = "full", trigger_redraw = false, pty = true }
     )
 
+    local with_line = require("trunks._ui.keymaps.set").with_line
     require("trunks._ui.auto_display").create_auto_display(bufnr, "stash", {
-        generate_cmd = function()
-            local ok, line_data = pcall(get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
+        generate_cmd = with_line(bufnr, get_line, function(line_data)
             local diff_command_builder = require("trunks._core.command").base_command(
                 "stash show -p --include-untracked " .. line_data.stash_index
             )
             return diff_command_builder:build()
-        end,
-        get_current_diff = function()
-            local ok, line_data = pcall(get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
+        end),
+        get_current_diff = with_line(bufnr, get_line, function(line_data)
             return line_data.stash_index
-        end,
+        end),
         strategy = { display_strategy = "below", insert = false, trigger_redraw = false, pty = false },
     })
 

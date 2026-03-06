@@ -139,11 +139,7 @@ function M.git_show_keymap_fn(bufnr, get_line, filename)
         end
     end
 
-    return function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    return require("trunks._ui.keymaps.set").with_line(bufnr, get_line, function(line_data)
         local elements = require("trunks._ui.elements")
         local float_bufnr = elements.new_buffer({})
         local float_win = elements.float(float_bufnr, { title = "Git show " .. line_data.hash })
@@ -156,7 +152,7 @@ function M.git_show_keymap_fn(bufnr, get_line, filename)
             vim.api.nvim_win_close(float_win, true)
             require("trunks._core.register").deregister_buffer(float_bufnr)
         end, { buffer = float_bufnr, noremap = true })
-    end
+    end)
 end
 
 return M

@@ -133,41 +133,30 @@ local function set_keymaps(bufnr, commit)
         { open_file_keymaps = true, auto_display_keymaps = true }
     )
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
+    local with_line = require("trunks._ui.keymaps.set").with_line
 
     require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
 
-    set("n", keymaps.edit_file, function()
-        local ok, line_data = pcall(M.get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.edit_file, with_line(bufnr, M.get_line, function(line_data)
         if vim.uv.fs_stat(line_data.filename) then
             require("trunks._core.register").deregister_buffer(bufnr, {})
             vim.cmd.edit(line_data.filename)
         else
             vim.notify("File does not exist: " .. line_data.filename, vim.log.levels.ERROR)
         end
-    end, { buffer = bufnr })
+    end), { buffer = bufnr })
 
-    set("n", keymaps.restore_popup, function()
-        local ok, line_data = pcall(M.get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.restore_popup, with_line(bufnr, M.get_line, function(line_data)
         require("trunks._ui.popups.restore_popup").render(line_data.filename, commit)
-    end, { buffer = bufnr })
+    end), { buffer = bufnr })
 
-    set("n", keymaps.open_file_popup, function()
-        local ok, line_data = pcall(M.get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.open_file_popup, with_line(bufnr, M.get_line, function(line_data)
         require("trunks._ui.popups.open_file_popup").render(line_data.filename, commit, {
             before_split = function()
                 require("trunks._ui.auto_display").close_auto_display(bufnr, "commit_details")
             end,
         })
-    end, keymap_opts)
+    end), keymap_opts)
 
     set("n", keymaps.show_all_changes, function()
         vim.cmd("G show " .. commit)
@@ -194,13 +183,9 @@ function M.render(commit, opts)
     local bufnr, win = require("trunks._ui.elements").new_buffer({ filetype = "git", show = true })
     M.set_lines(bufnr, commit, opts)
 
+    local with_line = require("trunks._ui.keymaps.set").with_line
     require("trunks._ui.auto_display").create_auto_display(bufnr, "commit_details", {
-        generate_cmd = function()
-            local ok, line_data = pcall(M.get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
-
+        generate_cmd = with_line(bufnr, M.get_line, function(line_data)
             local Command = require("trunks._core.command")
             local command_builder
 
@@ -225,14 +210,10 @@ function M.render(commit, opts)
             end
 
             return command_builder:build()
-        end,
-        get_current_diff = function()
-            local ok, line_data = pcall(M.get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
+        end),
+        get_current_diff = with_line(bufnr, M.get_line, function(line_data)
             return line_data.filename
-        end,
+        end),
         strategy = { display_strategy = "below", win_size = 0.67, insert = false, enter = false },
     })
 

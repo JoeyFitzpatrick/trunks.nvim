@@ -23,6 +23,7 @@ local function set_keymaps(bufnr)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "log", {})
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
+    local with_line = require("trunks._ui.keymaps.set").with_line
 
     local keymap_to_command_map = {
         { keymap = keymaps.pull, command = "pull" },
@@ -46,20 +47,12 @@ local function set_keymaps(bufnr)
     }
 
     for _, mapping in ipairs(keymap_with_hash_to_command_map) do
-        set("n", mapping.keymap, function()
-            local ok, line_data = pcall(get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
+        set("n", mapping.keymap, with_line(bufnr, get_line, function(line_data)
             vim.cmd(mapping.command .. " " .. line_data.hash)
-        end, keymap_opts)
+        end), keymap_opts)
     end
 
-    set("n", keymaps.commit_drop, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.commit_drop, with_line(bufnr, get_line, function(line_data)
         if
             require("trunks._ui.utils.confirm").confirm_choice(
                 "Are you sure you want to drop commit " .. line_data.hash .. "?"
@@ -67,40 +60,28 @@ local function set_keymaps(bufnr)
         then
             vim.cmd("Trunks commit-drop " .. line_data.hash)
         end
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.reset, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.reset, with_line(bufnr, get_line, function(line_data)
         vim.ui.select({ "mixed", "soft", "hard" }, { prompt = "Git reset type: " }, function(selection)
             require("trunks._core.run_cmd").run_hidden_cmd("git reset --" .. selection .. " " .. line_data.hash)
         end)
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.revert, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.revert, with_line(bufnr, get_line, function(line_data)
         require("trunks._core.run_cmd").run_hidden_cmd("git revert " .. line_data.hash .. " --no-commit")
         if vim.v.shell_error == 0 then
             vim.notify("Reverted commit " .. line_data.hash .. " and staged changes")
             require("trunks._core.run_cmd").run_hidden_cmd("git revert --quit")
         end
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.revert_and_commit, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.revert_and_commit, with_line(bufnr, get_line, function(line_data)
         vim.cmd("G revert " .. line_data.hash)
         if vim.v.shell_error == 0 then
             vim.notify("Reverted commit " .. line_data.hash)
         end
-    end, keymap_opts)
+    end), keymap_opts)
 
     set("n", keymaps.show, require("trunks._ui.keymaps.base").git_show_keymap_fn(bufnr, get_line), keymap_opts)
 end

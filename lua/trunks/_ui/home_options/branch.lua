@@ -21,6 +21,7 @@ local function set_keymaps(bufnr)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "branch", {})
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
+    local with_line = require("trunks._ui.keymaps.set").with_line
 
     ---@param branch_name string
     ---@param delete_type "local" | "remote" | "both"
@@ -75,12 +76,7 @@ local function set_keymaps(bufnr)
         end
     end
 
-    set("n", keymaps.delete, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-
+    set("n", keymaps.delete, with_line(bufnr, get_line, function(line_data)
         require("trunks._ui.popups.popup").render_popup({
             buffer_name = "TrunksDeleteBranch",
             title = "Delete Branch",
@@ -108,7 +104,7 @@ local function set_keymaps(bufnr)
                 },
             },
         })
-    end, keymap_opts)
+    end), keymap_opts)
 
     local keymap_to_command_map = {
         { keymap = keymaps.pull, command = "pull" },
@@ -124,23 +120,15 @@ local function set_keymaps(bufnr)
         end, keymap_opts)
     end
 
-    set("n", keymaps.log, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.log, with_line(bufnr, get_line, function(line_data)
         local log_bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = "TrunksLog-" .. os.tmpname() })
         require("trunks._ui.home_options.log").render(
             log_bufnr,
             { start_line = 0, command_builder = Command.base_command("log " .. line_data.branch_name) }
         )
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.new_branch, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.new_branch, with_line(bufnr, get_line, function(line_data)
         vim.ui.input({ prompt = "Name for new branch off of " .. line_data.branch_name .. ": " }, function(input)
             if not input then
                 return
@@ -150,26 +138,18 @@ local function set_keymaps(bufnr)
                 return
             end
         end)
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.rename, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.rename, with_line(bufnr, get_line, function(line_data)
         vim.ui.input({ prompt = "New name for branch " .. line_data.branch_name .. ": " }, function(input)
             if not input then
                 return
             end
             run_cmd.run_hidden_cmd(string.format("branch -m %s %s", line_data.branch_name, input), { rerender = true })
         end)
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.spinoff, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.spinoff, with_line(bufnr, get_line, function(line_data)
         vim.ui.input({ prompt = "Name for new branch off of " .. line_data.branch_name .. ": " }, function(input)
             if not input then
                 return
@@ -192,18 +172,14 @@ local function set_keymaps(bufnr)
                 { rerender = true }
             )
         end)
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.switch, function()
-        local ok, line_data = pcall(get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.switch, with_line(bufnr, get_line, function(line_data)
         local result = run_cmd.run_hidden_cmd("switch " .. line_data.branch_name)
         if result == "error" then
             return
         end
-    end, keymap_opts)
+    end), keymap_opts)
 end
 
 ---@param bufnr integer

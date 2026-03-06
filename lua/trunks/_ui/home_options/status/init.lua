@@ -43,12 +43,9 @@ function M.set_keymaps(bufnr)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "status", ui_keymap_opts)
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
+    local with_line = require("trunks._ui.keymaps.set").with_line
 
-    set("n", keymaps.stage, function()
-        local ok, line_data = pcall(M.get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.stage, with_line(bufnr, M.get_line, function(line_data)
         if not require("trunks._core.git").is_staged(line_data.status) then
             require("trunks._core.run_cmd").run_hidden_cmd("git add -- " .. line_data.filename, { rerender = true })
         else
@@ -57,7 +54,7 @@ function M.set_keymaps(bufnr)
                 { rerender = true }
             )
         end
-    end, keymap_opts)
+    end), keymap_opts)
 
     set("v", keymaps.stage, function()
         local visual_start_line, end_line = require("trunks._ui.utils.ui_utils").get_visual_line_nums()
@@ -107,19 +104,11 @@ function M.set_keymaps(bufnr)
         require("trunks._ui.popups.commit_popup").render()
     end, keymap_opts)
 
-    set("n", keymaps.diff_file, function()
-        local ok, line_data = pcall(M.get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.diff_file, with_line(bufnr, M.get_line, function(line_data)
         vim.api.nvim_exec2("G diff " .. line_data.filename, {})
-    end, keymap_opts)
+    end), keymap_opts)
 
-    set("n", keymaps.edit_file, function()
-        local ok, line_data = pcall(M.get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", keymaps.edit_file, with_line(bufnr, M.get_line, function(line_data)
         local current_buffer = vim.api.nvim_get_current_buf()
         -- Deregister current buffer so it doesn't hang around
         require("trunks._core.register").deregister_buffer(current_buffer)
@@ -130,7 +119,7 @@ function M.set_keymaps(bufnr)
             vim.cmd("tabclose")
         end
         vim.api.nvim_exec2("e " .. line_data.filename, {})
-    end, keymap_opts)
+    end), keymap_opts)
 
     set("n", keymaps.restore, function()
         -- We need to pass in line_num, otherwise it uses cursor position from popup
@@ -265,11 +254,7 @@ function M.set_keymaps(bufnr)
         require("trunks._ui.popups.stash_popup").render()
     end, keymap_opts)
 
-    set("n", "<S-Tab>", function()
-        local ok, line_data = pcall(M.get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
+    set("n", "<S-Tab>", with_line(bufnr, M.get_line, function(line_data)
         if require("trunks._core.git").is_modified(line_data.status) then
             if vim.b[bufnr].trunks_show_unstaged_for == line_data.filename then
                 vim.b[bufnr].trunks_show_unstaged_for = nil
@@ -278,7 +263,7 @@ function M.set_keymaps(bufnr)
             end
             require("trunks._ui.auto_display").refresh(bufnr)
         end
-    end, keymap_opts)
+    end), keymap_opts)
 end
 
 ---@param status string
@@ -320,12 +305,9 @@ function M.render(bufnr, opts)
 
     local win = term.win
     local Command = require("trunks._core.command")
+    local with_line = require("trunks._ui.keymaps.set").with_line
     require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
-        generate_cmd = function()
-            local ok, line_data = pcall(M.get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
+        generate_cmd = with_line(bufnr, M.get_line, function(line_data)
             local last_file = vim.b[bufnr].trunks_last_file
             if last_file ~= line_data.filename then
                 vim.b[bufnr].trunks_show_unstaged_for = nil
@@ -335,14 +317,10 @@ function M.render(bufnr, opts)
                 get_diff_cmd(line_data.status, line_data.safe_filename, line_data.filename, bufnr)
             )
                 :build()
-        end,
-        get_current_diff = function()
-            local ok, line_data = pcall(M.get_line, bufnr)
-            if not ok or not line_data then
-                return
-            end
+        end),
+        get_current_diff = with_line(bufnr, M.get_line, function(line_data)
             return line_data.safe_filename
-        end,
+        end),
         strategy = { enter = false, display_strategy = "below", pty = false },
     })
     M.set_keymaps(bufnr)
