@@ -28,7 +28,7 @@ local PAGER_COMMANDS = {
     diff = true,
     show = true,
     stash = { "-p" },
-    log = { "-p" },
+    log = { "-p", "-L" },
 }
 
 local PAGERS = require("trunks._constants.pagers").PAGERS
