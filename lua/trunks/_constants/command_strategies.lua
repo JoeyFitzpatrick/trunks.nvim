@@ -110,6 +110,7 @@ M.annotate = { insert = false }
 
 local branch_write_command_args = {
     "-d",
+    "-D",
     "--delete",
     "-m",
     "--move",
