@@ -1,4 +1,4 @@
----@alias trunks.DisplayStrategy "above" | "below" | "right" | "left" | "full"
+---@alias trunks.DisplayStrategy "above" | "below" | "right" | "left" | "full" | "print"
 ---@alias trunks.DisplayStrategyParser fun(cmd: string[]): trunks.DisplayStrategy
 ---@alias trunks.DisplayStrategyBoolParser fun(cmd: string[]): boolean
 
@@ -80,6 +80,7 @@ M.STRATEGIES = {
     RIGHT = "right",
     LEFT = "left",
     FULL = "full",
+    PRINT = "print",
 }
 
 M.default = {
@@ -95,7 +96,7 @@ M.add = {
         if is_full_screen_command(cmd) then
             return M.STRATEGIES.FULL
         end
-        return M.STRATEGIES.BELOW
+        return M.STRATEGIES.PRINT
     end,
     insert = is_full_screen_command,
     trigger_redraw = true,
