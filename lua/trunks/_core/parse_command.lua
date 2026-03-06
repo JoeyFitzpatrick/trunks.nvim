@@ -138,8 +138,7 @@ M.parse = function(input_args)
     local parsed_cmd = M.expand_special_characters(input_args.args)
     parsed_cmd = parse_subcommand(parsed_cmd)
 
-    local is_visual_command = input_args.range == 2
-    if is_visual_command then
+    if require("trunks._ui.utils.ui_utils").is_visual_command(input_args) then
         parsed_cmd = parse_visual_command(parsed_cmd, input_args)
     end
     return parsed_cmd

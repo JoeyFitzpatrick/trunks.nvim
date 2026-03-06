@@ -11,18 +11,25 @@ function M.get_visual_line_nums()
     return start, ending
 end
 
+---@param input_args vim.api.keyset.create_user_command.command_args
+function M.is_visual_command(input_args)
+    local mode = vim.api.nvim_get_mode().mode
+    local in_visual_mode = mode:match("^v") or mode:match("^V") or mode:match(vim.keycode("^<c-v>"))
+    return input_args.range == 2 or in_visual_mode
+end
+
 --- Return the text from the last visual selection.
 ---@return string
 function M.get_visual_selection()
-    local text = ""
-    local maxcol = vim.v.maxcol
-    local region = vim.region(0, "'<", "'>", vim.fn.visualmode(), true)
-    for line, cols in vim.spairs(region) do
-        local endcol = cols[2] == maxcol and -1 or cols[2]
-        local chunk = vim.api.nvim_buf_get_text(0, line, cols[1], line, endcol, {})[1]
-        text = ("%s%s"):format(text, chunk)
+    local mode = vim.api.nvim_get_mode().mode
+    local in_visual_mode = mode:match("^v") or mode:match("^V") or mode:match(vim.keycode("^<c-v>"))
+    local text
+    if in_visual_mode then
+        text = vim.fn.getregion(vim.fn.getpos("v"), vim.fn.getpos("."))
+    else
+        text = vim.fn.getregion(vim.fn.getpos("'<"), vim.fn.getpos("'>"))
     end
-    return text
+    return text[1]
 end
 
 function M.get_start_line(bufnr)
