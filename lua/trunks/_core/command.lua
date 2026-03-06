@@ -82,10 +82,12 @@ function Command.base_command(cmd, filename)
     self._env_vars = {}
     self._pager = get_pager(cmd)
 
-    -- If the current buffer is outside cwd when this Command is instatiated, add a -C flag
+    -- If the current buffer is outside cwd when this Command is instatiated, add a -C flag.
+    -- Also disable auto-gc to avoid lock conflicts with other processes in the external repo.
     local git_c_flag = require("trunks._core.parse_command").get_git_c_flag(filename)
     if git_c_flag then
         table.insert(self._prefix, git_c_flag)
+        table.insert(self._prefix_args, "-c gc.auto=0")
     end
 
     return self

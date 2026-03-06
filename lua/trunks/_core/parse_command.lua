@@ -68,7 +68,7 @@ local function is_in_cwd(filepath)
     if not cwd then
         return false
     end
-    return vim.startswith(filepath, cwd)
+    return vim.startswith(filepath, cwd .. "/") or filepath == cwd
 end
 
 ---@param path string
@@ -77,7 +77,7 @@ function M._find_git_root(path)
     local uv = vim.loop
     local function exists(p)
         local stat = uv.fs_stat(p)
-        return stat and stat.type == "directory"
+        return stat ~= nil
     end
     path = vim.fn.fnamemodify(path, ":p")
     while path and path ~= "/" do
