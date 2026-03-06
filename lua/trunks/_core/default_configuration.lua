@@ -87,11 +87,20 @@ return {
         },
     },
     open_files = {
-        keymaps = { -- When available, these open file under cursor in various UIs
-            open_in_current_window = "ow",
-            open_in_horizontal_split = "oh",
-            open_in_new_tab = "ot",
-            open_in_vertical_split = "ov",
+        keymaps = { -- When available, trigger the open file popup
+            open_file_popup = "o",
+        },
+    },
+    open_file_popup = {
+        keymaps = { -- Keys used inside the open file popup
+            open_in_current_window = "w",
+            open_in_horizontal_split = "h",
+            open_in_new_tab = "t",
+            open_in_vertical_split = "v",
+            open_previous_in_current_window = "W",
+            open_previous_in_horizontal_split = "H",
+            open_previous_in_new_tab = "T",
+            open_previous_in_vertical_split = "V",
         },
     },
     reflog = {

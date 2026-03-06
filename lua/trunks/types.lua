@@ -20,6 +20,7 @@
 ---@field git_filetype? trunks.GitFiletypeConfiguration
 ---@field log? trunks.LogConfiguration
 ---@field open_files? trunks.OpenFilesConfiguration
+---@field open_file_popup? trunks.OpenFilePopupConfiguration
 ---@field reflog? trunks.ReflogConfiguration
 ---@field restore_popup? trunks.RestorePopupConfiguration
 ---@field stash? trunks.StashConfiguration
@@ -57,6 +58,9 @@
 
 ---@class trunks.OpenFilesConfiguration
 ---@field keymaps? trunks.OpenFilesKeymaps
+
+---@class trunks.OpenFilePopupConfiguration
+---@field keymaps? trunks.OpenFilePopupKeymaps
 
 ---@class trunks.ReflogConfiguration
 ---@field keymaps? trunks.ReflogKeymaps
@@ -138,10 +142,17 @@
 ---@field show? string
 
 ---@class trunks.OpenFilesKeymaps
+---@field open_file_popup? string
+
+---@class trunks.OpenFilePopupKeymaps
 ---@field open_in_current_window? string
 ---@field open_in_horizontal_split? string
 ---@field open_in_new_tab? string
 ---@field open_in_vertical_split? string
+---@field open_previous_in_current_window? string
+---@field open_previous_in_horizontal_split? string
+---@field open_previous_in_new_tab? string
+---@field open_previous_in_vertical_split? string
 
 ---@class trunks.ReflogKeymaps
 ---@field checkout? string

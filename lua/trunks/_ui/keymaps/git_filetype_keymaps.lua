@@ -130,34 +130,17 @@ local function get_line(bufnr)
 end
 
 ---@param line_data trunks.GitFiletypeLineData | nil
----@param open_type "tab" | "window" | "vertical" | "horizontal"
 ---@return { file_to_open: string, commit_to_use: string } | nil
-local function open_file(line_data, open_type)
+local function get_open_file_info(line_data)
     if not line_data then
         return nil
     end
-
-    local file_to_open, commit_to_use = nil, nil
     if line_data.item_type == "filepath" then
-        file_to_open = line_data.filepath
-        commit_to_use = line_data.commit
+        return { file_to_open = line_data.filepath, commit_to_use = line_data.commit }
     elseif line_data.item_type == "previous_filepath" then
-        file_to_open = line_data.previous_filepath
-        commit_to_use = line_data.previous_commit
+        return { file_to_open = line_data.previous_filepath, commit_to_use = line_data.previous_commit }
     end
-    if not file_to_open or not commit_to_use then
-        return nil
-    end
-
-    if open_type == "tab" then
-        open_file_module.open_file_in_tab(file_to_open, commit_to_use, {})
-    elseif open_type == "window" then
-        open_file_module.open_file_in_current_window(file_to_open, commit_to_use, {})
-    elseif open_type == "vertical" then
-        open_file_module.open_file_in_split(file_to_open, commit_to_use, "right", {})
-    elseif open_type == "horizontal" then
-        open_file_module.open_file_in_split(file_to_open, commit_to_use, "below", {})
-    end
+    return nil
 end
 
 ---@param bufnr integer
@@ -191,20 +174,16 @@ function M.set_keymaps(bufnr)
         end
     end, keymap_opts)
 
-    set("n", keymaps.open_in_current_window, function()
-        open_file(get_line(bufnr), "window")
-    end, keymap_opts)
-
-    set("n", keymaps.open_in_horizontal_split, function()
-        open_file(get_line(bufnr), "horizontal")
-    end, keymap_opts)
-
-    set("n", keymaps.open_in_new_tab, function()
-        open_file(get_line(bufnr), "tab")
-    end, keymap_opts)
-
-    set("n", keymaps.open_in_vertical_split, function()
-        open_file(get_line(bufnr), "vertical")
+    set("n", keymaps.open_file_popup, function()
+        local ok, line_data = pcall(get_line, bufnr)
+        if not ok or not line_data then
+            return
+        end
+        local info = get_open_file_info(line_data)
+        if not info then
+            return
+        end
+        require("trunks._ui.popups.open_file_popup").render(info.file_to_open, info.commit_to_use, {})
     end, keymap_opts)
 end
 

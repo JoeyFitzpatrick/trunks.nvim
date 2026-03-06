@@ -157,38 +157,16 @@ local function set_keymaps(bufnr, commit)
         require("trunks._ui.popups.restore_popup").render(line_data.filename, commit)
     end, { buffer = bufnr })
 
-    set("n", keymaps.open_in_current_window, function()
+    set("n", keymaps.open_file_popup, function()
         local ok, line_data = pcall(M.get_line, bufnr)
         if not ok or not line_data then
             return
         end
-        require("trunks._core.open_file").open_file_in_current_window(line_data.filename, commit, {})
-    end, keymap_opts)
-
-    set("n", keymaps.open_in_horizontal_split, function()
-        local ok, line_data = pcall(M.get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-        require("trunks._ui.auto_display").close_auto_display(bufnr, "commit_details")
-        require("trunks._core.open_file").open_file_in_split(line_data.filename, commit, "below", {})
-    end, keymap_opts)
-
-    set("n", keymaps.open_in_new_tab, function()
-        local ok, line_data = pcall(M.get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-        require("trunks._core.open_file").open_file_in_tab(line_data.filename, commit, {})
-    end, keymap_opts)
-
-    set("n", keymaps.open_in_vertical_split, function()
-        local ok, line_data = pcall(M.get_line, bufnr)
-        if not ok or not line_data then
-            return
-        end
-        require("trunks._ui.auto_display").close_auto_display(bufnr, "commit_details")
-        require("trunks._core.open_file").open_file_in_split(line_data.filename, commit, "right", {})
+        require("trunks._ui.popups.open_file_popup").render(line_data.filename, commit, {
+            before_split = function()
+                require("trunks._ui.auto_display").close_auto_display(bufnr, "commit_details")
+            end,
+        })
     end, keymap_opts)
 
     set("n", keymaps.show_all_changes, function()

@@ -76,10 +76,18 @@ M.long_descriptions = {
     },
     ---@type trunks.OpenFilesKeymaps
     open_files = {
-        open_in_current_window = "Open file at this commit in current window",
-        open_in_horizontal_split = "Open file at this commit in a horizontal split",
-        open_in_new_tab = "Open file at this commit in a new tab",
-        open_in_vertical_split = "Open file at this commit in a vertical split",
+        open_file_popup = "Open file popup",
+    },
+    ---@type trunks.OpenFilePopupKeymaps
+    open_file_popup = {
+        open_in_current_window = "Open at this commit in current window",
+        open_in_horizontal_split = "Open at this commit in a horizontal split",
+        open_in_new_tab = "Open at this commit in a new tab",
+        open_in_vertical_split = "Open at this commit in a vertical split",
+        open_previous_in_current_window = "Open at previous commit in current window",
+        open_previous_in_horizontal_split = "Open at previous commit in a horizontal split",
+        open_previous_in_new_tab = "Open at previous commit in a new tab",
+        open_previous_in_vertical_split = "Open at previous commit in a vertical split",
     },
     ---@type trunks.ReflogKeymaps
     reflog = {
@@ -188,6 +196,8 @@ add_description("stash", "show", "Details")
 add_description("status", "commit_popup", "Commit")
 add_description("status", "restore", "Discard")
 add_description("status", "stash_popup", "Stash")
+
+add_description("open_files", "open_file_popup", "Open file")
 
 add_description("time_machine", "commit_details", "Details")
 add_description("time_machine", "diff_against_head", "Diff against HEAD")

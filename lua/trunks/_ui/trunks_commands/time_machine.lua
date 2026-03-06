@@ -209,20 +209,27 @@ local function set_keymaps(bufnr, filename)
     local keymap_opts = { buffer = bufnr, nowait = true }
     local safe_set_keymap = require("trunks._ui.keymaps.set").safe_set_keymap
 
-    safe_set_keymap("n", keymaps.open_in_current_window, function()
-        open_file(bufnr, filename, "window")
-    end, keymap_opts)
-
-    safe_set_keymap("n", keymaps.open_in_horizontal_split, function()
-        open_file(bufnr, filename, "horizontal")
-    end, keymap_opts)
-
-    safe_set_keymap("n", keymaps.open_in_new_tab, function()
-        open_file(bufnr, filename, "tab")
-    end, keymap_opts)
-
-    safe_set_keymap("n", keymaps.open_in_vertical_split, function()
-        open_file(bufnr, filename, "vertical")
+    safe_set_keymap("n", keymaps.open_file_popup, function()
+        local ok, line_data = pcall(M._get_line, bufnr)
+        if not ok or not line_data then
+            return
+        end
+        if not M.cache[filename] or not M.cache[filename][line_data.time_machine_index] then
+            return
+        end
+        local tm_data = M.cache[filename][line_data.time_machine_index]
+        local tm_index = line_data.time_machine_index
+        require("trunks._ui.popups.open_file_popup").render(tm_data.filename, tm_data.hash, {
+            open_file_opts = { original_filename = filename },
+            before_split = function()
+                require("trunks._ui.auto_display").close_auto_display(bufnr, "time_machine")
+            end,
+            after_open = function(new_bufnr)
+                set_file_keymaps(new_bufnr)
+                vim.b[new_bufnr].time_machine_index = tm_index
+                vim.b[new_bufnr].original_filename = filename
+            end,
+        })
     end, keymap_opts)
 
     safe_set_keymap("n", keymaps.commit_details, function()
