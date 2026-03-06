@@ -1,6 +1,11 @@
---- All `trunks` command definitions.
-
 local PREFIX = "G"
+
+local function run_switch_command()
+    local branches = vim.fn.systemlist("git branch --all")
+    vim.ui.select(branches, { prompt = "Git Branches" }, function(selection)
+        vim.cmd("G switch " .. selection)
+    end)
+end
 
 ---@param input_args vim.api.keyset.create_user_command.command_args
 local function run_git_command(input_args)
@@ -34,6 +39,10 @@ end
 
 vim.api.nvim_create_user_command(PREFIX, function(input_args)
     require("trunks")
+    if input_args.fargs[1] == "switch" and #input_args.fargs == 1 then
+        run_switch_command()
+        return
+    end
     run_git_command(input_args)
 end, {
     nargs = "*",
