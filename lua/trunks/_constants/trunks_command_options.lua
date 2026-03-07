@@ -6,6 +6,7 @@ M.options = {
     ["commit-drop"] = {},
     ["commit-instant-fixup"] = {},
     edit = {},
+    ["log-qf"] = {},
     hdiff = { completion_type = "branch" },
     vdiff = { completion_type = "branch" },
     ["time-machine"] = { completion_type = "filepath" },
