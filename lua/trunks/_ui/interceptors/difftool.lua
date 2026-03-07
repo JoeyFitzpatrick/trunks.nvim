@@ -217,6 +217,7 @@ function M.render(command_builder)
     local diff_qf_tab_id = vim.api.nvim_get_current_tabpage()
 
     local virtual_buffers = require("trunks._core.virtual_buffers")
+    local git_root = require("trunks._core.parse_command")._find_git_root(vim.loop.cwd()) or vim.loop.cwd()
     local flattened_qf_locations = {}
     local found_filenames = {}
     local filenames = {}
@@ -226,7 +227,7 @@ function M.render(command_builder)
             -- Use virtual URI if right_commit is set (comparing two commits, not working tree)
             local qf_filename
             if right_commit then
-                qf_filename = virtual_buffers.create_uri(right_commit, location.filename)
+                qf_filename = virtual_buffers.create_uri(git_root, right_commit, location.filename)
             else
                 qf_filename = location.filename
             end

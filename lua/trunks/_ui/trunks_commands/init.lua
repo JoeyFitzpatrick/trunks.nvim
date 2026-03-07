@@ -47,6 +47,10 @@ local cmd_map = {
         require("trunks._ui.trunks_commands.commit_instant_fixup").commit_instant_fixup(hash)
     end,
 
+    edit = function(args)
+        require("trunks._ui.trunks_commands.edit").render(args)
+    end,
+
     ["time-machine"] = function(cmd)
         local filename = vim.split(cmd, " ")[2]
         local output, exit_code = require("trunks._ui.trunks_commands.time_machine").render(filename)

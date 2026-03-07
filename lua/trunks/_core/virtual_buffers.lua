@@ -1,52 +1,124 @@
 ---@class trunks.VirtualBufferUri
+---@field git_root string The absolute path to the git repository root
 ---@field commit string The commit hash
 ---@field filepath string The file path within the repository
 
 local M = {}
 
----Create a virtual buffer URI for a file at a specific commit
----@param commit string The commit hash or reference
+-- URI format: trunks://<git_root>//commit/<hash>/<filepath>
+--             trunks://<git_root>//show/<ref>
+-- The `//` separates the git root from the object spec.
+
+---@param git_root string Absolute path to git repository root
+---@param commit string
 ---@param filepath string The file path (should not start with /)
 ---@return string uri The trunks:// URI
-function M.create_uri(commit, filepath)
-    -- Normalize filepath to not start with /
+function M.create_uri(git_root, commit, filepath)
     local normalized_path = filepath:gsub("^/+", "")
-    return string.format("trunks://commit/%s/%s", commit, normalized_path)
+    return string.format("trunks://%s//commit/%s/%s", git_root, commit, normalized_path)
 end
 
----Parse a virtual buffer URI into its components
----@param uri string The trunks:// URI
----@return string|nil commit The commit hash, or nil if parse fails
----@return string|nil filepath The file path, or nil if parse fails
+---@param git_root string Absolute path to git repository root
+---@param ref string A git ref (commit hash, branch, tag, etc.)
+---@return string uri The trunks:// URI for a git show view
+function M.create_show_uri(git_root, ref)
+    return string.format("trunks://%s//show/%s", git_root, ref)
+end
+
+---@param uri string
+---@return string|nil git_root
+---@return string|nil commit
+---@return string|nil filepath
 function M.parse_uri(uri)
-    local commit, filepath = uri:match("^trunks://commit/([^/]+)/(.+)$")
-    return commit, filepath
+    local rest = uri:sub(#"trunks://" + 1)
+    local sep = rest:find("//", 1, true)
+    if not sep then
+        return nil, nil, nil
+    end
+    local git_root = rest:sub(1, sep - 1)
+    local spec = rest:sub(sep + 2)
+    local commit, filepath = spec:match("^commit/([^/]+)/(.+)$")
+    return git_root ~= "" and git_root or nil, commit, filepath
 end
 
----Check if a buffer name is a virtual buffer URI
----@param bufname string The buffer name to check
+---@param uri string
+---@return string|nil git_root
+---@return string|nil ref
+function M.parse_show_uri(uri)
+    local rest = uri:sub(#"trunks://" + 1)
+    local sep = rest:find("//", 1, true)
+    if not sep then
+        return nil, nil
+    end
+    local git_root = rest:sub(1, sep - 1)
+    local spec = rest:sub(sep + 2)
+    local ref = spec:match("^show/(.+)$")
+    return git_root ~= "" and git_root or nil, ref
+end
+
+---@param bufname string
 ---@return boolean
 function M.is_virtual_uri(bufname)
     return vim.startswith(bufname, "trunks://")
 end
 
----Load content for a virtual buffer
+---Run a git subcommand in the given repository root, without pager.
+---@param git_root string|nil
+---@param subcmd string
+---@return string[], integer
+local function run_git(git_root, subcmd)
+    local cmd_obj = require("trunks._core.command").base_command(subcmd, git_root)
+    cmd_obj._pager = nil
+    local output = vim.fn.systemlist(cmd_obj:build())
+    return output, vim.v.shell_error
+end
+
+---@param bufnr integer
+---@param output string[]
+---@param filetype string|nil
+local function set_buffer_content(bufnr, output, filetype)
+    vim.bo[bufnr].modifiable = true
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, output)
+    vim.bo[bufnr].modified = false
+    vim.bo[bufnr].modifiable = false
+    vim.bo[bufnr].buftype = "nofile"
+    vim.bo[bufnr].bufhidden = "hide"
+    if filetype then
+        vim.bo[bufnr].filetype = filetype
+    end
+    require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
+end
+
 ---@param bufnr integer
 ---@param uri string
 ---@return boolean success
 local function load_virtual_buffer_content(bufnr, uri)
-    local commit, filepath = M.parse_uri(uri)
+    -- Handle trunks://<root>//show/<ref> URIs
+    local git_root, show_ref = M.parse_show_uri(uri)
+    if show_ref then
+        local output, exit_code = run_git(git_root, string.format("show --pretty=medium %s", show_ref))
+        if exit_code ~= 0 or not output or #output == 0 then
+            vim.notify("Trunks: failed to run git show for '" .. show_ref .. "'", vim.log.levels.ERROR)
+            return false
+        end
+        set_buffer_content(bufnr, output, "git")
+        vim.b[bufnr].trunks_ref = show_ref
+        require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
+        return true
+    end
+
+    -- Handle trunks://<root>//commit/<hash>/<filepath> URIs
+    local commit, filepath
+    git_root, commit, filepath = M.parse_uri(uri)
 
     if not commit or not filepath then
         vim.notify("Invalid trunks:// URI: " .. uri, vim.log.levels.ERROR)
         return false
     end
 
-    -- Run git command to get file content
-    local cmd = string.format("git show %s:%s", commit, filepath)
-    local output = require("trunks._core.run_cmd").run_cmd(cmd, { no_pager = true })
+    local output, exit_code = run_git(git_root, string.format("show %s:%s", commit, filepath))
 
-    if not output or #output == 0 then
+    if exit_code ~= 0 or not output or #output == 0 then
         vim.notify(
             string.format("Failed to read file %s at commit %s", filepath, commit:sub(1, 7)),
             vim.log.levels.ERROR
@@ -54,34 +126,18 @@ local function load_virtual_buffer_content(bufnr, uri)
         return false
     end
 
-    -- Clear the buffer and populate with git output
-    vim.bo[bufnr].modifiable = true
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, output)
-
-    -- Set buffer options
-    vim.bo[bufnr].modified = false
-    vim.bo[bufnr].modifiable = false
-    vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].bufhidden = "hide"
-
-    -- Set filetype for syntax highlighting
     local ft = vim.filetype.match({ filename = filepath })
-    if ft then
-        vim.bo[bufnr].filetype = ft
-    end
+    set_buffer_content(bufnr, output, ft)
 
-    -- Store metadata for later use
     vim.b[bufnr].trunks_commit = commit
     vim.b[bufnr].trunks_filepath = filepath
 
     return true
 end
 
----Setup autocommands to handle virtual buffer URIs
 function M.setup()
     local group = vim.api.nvim_create_augroup("TrunksVirtualBuffers", { clear = true })
 
-    -- Handle reading virtual buffers
     vim.api.nvim_create_autocmd("BufReadCmd", {
         group = group,
         pattern = "trunks://*",
@@ -105,17 +161,6 @@ function M.setup()
             end
         end,
         desc = "Trunks: Ensure virtual buffer content is loaded",
-    })
-
-    -- Handle write attempts (disallow writing to past commits)
-    vim.api.nvim_create_autocmd("BufWriteCmd", {
-        group = group,
-        pattern = "trunks://*",
-        callback = function(args)
-            vim.notify("Cannot write to a git commit buffer", vim.log.levels.WARN)
-            vim.bo[args.buf].modified = false -- Clear modified flag
-        end,
-        desc = "Trunks: Prevent writing to virtual buffers",
     })
 end
 

@@ -59,14 +59,21 @@ local split_to_vim_cmd = {
 }
 
 ---@param filename string
+---@return string git_root
+local function get_git_root(filename)
+    local abs = vim.fn.fnamemodify(filename, ":p")
+    return require("trunks._core.parse_command")._find_git_root(abs) or vim.loop.cwd()
+end
+
+---@param filename string
 ---@param commit string
 ---@param split "above" | "below" | "right" | "left"
 ---@param opts trunks.OpenFileOpts
 ---@return integer -- bufnr of created buffer
 function M.open_file_in_split(filename, commit, split, opts)
     delete_existing_buffer(get_filename(filename, commit))
-    local file_at_commit_uri = require("trunks._core.virtual_buffers").create_uri(commit, filename)
-    vim.print(file_at_commit_uri)
+    local file_at_commit_uri =
+        require("trunks._core.virtual_buffers").create_uri(get_git_root(filename), commit, filename)
     vim.cmd(split_to_vim_cmd[split] .. " " .. file_at_commit_uri)
     local bufnr = vim.api.nvim_get_current_buf()
     ensure_buffer_loaded(bufnr)
@@ -81,7 +88,8 @@ end
 function M.open_file_in_tab(filename, commit, opts)
     vim.cmd("tabnew")
     delete_existing_buffer(get_filename(filename, commit))
-    local file_at_commit_uri = require("trunks._core.virtual_buffers").create_uri(commit, filename)
+    local file_at_commit_uri =
+        require("trunks._core.virtual_buffers").create_uri(get_git_root(filename), commit, filename)
     vim.cmd("e " .. file_at_commit_uri)
     local bufnr = vim.api.nvim_get_current_buf()
     ensure_buffer_loaded(bufnr)
@@ -95,7 +103,8 @@ end
 ---@return integer -- bufnr of created buffer
 function M.open_file_in_current_window(filename, commit, opts)
     delete_existing_buffer(get_filename(filename, commit))
-    local file_at_commit_uri = require("trunks._core.virtual_buffers").create_uri(commit, filename)
+    local file_at_commit_uri =
+        require("trunks._core.virtual_buffers").create_uri(get_git_root(filename), commit, filename)
     vim.cmd("e " .. file_at_commit_uri)
     local bufnr = vim.api.nvim_get_current_buf()
     ensure_buffer_loaded(bufnr)
