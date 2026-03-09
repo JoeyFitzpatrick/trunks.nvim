@@ -82,7 +82,7 @@ local function set_buffer_content(bufnr, output, filetype)
     vim.bo[bufnr].modified = false
     vim.bo[bufnr].modifiable = false
     vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].bufhidden = "delete"
+    vim.bo[bufnr].bufhidden = "wipe"
     if filetype then
         vim.bo[bufnr].filetype = filetype
     end
@@ -104,6 +104,14 @@ local function load_virtual_buffer_content(bufnr, uri)
         set_buffer_content(bufnr, output, "git")
         vim.b[bufnr].trunks_ref = show_ref
         require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
+
+        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+            local buf = vim.api.nvim_win_get_buf(win)
+            if buf ~= bufnr and vim.b[buf].trunks_ref then
+                vim.api.nvim_win_close(win, true)
+            end
+        end
+
         return true
     end
 

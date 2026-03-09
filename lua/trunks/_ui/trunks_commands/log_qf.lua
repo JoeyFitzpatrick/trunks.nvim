@@ -1,7 +1,5 @@
 local M = {}
 
----Update the tracked filepath when a git --summary rename/copy line is encountered.
----Mirrors fugitive's LogParse rename-tracking logic.
 ---@param line string
 ---@param target string current target path (relative to git root, no leading slash)
 ---@return string updated target
@@ -14,7 +12,7 @@ local function apply_rename(line, target)
     if not rename:find("{", 1, true) then
         rename = "{" .. rename .. "}"
     end
-    -- Extract new path: replace {old => new} block with new part, preserving surrounding path
+
     local new_path = rename:gsub("{(.-) => (.-)}", "%2")
     local old_path = rename:gsub("{(.-) => (.-)}", "%1")
     if target == new_path then
@@ -197,7 +195,7 @@ function M.render(input_args)
         title = "Trunks log-qf",
         items = qf_items,
     })
-    vim.cmd("copen")
+    vim.cmd("copen | cfirst")
 end
 
 return M
