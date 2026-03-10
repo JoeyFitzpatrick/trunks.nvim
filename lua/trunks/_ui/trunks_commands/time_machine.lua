@@ -123,7 +123,7 @@ local function time_machine_close(bufnr)
         vim.t.time_machine_cache_key = nil
     end
 
-    require("trunks._core.register").deregister_buffer(bufnr, {})
+    require("trunks._core.register").close_buffer(bufnr, {})
     local num_tabs = #vim.api.nvim_list_tabpages()
     if num_tabs > 1 then
         vim.cmd.tabclose()
@@ -386,7 +386,7 @@ local function move_through_time_machine(bufnr, direction)
     vim.b[new_bufnr].original_filename = filename
 
     if split_args then
-        require("trunks._core.register").deregister_buffer(split_args.bufnr, { delete_win_buffers = false })
+        require("trunks._core.register").close_buffer(split_args.bufnr, { delete_win_buffers = false })
         local split_commit = nil
         if split_args.split_type == "previous_commit" then
             split_commit = time_machine_data.hash

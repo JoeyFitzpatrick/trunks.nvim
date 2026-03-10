@@ -137,26 +137,41 @@ local function set_keymaps(bufnr, commit)
 
     require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
 
-    set("n", keymaps.edit_file, with_line(bufnr, M.get_line, function(line_data)
-        if vim.uv.fs_stat(line_data.filename) then
-            require("trunks._core.register").deregister_buffer(bufnr, {})
-            vim.cmd.edit(line_data.filename)
-        else
-            vim.notify("File does not exist: " .. line_data.filename, vim.log.levels.ERROR)
-        end
-    end), { buffer = bufnr })
+    set(
+        "n",
+        keymaps.edit_file,
+        with_line(bufnr, M.get_line, function(line_data)
+            if vim.uv.fs_stat(line_data.filename) then
+                require("trunks._core.register").close_buffer(bufnr, {})
+                vim.cmd.edit(line_data.filename)
+            else
+                vim.notify("File does not exist: " .. line_data.filename, vim.log.levels.ERROR)
+            end
+        end),
+        { buffer = bufnr }
+    )
 
-    set("n", keymaps.restore_popup, with_line(bufnr, M.get_line, function(line_data)
-        require("trunks._ui.popups.restore_popup").render(line_data.filename, commit)
-    end), { buffer = bufnr })
+    set(
+        "n",
+        keymaps.restore_popup,
+        with_line(bufnr, M.get_line, function(line_data)
+            require("trunks._ui.popups.restore_popup").render(line_data.filename, commit)
+        end),
+        { buffer = bufnr }
+    )
 
-    set("n", keymaps.open_file_popup, with_line(bufnr, M.get_line, function(line_data)
-        require("trunks._ui.popups.open_file_popup").render(line_data.filename, commit, {
-            before_split = function()
-                require("trunks._ui.auto_display").close_auto_display(bufnr, "commit_details")
-            end,
-        })
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.open_file_popup,
+        with_line(bufnr, M.get_line, function(line_data)
+            require("trunks._ui.popups.open_file_popup").render(line_data.filename, commit, {
+                before_split = function()
+                    require("trunks._ui.auto_display").close_auto_display(bufnr, "commit_details")
+                end,
+            })
+        end),
+        keymap_opts
+    )
 
     set("n", keymaps.show_all_changes, function()
         vim.cmd("G show " .. commit)

@@ -83,7 +83,7 @@ local function display_keymap_help(mappings, ui_type, opts)
     local keymap_opts = { buffer = bufnr }
 
     vim.keymap.set("n", "q", function()
-        register.deregister_buffer(bufnr)
+        register.close_buffer(bufnr)
     end, keymap_opts)
 end
 
@@ -150,7 +150,7 @@ function M.git_show_keymap_fn(bufnr, get_line, filename)
 
         require("trunks._ui.keymaps.set").safe_set_keymap("t", "q", function()
             vim.api.nvim_win_close(float_win, true)
-            require("trunks._core.register").deregister_buffer(float_bufnr)
+            require("trunks._core.register").close_buffer(float_bufnr)
         end, { buffer = float_bufnr, noremap = true })
     end)
 end

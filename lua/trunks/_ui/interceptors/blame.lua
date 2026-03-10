@@ -25,15 +25,25 @@ local function set_keymaps(bufnr, filename)
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
     local with_line = require("trunks._ui.keymaps.set").with_line
 
-    set("n", keymaps.checkout, with_line(bufnr, get_line, function(line_data)
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-        vim.cmd("G checkout " .. line_data.hash)
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.checkout,
+        with_line(bufnr, get_line, function(line_data)
+            vim.api.nvim_buf_delete(bufnr, { force = true })
+            vim.cmd("G checkout " .. line_data.hash)
+        end),
+        keymap_opts
+    )
 
-    set("n", keymaps.commit_details, with_line(bufnr, get_line, function(line_data)
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-        require("trunks._ui.trunks_commands.commit_details").render(line_data.hash, { filename = filename })
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.commit_details,
+        with_line(bufnr, get_line, function(line_data)
+            vim.api.nvim_buf_delete(bufnr, { force = true })
+            require("trunks._ui.trunks_commands.commit_details").render(line_data.hash, { filename = filename })
+        end),
+        keymap_opts
+    )
 
     local function get_filepath()
         local buf_name = vim.api.nvim_buf_get_name(0)
@@ -44,29 +54,39 @@ local function set_keymaps(bufnr, filename)
         return vim.fn.expand("%:.")
     end
 
-    set("n", keymaps.diff_file, with_line(bufnr, get_line, function(line_data)
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-        vim.cmd(string.format("G show %s -- %s", line_data.hash, get_filepath()))
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.diff_file,
+        with_line(bufnr, get_line, function(line_data)
+            vim.api.nvim_buf_delete(bufnr, { force = true })
+            vim.cmd(string.format("G show %s -- %s", line_data.hash, get_filepath()))
+        end),
+        keymap_opts
+    )
 
-    set("n", keymaps.reblame, with_line(bufnr, get_line, function(line_data)
-        local current_cursor_line = vim.api.nvim_win_get_cursor(0)[1]
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-        local filepath = line_data.filename or get_filepath()
-        require("trunks._ui.elements").new_buffer({
-            filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 }),
-            lines = function()
-                local output = run_cmd.run_cmd(string.format("show %s:%s", line_data.hash, filepath))
-                return output
-            end,
-            buffer_name = os.tmpname() .. "/" .. FILENAME_PREFIX .. filepath,
-        })
-        local cmd = string.format("G blame %s -- %s", line_data.hash, filepath)
-        vim.cmd(cmd)
-        -- we don't want to set the cursor outside the new buffer's line count
-        local new_cursor_line = math.min(current_cursor_line, vim.api.nvim_buf_line_count(0))
-        vim.api.nvim_win_set_cursor(0, { new_cursor_line, 0 })
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.reblame,
+        with_line(bufnr, get_line, function(line_data)
+            local current_cursor_line = vim.api.nvim_win_get_cursor(0)[1]
+            vim.api.nvim_buf_delete(bufnr, { force = true })
+            local filepath = line_data.filename or get_filepath()
+            require("trunks._ui.elements").new_buffer({
+                filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 }),
+                lines = function()
+                    local output = run_cmd.run_cmd(string.format("show %s:%s", line_data.hash, filepath))
+                    return output
+                end,
+                buffer_name = os.tmpname() .. "/" .. FILENAME_PREFIX .. filepath,
+            })
+            local cmd = string.format("G blame %s -- %s", line_data.hash, filepath)
+            vim.cmd(cmd)
+            -- we don't want to set the cursor outside the new buffer's line count
+            local new_cursor_line = math.min(current_cursor_line, vim.api.nvim_buf_line_count(0))
+            vim.api.nvim_win_set_cursor(0, { new_cursor_line, 0 })
+        end),
+        keymap_opts
+    )
 
     set("n", keymaps.return_to_original_file, function()
         local current_cursor_line = vim.api.nvim_win_get_cursor(0)[1]
@@ -241,7 +261,7 @@ M.render = function(command_builder)
 
     if result ~= "success" then
         BLAME_WINDOWS[blame_buffer_name] = nil
-        require("trunks._core.register").deregister_buffer(bufnr)
+        require("trunks._core.register").close_buffer(bufnr)
         return
     end
 

@@ -16,7 +16,7 @@ end
 
 function M.set_q_keymap(bufnr)
     vim.keymap.set("n", "q", function()
-        require("trunks._core.register").deregister_buffer(bufnr, {})
+        require("trunks._core.register").close_buffer(bufnr, {})
     end, { buffer = bufnr })
 end
 

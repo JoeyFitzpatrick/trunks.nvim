@@ -17,7 +17,7 @@ end
 
 ---@param bufnr? integer
 ---@param opts? trunks.DeregisterOpts
-function M.deregister_buffer(bufnr, opts)
+function M.close_buffer(bufnr, opts)
     if not bufnr then
         return
     end

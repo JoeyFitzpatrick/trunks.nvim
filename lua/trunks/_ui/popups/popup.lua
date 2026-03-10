@@ -41,7 +41,7 @@ local function get_popup_lines(bufnr, mapping_config, title)
                 -- Close the popup before performing the action. This prevents issues where
                 -- a nested popup doesn't render because the action opens a popup, which is
                 -- then immediately closed.
-                require("trunks._core.register").deregister_buffer(bufnr)
+                require("trunks._core.register").close_buffer(bufnr)
                 if type(mapping.action) == "string" then
                     vim.cmd(mapping.action)
                 else
@@ -156,7 +156,7 @@ function M.set_popup_lines(bufnr, columns)
             -- Set up keymaps for this row
             if col.rows[row_idx] then
                 require("trunks._ui.keymaps.set").safe_set_keymap("n", col.rows[row_idx].keys, function()
-                    require("trunks._core.register").deregister_buffer(bufnr, { delete_win_buffers = false })
+                    require("trunks._core.register").close_buffer(bufnr, { delete_win_buffers = false })
                     if type(col.rows[row_idx].action) == "string" then
                         vim.cmd(col.rows[row_idx].action)
                     else

@@ -91,14 +91,14 @@ local function set_keymaps(bufnr)
         local old_bufnr = bufnr
         tabs:cycle_tab("forward")
         M.create_and_render_buffer(tabs.current_option)
-        require("trunks._core.register").deregister_buffer(old_bufnr, { delete_win_buffers = false })
+        require("trunks._core.register").close_buffer(old_bufnr, { delete_win_buffers = false })
     end, { buffer = bufnr })
 
     set("n", keymaps.previous, function()
         local old_bufnr = bufnr
         tabs:cycle_tab("back")
         M.create_and_render_buffer(tabs.current_option)
-        require("trunks._core.register").deregister_buffer(old_bufnr, { delete_win_buffers = false })
+        require("trunks._core.register").close_buffer(old_bufnr, { delete_win_buffers = false })
     end, { buffer = bufnr })
 end
 

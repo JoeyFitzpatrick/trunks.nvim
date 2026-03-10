@@ -82,7 +82,7 @@ local function set_buffer_content(bufnr, output, filetype)
     vim.bo[bufnr].modified = false
     vim.bo[bufnr].modifiable = false
     vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].bufhidden = "wipe"
+    vim.bo[bufnr].bufhidden = "delete"
     if filetype then
         vim.bo[bufnr].filetype = filetype
     end

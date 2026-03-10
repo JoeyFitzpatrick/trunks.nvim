@@ -45,16 +45,21 @@ function M.set_keymaps(bufnr)
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
     local with_line = require("trunks._ui.keymaps.set").with_line
 
-    set("n", keymaps.stage, with_line(bufnr, M.get_line, function(line_data)
-        if not require("trunks._core.git").is_staged(line_data.status) then
-            require("trunks._core.run_cmd").run_hidden_cmd("git add -- " .. line_data.filename, { rerender = true })
-        else
-            require("trunks._core.run_cmd").run_hidden_cmd(
-                "git reset HEAD -- " .. line_data.filename,
-                { rerender = true }
-            )
-        end
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.stage,
+        with_line(bufnr, M.get_line, function(line_data)
+            if not require("trunks._core.git").is_staged(line_data.status) then
+                require("trunks._core.run_cmd").run_hidden_cmd("git add -- " .. line_data.filename, { rerender = true })
+            else
+                require("trunks._core.run_cmd").run_hidden_cmd(
+                    "git reset HEAD -- " .. line_data.filename,
+                    { rerender = true }
+                )
+            end
+        end),
+        keymap_opts
+    )
 
     set("v", keymaps.stage, function()
         local visual_start_line, end_line = require("trunks._ui.utils.ui_utils").get_visual_line_nums()
@@ -104,22 +109,32 @@ function M.set_keymaps(bufnr)
         require("trunks._ui.popups.commit_popup").render()
     end, keymap_opts)
 
-    set("n", keymaps.diff_file, with_line(bufnr, M.get_line, function(line_data)
-        vim.api.nvim_exec2("G diff " .. line_data.filename, {})
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.diff_file,
+        with_line(bufnr, M.get_line, function(line_data)
+            vim.api.nvim_exec2("G diff " .. line_data.filename, {})
+        end),
+        keymap_opts
+    )
 
-    set("n", keymaps.edit_file, with_line(bufnr, M.get_line, function(line_data)
-        local current_buffer = vim.api.nvim_get_current_buf()
-        -- Deregister current buffer so it doesn't hang around
-        require("trunks._core.register").deregister_buffer(current_buffer)
+    set(
+        "n",
+        keymaps.edit_file,
+        with_line(bufnr, M.get_line, function(line_data)
+            local current_buffer = vim.api.nvim_get_current_buf()
+            -- Deregister current buffer so it doesn't hang around
+            require("trunks._core.register").close_buffer(current_buffer)
 
-        -- Home UI opens in new tab. If we're in a separate tab, close it.
-        local num_tabs = #vim.api.nvim_list_tabpages()
-        if num_tabs > 1 then
-            vim.cmd("tabclose")
-        end
-        vim.api.nvim_exec2("e " .. line_data.filename, {})
-    end), keymap_opts)
+            -- Home UI opens in new tab. If we're in a separate tab, close it.
+            local num_tabs = #vim.api.nvim_list_tabpages()
+            if num_tabs > 1 then
+                vim.cmd("tabclose")
+            end
+            vim.api.nvim_exec2("e " .. line_data.filename, {})
+        end),
+        keymap_opts
+    )
 
     set("n", keymaps.restore, function()
         -- We need to pass in line_num, otherwise it uses cursor position from popup
@@ -254,16 +269,21 @@ function M.set_keymaps(bufnr)
         require("trunks._ui.popups.stash_popup").render()
     end, keymap_opts)
 
-    set("n", "<S-Tab>", with_line(bufnr, M.get_line, function(line_data)
-        if require("trunks._core.git").is_modified(line_data.status) then
-            if vim.b[bufnr].trunks_show_unstaged_for == line_data.filename then
-                vim.b[bufnr].trunks_show_unstaged_for = nil
-            else
-                vim.b[bufnr].trunks_show_unstaged_for = line_data.filename
+    set(
+        "n",
+        "<S-Tab>",
+        with_line(bufnr, M.get_line, function(line_data)
+            if require("trunks._core.git").is_modified(line_data.status) then
+                if vim.b[bufnr].trunks_show_unstaged_for == line_data.filename then
+                    vim.b[bufnr].trunks_show_unstaged_for = nil
+                else
+                    vim.b[bufnr].trunks_show_unstaged_for = line_data.filename
+                end
+                require("trunks._ui.auto_display").refresh(bufnr)
             end
-            require("trunks._ui.auto_display").refresh(bufnr)
-        end
-    end), keymap_opts)
+        end),
+        keymap_opts
+    )
 end
 
 ---@param status string

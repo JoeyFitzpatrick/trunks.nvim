@@ -35,7 +35,7 @@ local function choose_instant_fixup_commit()
         end
 
         local hash = vim.api.nvim_get_current_line():match("^%x+")
-        require("trunks._core.register").deregister_buffer(bufnr, { delete_win_buffers = false })
+        require("trunks._core.register").close_buffer(bufnr, { delete_win_buffers = false })
         run_instant_fixup(hash)
     end, { buffer = bufnr, nowait = true })
 end
