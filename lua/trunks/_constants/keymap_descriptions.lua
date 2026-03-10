@@ -23,6 +23,7 @@ M.long_descriptions = {
         reblame = "Reblame file at commit",
         return_to_original_file = "Close blame and return to original file",
         show = "Show commit details",
+        show_no_whitespace = "Show commit details, ignoring whitespace",
     },
     ---@type trunks.BranchKeymaps
     branch = {
@@ -96,6 +97,7 @@ M.long_descriptions = {
         commit_details = "Show commit in Trunks commit details UI",
         recover = "Recover this commit by making a branch from it",
         show = "Show commit details (native diff)",
+        show_no_whitespace = "Show commit details, ignoring whitespace",
     },
     ---@type trunks.RestorePopupKeymaps
     restore_popup = {

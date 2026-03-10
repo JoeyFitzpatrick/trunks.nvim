@@ -27,6 +27,7 @@ return {
             reblame = "r", -- Display the file as of the given commit, then blame from that commit
             return_to_original_file = "gq", -- If in reblamed file, return to original
             show = "s", -- Output of `git show` for the given commit
+            show_no_whitespace = "S", -- Output of `git show` for the given commit, ignoring whitespace changes
         },
     },
     branch = {
@@ -110,6 +111,7 @@ return {
             commit_details = "<enter>",
             recover = "r",
             show = "s",
+            show_no_whitespace = "S",
         },
     },
     restore_popup = {

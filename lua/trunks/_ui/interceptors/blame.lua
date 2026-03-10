@@ -103,6 +103,13 @@ local function set_keymaps(bufnr, filename)
         require("trunks._ui.keymaps.base").git_show_keymap_fn(bufnr, get_line, filename),
         keymap_opts
     )
+
+    set(
+        "n",
+        keymaps.show_no_whitespace,
+        require("trunks._ui.keymaps.base").git_show_keymap_fn(bufnr, get_line, filename, true),
+        keymap_opts
+    )
 end
 
 local function highlight_line(bufnr, line, line_num)

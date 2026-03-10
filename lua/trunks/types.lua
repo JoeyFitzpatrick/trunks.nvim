@@ -91,6 +91,7 @@
 ---@field reblame? string
 ---@field return_to_original_file? string
 ---@field show? string
+---@field show_no_whitespace? string
 
 ---@class trunks.BranchKeymaps
 ---@field delete? string
@@ -155,6 +156,7 @@
 ---@field commit_details? string
 ---@field recover? string
 ---@field show? string
+---@field show_no_whitespace? string
 
 ---@class trunks.RestorePopupConfiguration
 ---@field keymaps? trunks.RestorePopupKeymaps
