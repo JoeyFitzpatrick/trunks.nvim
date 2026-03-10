@@ -9,9 +9,6 @@ M.options = {
     ["log-qf"] = {},
     hdiff = { completion_type = "branch" },
     vdiff = { completion_type = "branch" },
-    ["time-machine"] = { completion_type = "filepath" },
-    ["time-machine-next"] = {},
-    ["time-machine-previous"] = {},
 }
 
 M.commands = vim.tbl_keys(M.options)

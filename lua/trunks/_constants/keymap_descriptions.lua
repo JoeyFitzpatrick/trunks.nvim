@@ -125,12 +125,6 @@ M.long_descriptions = {
         stage_all = "Stage all files",
         stash_popup = "Open git stash options",
     },
-    ---@type trunks.TimeMachineKeymaps
-    time_machine = {
-        commit_details = "Show commit details",
-        diff_against_previous_commit = "Diff file against previous commit",
-        diff_against_head = "Diff file against HEAD",
-    },
 }
 
 local config = require("trunks._core.configuration").DATA
@@ -198,10 +192,6 @@ add_description("status", "restore", "Discard")
 add_description("status", "stash_popup", "Stash")
 
 add_description("open_files", "open_file_popup", "Open file")
-
-add_description("time_machine", "commit_details", "Details")
-add_description("time_machine", "diff_against_head", "Diff against HEAD")
-add_description("time_machine", "diff_against_previous_commit", "Diff")
 
 ---@param ui_types string[]
 ---@return string

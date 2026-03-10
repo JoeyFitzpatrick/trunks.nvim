@@ -167,14 +167,6 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     stash_popup = "S",
                 },
             },
-            time_machine = {
-                auto_display_on = true,
-                keymaps = {
-                    commit_details = "<enter>",
-                    diff_against_previous_commit = "d", -- Diff file against previous commit
-                    diff_against_head = "D", -- Diff file against HEAD
-                },
-            },
             -- End of default configuration
         }
     end
@@ -330,16 +322,10 @@ Trunks provides some commands that are not valid git commands. Instead of the `:
 
 If no commit is given, a list of commits (e.g. `git log` output) is shown, so that a commit can be chosen to fixup.
 
-### time-machine
-`:Trunks time-machine <optional filename>` creates a time-machine buffer for the given file, or the current buffer if a file is not given. This displays a list of commits that changed the file. Putting the cursor on a given commit will display the diff for that file at that commit. There is a keymap to open the file at the given commit, plus other keymaps that can be viewed with `g?`.
+### log-qf
+`:Trunks log-qf`: same concept as `Gclog` from vim-fugitive. Send git log entries to the quickfix list. By default, it shows the output of `git show` in each entry. Pass it a range (or call from visual mode), and each entry will pass line numbers to `git log` via the `-L` flag, and each entry will be the file as it existed at the given revision. Use 0 as the range, e.g. `0Trunks log-qf`, to see file revisions for every revision of a file.
 
 Once you have opened a file at a revision, there are keymaps to move to the next/previous revision, as well as open diff splits.
-
-### time-machine-next
-In a time-machine buffer, move to the next most recent revision for the given file. If a diff split is open, re-generate that diff.
-
-### time-machine-previous
-In a time-machine buffer, move to the previous revision for the given file. If a diff split is open, re-generate that diff. If this is run on a regular buffer, open a time-machine buffer at the previous revision for the current buffer.
 
 ### vdiff
 `:Trunks vdiff` opens a vertical split and uses `vimdiff` to diff the current file against `HEAD`. You can pass a commit, e.g. `:Trunks vdiff abc123`, to diff the current file against the same file in the given commit. You can also pass a branch, e.g. `:Trunks vdiff some-branch`. See `:h vimdiff`.

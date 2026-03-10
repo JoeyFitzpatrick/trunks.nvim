@@ -55,21 +55,6 @@ local cmd_map = {
         require("trunks._ui.trunks_commands.log_qf").render(input_args)
     end,
 
-    ["time-machine"] = function(cmd)
-        local filename = vim.split(cmd, " ")[2]
-        local output, exit_code = require("trunks._ui.trunks_commands.time_machine").render(filename)
-        local error_text = output or "Unable to run time-machine"
-        utils.handle_output(nil, error_text, exit_code)
-    end,
-
-    ["time-machine-next"] = function()
-        require("trunks._ui.trunks_commands.time_machine").next(vim.api.nvim_get_current_buf())
-    end,
-
-    ["time-machine-previous"] = function()
-        require("trunks._ui.trunks_commands.time_machine").previous(vim.api.nvim_get_current_buf())
-    end,
-
     vdiff = function(cmd)
         require("trunks._ui.interceptors.split_diff").split_diff(cmd, "right")
     end,

@@ -2,7 +2,7 @@
 
 Trunks is a Neovim git client. It has some similarities to [vim-fugitive](https://github.com/tpope/vim-fugitive). This plugin ships with two commands:
 - The `:G` command, which invokes an arbitrary git command, e.g. `:G commit`, `:G log --oneline`, etc. You can also run `:G` to open the home UI, which displays a git status buffer and allows for navigation via `h` and `l` to see branch, log, and stash buffers. The `%` character will expand to the current buffer's filename, similar to vim-fugitive, e.g. `:G log -- %` to see commits that changed the current file.
-- The `:Trunks` command, which provides subcommands for git features that aren't already git commands. For example, `:Trunks vdiff` opens a vim diff in a vertical split, `:Trunks time-machine` opens a UI to navigate between revisions of a file, etc.
+- The `:Trunks` command, which provides subcommands for git features that aren't already git commands. For example, `:Trunks vdiff` opens a vim diff in a vertical split, `:Trunks log-qf` sends `git log` entries to the quickfix list, etc.
 
 The main benefits of using Trunks:
 - Most `:G` commands will display their output in terminal mode. This is a powerful concept:
@@ -19,7 +19,7 @@ As mentioned above, there is also the `:Trunks` command, which provides some add
 - `:Trunks browse`, to open the current buffer in your hosting provider (currently, GitHub, GitLab, and Bitbucket are supported). Use in visual mode to link to specific lines.
 - `:Trunks commit-drop`: pass a commit hash to it, and that commit is dropped. Use without arguments to open a log buffer to choose a commit.
 - `:Trunks commit-instant-fixup`: similar to `:Trunks commit-drop`, except instead of dropping a commit, apply staged changes to it.
-- `:Trunks time-machine`: in a new tab, display a log buffer with commits that changed the current buffer. Press `<Tab>` to toggle the auto-diff. Use `:Trunks time-machine-next` and `:Trunks time-machine-previous` to cycle the current buffer through revisions, vaguely akin to the emacs [git-timemachine](https://codeberg.org/pidu/git-timemachine) plugin.
+- `:Trunks log-qf`: same concept as `Gclog` from vim-fugitive. Send git log entries to the quickfix list. By default, it shows the output of `git show` in each entry. Pass it a range (or call from visual mode), and each entry will pass line numbers to `git log` via the `-L` flag, and each entry will be the file as it existed at the given revision. Use 0 as the range, e.g. `0Trunks log-qf`, to see file revisions for every revision of a file.
 
 Here's an example of running some git commands with Trunks:
 ![trunks_some_commands](https://github.com/user-attachments/assets/a93743fa-056e-4d4d-917d-95e0dc0f2a86)
@@ -194,14 +194,6 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     stage = "s", -- (un)stage file under cursor
                     stage_all = "a",
                     stash_popup = "S",
-                },
-            },
-            time_machine = {
-                auto_display_on = true,
-                keymaps = {
-                    commit_details = "<enter>",
-                    diff_against_previous_commit = "d", -- Diff file against previous commit
-                    diff_against_head = "D", -- Diff file against HEAD
                 },
             },
             -- End of default configuration

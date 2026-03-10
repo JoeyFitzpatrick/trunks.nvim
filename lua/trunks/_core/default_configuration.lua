@@ -146,12 +146,4 @@ return {
             stash_popup = "S",
         },
     },
-    time_machine = {
-        auto_display_on = true,
-        keymaps = {
-            commit_details = "<enter>",
-            diff_against_previous_commit = "d", -- Diff file against previous commit
-            diff_against_head = "D", -- Diff file against HEAD
-        },
-    },
 }
