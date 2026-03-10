@@ -88,6 +88,7 @@ able to lazy load it however you normally lazy load plugins.
                         reblame = "r", -- Display the file as of the given commit, then blame from that commit
                         return_to_original_file = "gq", -- If in reblamed file, return to original
                         show = "s", -- Output of `git show` for the given commit
+                        show_no_whitespace = "S", -- Output of `git show` for the given commit, ignoring whitespace changes
                     },
                 },
                 branch = {
@@ -144,7 +145,8 @@ able to lazy load it however you normally lazy load plugins.
                         reset = "rs", -- Reset to commit under cursor
                         revert = "rv", -- Revert commit under cursor, but don't commit changes
                         revert_and_commit = "rV", -- Revert commit under cursor, and commit the revert
-                        show = "s",
+                        show = "s", -- Run "git show" for commit under cursor
+                        show_no_whitespace = "S", -- Run "git show" for commit under cursor, ignoring whitespace changes
                     },
                 },
                 open_files = {
@@ -170,6 +172,7 @@ able to lazy load it however you normally lazy load plugins.
                         commit_details = "<enter>",
                         recover = "r",
                         show = "s",
+                        show_no_whitespace = "S",
                     },
                 },
                 restore_popup = {
