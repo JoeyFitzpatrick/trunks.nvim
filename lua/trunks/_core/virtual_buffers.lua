@@ -75,8 +75,9 @@ end
 
 ---@param bufnr integer
 ---@param output string[]
+---@param hash string
 ---@param filetype string|nil
-local function set_buffer_content(bufnr, output, filetype)
+local function set_buffer_content(bufnr, output, hash, filetype)
     vim.bo[bufnr].modifiable = true
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, output)
     vim.bo[bufnr].modified = false
@@ -86,7 +87,15 @@ local function set_buffer_content(bufnr, output, filetype)
     if filetype then
         vim.bo[bufnr].filetype = filetype
     end
+    vim.b[bufnr].trunks_ref = hash
     require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
+
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        local buf = vim.api.nvim_win_get_buf(win)
+        if buf ~= bufnr and vim.b[buf].trunks_ref then
+            vim.api.nvim_win_close(win, true)
+        end
+    end
 end
 
 ---@param bufnr integer
@@ -101,17 +110,8 @@ local function load_virtual_buffer_content(bufnr, uri)
             vim.notify("Trunks: failed to run git show for '" .. show_ref .. "'", vim.log.levels.ERROR)
             return false
         end
-        set_buffer_content(bufnr, output, "git")
-        vim.b[bufnr].trunks_ref = show_ref
+        set_buffer_content(bufnr, output, show_ref, "git")
         require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
-
-        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-            local buf = vim.api.nvim_win_get_buf(win)
-            if buf ~= bufnr and vim.b[buf].trunks_ref then
-                vim.api.nvim_win_close(win, true)
-            end
-        end
-
         return true
     end
 
@@ -135,7 +135,7 @@ local function load_virtual_buffer_content(bufnr, uri)
     end
 
     local ft = vim.filetype.match({ filename = filepath })
-    set_buffer_content(bufnr, output, ft)
+    set_buffer_content(bufnr, output, commit, ft)
 
     vim.b[bufnr].trunks_commit = commit
     vim.b[bufnr].trunks_filepath = filepath

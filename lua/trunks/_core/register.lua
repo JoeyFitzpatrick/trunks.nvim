@@ -31,7 +31,12 @@ function M.close_buffer(bufnr, opts)
         M._delete_trunks_buffers_for_win(vim.api.nvim_get_current_win())
     end
 
-    vim.api.nvim_buf_delete(bufnr, { force = true })
+    local buf_name = vim.api.nvim_buf_get_name(bufnr)
+    if require("trunks._core.virtual_buffers").is_virtual_uri(buf_name) then
+        vim.cmd.bunload(bufnr)
+    else
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
 end
 
 function M.rerender_buffers()
