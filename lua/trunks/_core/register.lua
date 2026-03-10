@@ -33,7 +33,7 @@ function M.close_buffer(bufnr, opts)
 
     local buf_name = vim.api.nvim_buf_get_name(bufnr)
     if require("trunks._core.virtual_buffers").is_virtual_uri(buf_name) then
-        vim.cmd.bunload(bufnr)
+        vim.cmd("bunload! " .. bufnr)
     else
         vim.api.nvim_buf_delete(bufnr, { force = true })
     end
