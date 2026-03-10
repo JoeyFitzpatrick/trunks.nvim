@@ -83,7 +83,8 @@ return {
             reset = "rs", -- Reset to commit under cursor
             revert = "rv", -- Revert commit under cursor, but don't commit changes
             revert_and_commit = "rV", -- Revert commit under cursor, and commit the revert
-            show = "s",
+            show = "s", -- Run "git show" for commit under cursor
+            show_no_whitespace = "S", -- Run "git show" for commit under cursor, ignoring whitespace changes
         },
     },
     open_files = {

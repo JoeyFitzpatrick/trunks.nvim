@@ -135,6 +135,7 @@
 ---@field revert? string
 ---@field revert_and_commit? string
 ---@field show? string
+---@field show_no_whitespace? string
 
 ---@class trunks.OpenFilesKeymaps
 ---@field open_file_popup? string

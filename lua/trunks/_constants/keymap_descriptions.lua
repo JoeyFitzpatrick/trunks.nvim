@@ -73,6 +73,7 @@ M.long_descriptions = {
         revert = "Revert commit, and stage the changes from the revert",
         revert_and_commit = "Revert commit, and commit the revert",
         show = "Show commit details",
+        show_no_whitespace = "Show commit details, ignoring whitespace",
     },
     ---@type trunks.OpenFilesKeymaps
     open_files = {

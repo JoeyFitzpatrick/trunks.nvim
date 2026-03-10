@@ -130,8 +130,9 @@ end
 ---@param bufnr integer
 ---@param get_line function
 ---@param filename? string
+---@param ignore_whitespace? boolean
 ---@return function
-function M.git_show_keymap_fn(bufnr, get_line, filename)
+function M.git_show_keymap_fn(bufnr, get_line, filename, ignore_whitespace)
     if not filename then
         local buffer_with_filename = register.last_non_trunks_buffer_for_win[vim.api.nvim_get_current_win()]
         if buffer_with_filename then
@@ -144,8 +145,13 @@ function M.git_show_keymap_fn(bufnr, get_line, filename)
         local float_bufnr = elements.new_buffer({})
         local float_win = elements.float(float_bufnr, { title = "Git show " .. line_data.hash })
 
+        local git_show_command = "show --format=medium "
+        if ignore_whitespace then
+            git_show_command = git_show_command .. "--ignore-blank-lines --ignore-all-space "
+        end
+
         local command =
-            require("trunks._core.command").base_command("show --format=medium " .. line_data.hash, filename):build()
+            require("trunks._core.command").base_command(git_show_command .. line_data.hash, filename):build()
         elements.terminal(float_bufnr, command, { display_strategy = "full" })
 
         require("trunks._ui.keymaps.set").safe_set_keymap("t", "q", function()

@@ -110,6 +110,12 @@ local function set_keymaps(bufnr)
     )
 
     set("n", keymaps.show, require("trunks._ui.keymaps.base").git_show_keymap_fn(bufnr, get_line), keymap_opts)
+    set(
+        "n",
+        keymaps.show_no_whitespace,
+        require("trunks._ui.keymaps.base").git_show_keymap_fn(bufnr, get_line, nil, true),
+        keymap_opts
+    )
 end
 
 ---@param bufnr integer
