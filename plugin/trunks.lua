@@ -30,19 +30,21 @@ local function run_git_command(input_args)
         ---@diagnostic disable-next-line: need-check-nil
         display_strategy = display_strategy(final_cmd)
     end
+
     if display_strategy == "print" then
         vim.print(vim.fn.system(final_cmd))
-        return
+    else
+        local ui_function = require("trunks._ui.interceptors").get_ui(command_builder)
+        if ui_function then
+            ui_function(command_builder)
+        else
+            local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
+            require("trunks._ui.elements").terminal(bufnr, command_builder:build())
+        end
     end
-
-    local ui_function = require("trunks._ui.interceptors").get_ui(command_builder)
-    if ui_function then
-        ui_function(command_builder)
-        return
+    if strategy.trigger_redraw then
+        vim.cmd("checktime")
     end
-
-    local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
-    require("trunks._ui.elements").terminal(bufnr, command_builder:build())
 end
 
 ---@param input_args vim.api.keyset.create_user_command.command_args
