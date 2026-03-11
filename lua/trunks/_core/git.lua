@@ -40,7 +40,7 @@ M.is_untracked = function(status)
 end
 
 M.is_anything_staged = function()
-    local _, exit_code = require("trunks._core.run_cmd").run_cmd("git diff --cached --quiet")
+    local _, exit_code = require("trunks._core.run_cmd").run_cmd("diff --cached --quiet", { no_pager = true })
     -- git diff --cached --quiet returns non-zero exit code if there are staged changes
     return exit_code ~= 0
 end

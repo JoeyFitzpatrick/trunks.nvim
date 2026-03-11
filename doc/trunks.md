@@ -108,6 +108,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     revert_and_commit = "rV", -- Revert commit under cursor, and commit the revert
                     show = "s", -- Run "git show" for commit under cursor
                     show_no_whitespace = "S", -- Run "git show" for commit under cursor, ignoring whitespace changes
+                    commit_instant_fixup = "I", -- Run instant fixup for commit under cursor
                 },
             },
             open_files = {

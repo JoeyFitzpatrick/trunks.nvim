@@ -109,6 +109,15 @@ local function set_keymaps(bufnr)
         keymap_opts
     )
 
+    set(
+        "n",
+        keymaps.commit_instant_fixup,
+        with_line(bufnr, get_line, function(line_data)
+            require("trunks._ui.trunks_commands.commit_instant_fixup").commit_instant_fixup(line_data.hash)
+        end),
+        keymap_opts
+    )
+
     set("n", keymaps.show, require("trunks._ui.keymaps.base").git_show_keymap_fn(bufnr, get_line), keymap_opts)
     set(
         "n",

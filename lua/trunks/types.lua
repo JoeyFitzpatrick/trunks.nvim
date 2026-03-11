@@ -139,6 +139,7 @@
 ---@field revert_and_commit? string
 ---@field show? string
 ---@field show_no_whitespace? string
+---@field commit_instant_fixup? string
 
 ---@class trunks.OpenFilesKeymaps
 ---@field open_file_popup? string

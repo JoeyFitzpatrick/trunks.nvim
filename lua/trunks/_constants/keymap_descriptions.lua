@@ -68,6 +68,7 @@ M.long_descriptions = {
         commit_details = "Show commit details",
         diff_commit_against_head = "Diff commit against current HEAD",
         commit_drop = "Drop commit (with automatic rebase)",
+        commit_instant_fixup = "Run instant fixup for commit",
         pull = PULL_DESCRIPTION,
         push = PUSH_DESCRIPTION,
         rebase = "Rebase",
@@ -186,6 +187,7 @@ add_description("commit_instant_fixup", "", "Select commit to fixup", "<enter>")
 
 add_description("log", "checkout", "Checkout")
 add_description("log", "commit_details", "Details")
+add_description("log", "commit_instant_fixup", "Instant fixup")
 add_description("log", "diff_commit_against_head", "Diff")
 add_description("log", "rebase", "Rebase")
 add_description("log", "revert", "Revert")
