@@ -92,39 +92,6 @@ local function get_qf_locations(command_builder)
     return M._parse_diff_output(diff_output)
 end
 
----@return string[]
-local function format_qf(info)
-    local result = {}
-    local items = vim.fn.getqflist({ id = info.id, items = 0 }).items
-
-    local max_filename_length = 0
-    local max_line_num = 0
-    for _, item in ipairs(items) do
-        max_filename_length = math.max(max_filename_length, #item.user_data.filename)
-        max_line_num = math.max(max_line_num, item.lnum)
-    end
-    max_line_num = #tostring(max_line_num)
-
-    for _, item in ipairs(items) do
-        local num_digits = #tostring(item.lnum)
-        table.insert(
-            result,
-            string
-                .format(
-                    "%s%s ┃%s%d┃ %s",
-                    item.user_data.filename,
-                    string.rep(" ", max_filename_length - #item.user_data.filename),
-                    string.rep(" ", max_line_num - num_digits),
-                    item.lnum,
-                    item.text:match(".?%s*(.+)")
-                )
-                :sub(1, vim.o.columns - 12)
-        )
-    end
-
-    return result
-end
-
 ---Parse commit range from difftool arguments using git to resolve revisions
 ---@param cmd string The full command string
 ---@return string|nil left_commit The left side of the diff (nil for working tree)
@@ -259,8 +226,6 @@ function M.render(command_builder)
             local bufnr = args.buf
             local bufname = vim.api.nvim_buf_get_name(bufnr)
             local current_win = vim.api.nvim_get_current_win()
-            local split_win
-            local split_bufnr = vim.b[bufnr].split_bufnr
 
             -- Extract the real filepath for vdiff command
             local filepath
@@ -271,25 +236,21 @@ function M.render(command_builder)
                 filepath = bufname
             end
 
-            if split_bufnr then
-                split_win = vim.api.nvim_open_win(split_bufnr, false, { split = "right" })
+            if right_commit then
+                -- Diff between two specific commits
+                -- We're already viewing right_commit, so open left_commit in the split
+                require("trunks._core.open_file").open_file_in_split(filepath, left_commit, "right", {})
+            elseif left_commit then
+                -- Diff commit against working tree
+                -- Current buffer is working tree, open commit in split
+                vim.cmd("Trunks vdiff " .. left_commit)
             else
-                if right_commit then
-                    -- Diff between two specific commits
-                    -- We're already viewing right_commit, so open left_commit in the split
-                    require("trunks._core.open_file").open_file_in_split(filepath, left_commit, "right", {})
-                elseif left_commit then
-                    -- Diff commit against working tree
-                    -- Current buffer is working tree, open commit in split
-                    vim.cmd("Trunks vdiff " .. left_commit)
-                else
-                    -- No commits specified, diff against working tree
-                    vim.cmd("Trunks vdiff")
-                end
-                vim.b[bufnr].split_bufnr = vim.api.nvim_get_current_buf()
-                split_win = vim.api.nvim_get_current_win()
-                vim.cmd("wincmd p")
+                -- No commits specified, diff against working tree
+                vim.cmd("Trunks vdiff")
             end
+
+            local split_win = vim.api.nvim_get_current_win()
+            vim.cmd("wincmd p")
 
             -- Close any wins aside from splits and things like qflist
             for _, win in ipairs(vim.api.nvim_tabpage_list_wins(diff_qf_tab_id)) do
@@ -321,9 +282,8 @@ function M.render(command_builder)
     vim.fn.setqflist({}, "r", {
         title = "Trunks diff-qf",
         items = flattened_qf_locations,
-        quickfixtextfunc = format_qf,
     })
-    vim.cmd.copen()
+    vim.cmd("copen | cfirst")
 end
 
 return M
