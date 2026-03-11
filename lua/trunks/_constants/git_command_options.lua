@@ -16,6 +16,7 @@ return {
     reflog = "subcommand",
     remote = "subcommand",
     rerere = "subcommand",
+    reset = "filepath",
     restore = "filepath",
     revert = "branch",
     rm = "filepath",
