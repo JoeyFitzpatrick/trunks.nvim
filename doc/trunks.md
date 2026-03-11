@@ -55,6 +55,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                 keymaps = {
                     delete = "d", -- Display a popup with branch deletion options
                     log = "<enter>", -- Display commits for branch under cursor
+                    merge_rebase_popup = "m", -- Open merge/rebase popup for branch under cursor
                     new_branch = "n", -- New branch from branch under cusor
                     pull = "p",
                     push = "<leader>p",
@@ -133,6 +134,14 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     recover = "r",
                     show = "s",
                     show_no_whitespace = "S",
+                },
+            },
+            merge_rebase_popup = {
+                keymaps = {
+                    merge = "m", -- Merge branch under cursor into current branch
+                    rebase = "r", -- Rebase current branch onto branch under cursor
+                    merge_remote = "M", -- Merge remote of branch under cursor into current branch
+                    rebase_remote = "R", -- Rebase current branch onto remote of branch under cursor
                 },
             },
             restore_popup = {

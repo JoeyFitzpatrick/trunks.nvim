@@ -22,6 +22,7 @@
 ---@field open_files? trunks.OpenFilesConfiguration
 ---@field open_file_popup? trunks.OpenFilePopupConfiguration
 ---@field reflog? trunks.ReflogConfiguration
+---@field merge_rebase_popup? trunks.MergeRebasePopupConfiguration
 ---@field restore_popup? trunks.RestorePopupConfiguration
 ---@field stash? trunks.StashConfiguration
 ---@field stash_popup? trunks.StashPopupConfiguration
@@ -96,6 +97,7 @@
 ---@class trunks.BranchKeymaps
 ---@field delete? string
 ---@field log? string
+---@field merge_rebase_popup? string
 ---@field new_branch? string
 ---@field pull? string
 ---@field push? string
@@ -157,6 +159,15 @@
 ---@field recover? string
 ---@field show? string
 ---@field show_no_whitespace? string
+
+---@class trunks.MergeRebasePopupConfiguration
+---@field keymaps? trunks.MergeRebasePopupKeymaps
+
+---@class trunks.MergeRebasePopupKeymaps
+---@field merge? string
+---@field rebase? string
+---@field merge_remote? string
+---@field rebase_remote? string
 
 ---@class trunks.RestorePopupConfiguration
 ---@field keymaps? trunks.RestorePopupKeymaps

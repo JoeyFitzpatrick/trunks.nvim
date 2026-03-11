@@ -76,6 +76,10 @@ local function set_keymaps(bufnr)
         end
     end
 
+    set("n", keymaps.merge_rebase_popup, with_line(bufnr, get_line, function(line_data)
+        require("trunks._ui.popups.merge_rebase_popup").render(line_data.branch_name)
+    end), keymap_opts)
+
     set("n", keymaps.delete, with_line(bufnr, get_line, function(line_data)
         require("trunks._ui.popups.popup").render_popup({
             buffer_name = "TrunksDeleteBranch",

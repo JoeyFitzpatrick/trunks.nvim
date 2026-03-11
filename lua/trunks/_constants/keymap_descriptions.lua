@@ -29,6 +29,7 @@ M.long_descriptions = {
     branch = {
         delete = "Delete branch",
         log = "Show branch log",
+        merge_rebase_popup = "Open merge/rebase options",
         new_branch = "Create new branch",
         pull = PULL_DESCRIPTION,
         push = PUSH_DESCRIPTION,
@@ -99,6 +100,13 @@ M.long_descriptions = {
         show = "Show commit details (native diff)",
         show_no_whitespace = "Show commit details, ignoring whitespace",
     },
+    ---@type trunks.MergeRebasePopupKeymaps
+    merge_rebase_popup = {
+        merge = "Merge into current branch",
+        rebase = "Rebase current branch",
+        merge_remote = "Merge remote into current branch",
+        rebase_remote = "Rebase current branch onto remote",
+    },
     ---@type trunks.RestorePopupKeymaps
     restore_popup = {
         restore_from_commit = "Restore file from this commit",
@@ -165,6 +173,7 @@ add_description("blame", "reblame", "Reblame")
 
 add_description("branch", "delete", "Delete")
 add_description("branch", "log", "Commits")
+add_description("branch", "merge_rebase_popup", "Merge/Rebase")
 add_description("branch", "new_branch", "New branch")
 add_description("branch", "rename", "Rename")
 add_description("branch", "switch", "Switch")
