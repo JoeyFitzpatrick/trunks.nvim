@@ -38,27 +38,16 @@ end
 local function display_keymap_help(mappings, ui_type, opts)
     ---@type string[]
     local keys_to_descriptions = {}
+    local all_descriptions = require("trunks._constants.keymap_descriptions").long_descriptions
     local descriptions = require("trunks._constants.keymap_descriptions").long_descriptions[ui_type] or {}
     if opts.open_file_keymaps then
-        descriptions = vim.tbl_extend(
-            "force",
-            descriptions,
-            require("trunks._constants.keymap_descriptions").long_descriptions.open_files
-        )
+        descriptions = vim.tbl_extend("force", descriptions, all_descriptions.open_files)
     end
     if opts.auto_display_keymaps then
-        descriptions = vim.tbl_extend(
-            "force",
-            descriptions,
-            require("trunks._constants.keymap_descriptions").long_descriptions.auto_display
-        )
+        descriptions = vim.tbl_extend("force", descriptions, all_descriptions.auto_display)
     end
     if opts.diff_keymaps then
-        descriptions = vim.tbl_extend(
-            "force",
-            descriptions,
-            require("trunks._constants.keymap_descriptions").long_descriptions.diff
-        )
+        descriptions = vim.tbl_extend("force", descriptions, all_descriptions.diff)
     end
     local max_keymap_length = get_max_keymap_length(mappings)
 
@@ -69,7 +58,12 @@ local function display_keymap_help(mappings, ui_type, opts)
             string.format("   %s%s %s %s", keys, padding, MAP_SYMBOL, descriptions[command])
         )
     end
-    table.sort(keys_to_descriptions)
+    -- Sort keymaps by description, which is right after MAP_SYMBOL
+    table.sort(keys_to_descriptions, function(left, right)
+        local left_index = left:find(MAP_SYMBOL, 1, true)
+        local right_index = right:find(MAP_SYMBOL, 1, true)
+        return left:sub(left_index) < right:sub(right_index)
+    end)
 
     local bufnr = vim.api.nvim_create_buf(false, true)
     require("trunks._ui.elements").float(bufnr, { title = ui_type .. " keymaps" })
