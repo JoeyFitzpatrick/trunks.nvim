@@ -93,7 +93,6 @@ function M.set_keymaps(bufnr)
 
     local keymap_to_command_map = {
         { keymap = keymaps.pull, command = "pull" },
-        { keymap = keymaps.push, command = "push" },
     }
 
     for _, mapping in ipairs(keymap_to_command_map) do
@@ -135,6 +134,8 @@ function M.set_keymaps(bufnr)
         end),
         keymap_opts
     )
+
+    set("n", keymaps.push, require("trunks._ui.keymaps.base").git_push_keymap, keymap_opts)
 
     set("n", keymaps.restore, function()
         -- We need to pass in line_num, otherwise it uses cursor position from popup
