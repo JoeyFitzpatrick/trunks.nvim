@@ -3,7 +3,9 @@ local PREFIX = "G"
 local function run_switch_command()
     local branches = vim.fn.systemlist("git branch --all")
     vim.ui.select(branches, { prompt = "Git Branches" }, function(selection)
-        vim.cmd("G switch " .. selection)
+        if selection then
+            vim.cmd("G switch " .. selection)
+        end
     end)
 end
 
