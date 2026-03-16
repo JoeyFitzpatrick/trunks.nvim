@@ -80,6 +80,7 @@ vim.api.nvim_create_user_command("Trunks", function(input_args)
 end, {
     nargs = "*",
     desc = "Trunks command API. For commands that aren't native git commands.",
+    bang = true,
     range = true,
     complete = function(arglead, cmdline)
         local completion = require("trunks._completion").complete_command(arglead, cmdline, "Trunks")

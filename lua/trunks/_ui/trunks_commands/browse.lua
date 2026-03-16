@@ -115,7 +115,14 @@ function M.browse(_, input_args)
     end
 
     local url = M._generate_url(input_args)
-    if url then
+    if not url then
+        -- We already print an error message in _generate_url
+        return
+    end
+    if input_args.bang then
+        vim.fn.setreg("+", url)
+        vim.notify("Copied URL to clipboard: " .. url)
+    else
         vim.ui.open(url)
     end
 end
