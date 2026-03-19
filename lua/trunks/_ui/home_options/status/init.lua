@@ -2,6 +2,9 @@ local M = {}
 
 local elements = require("trunks._ui.elements")
 local ui_utils = require("trunks._ui.utils.ui_utils")
+local status_utils = require("trunks._ui.home_options.status.status_utils")
+local run_hidden_cmd = require("trunks._core.run_cmd").run_hidden_cmd
+local run_cmd = require("trunks._core.run_cmd").run_cmd
 
 local function get_status(line)
     return line:sub(1, 2)
@@ -30,7 +33,7 @@ function M.get_line(bufnr, line_num)
 end
 
 local function remove_untracked_file(filename)
-    require("trunks._core.run_cmd").run_hidden_cmd("git clean -f " .. filename, { rerender = true })
+    run_hidden_cmd("git clean -f " .. filename, { rerender = true })
 
     -- File/dir can still exist in some edge cases, for example, if it's an empty dir with a .git folder.
     -- In this case, currently we no-op, but documenting here for future reference.
@@ -50,12 +53,9 @@ function M.set_keymaps(bufnr)
         keymaps.stage,
         with_line(bufnr, M.get_line, function(line_data)
             if not require("trunks._core.git").is_staged(line_data.status) then
-                require("trunks._core.run_cmd").run_hidden_cmd("git add -- " .. line_data.filename, { rerender = true })
+                run_hidden_cmd("git add -- " .. line_data.filename, { rerender = true })
             else
-                require("trunks._core.run_cmd").run_hidden_cmd(
-                    "git reset HEAD -- " .. line_data.filename,
-                    { rerender = true }
-                )
+                run_hidden_cmd("git reset HEAD -- " .. line_data.filename, { rerender = true })
             end
         end),
         keymap_opts
@@ -64,31 +64,28 @@ function M.set_keymaps(bufnr)
     set("v", keymaps.stage, function()
         local visual_start_line, end_line = require("trunks._ui.utils.ui_utils").get_visual_line_nums()
         local files = vim.api.nvim_buf_get_lines(bufnr, visual_start_line, end_line, false)
-        local should_stage = require("trunks._ui.home_options.status.status_utils").should_stage_files(files)
+        local should_stage = status_utils.should_stage_files(files)
         local files_as_string = ""
         for i, file in ipairs(files) do
             -- don't add space for first file, and don't include status
             files_as_string = files_as_string .. (i == 0 and "" or " ") .. file:sub(4)
         end
         if should_stage then
-            require("trunks._core.run_cmd").run_hidden_cmd("git add " .. files_as_string, { rerender = true })
+            run_hidden_cmd("git add " .. files_as_string, { rerender = true })
             return
         end
-        require("trunks._core.run_cmd").run_hidden_cmd(
-            "git restore --staged -- " .. files_as_string,
-            { rerender = true }
-        )
+        run_hidden_cmd("git restore --staged -- " .. files_as_string, { rerender = true })
     end, keymap_opts)
 
     set("n", keymaps.stage_all, function()
-        local should_stage = require("trunks._ui.home_options.status.status_utils").should_stage_files(
+        local should_stage = status_utils.should_stage_files(
             vim.api.nvim_buf_get_lines(bufnr, ui_utils.get_start_line(bufnr), -1, false)
         )
         if should_stage then
-            require("trunks._core.run_cmd").run_hidden_cmd("git add -A", { rerender = true })
+            run_hidden_cmd("git add -A", { rerender = true })
             return
         end
-        require("trunks._core.run_cmd").run_hidden_cmd("git reset", { rerender = true })
+        run_hidden_cmd("git reset", { rerender = true })
     end, keymap_opts)
 
     local keymap_to_command_map = {
@@ -159,7 +156,7 @@ function M.set_keymaps(bufnr)
                             remove_untracked_file(filename)
                         else
                             local cmd = "git reset -- " .. filename .. " && git restore -- " .. filename
-                            require("trunks._core.run_cmd").run_hidden_cmd(cmd, { rerender = true })
+                            run_hidden_cmd(cmd, { rerender = true })
                         end
                     end,
                 },
@@ -179,7 +176,7 @@ function M.set_keymaps(bufnr)
                         else
                             -- Worth noting that lazygit does git -c core.hooksPath=/dev/null checkout -- filename
                             local cmd = "git restore -- " .. filename
-                            require("trunks._core.run_cmd").run_hidden_cmd(cmd, { rerender = true })
+                            run_hidden_cmd(cmd, { rerender = true })
                         end
                     end,
                 },
@@ -187,31 +184,28 @@ function M.set_keymaps(bufnr)
                     keys = "n",
                     description = "Nuke working tree",
                     action = function()
-                        require("trunks._core.run_cmd").run_hidden_cmd(
-                            "git reset --hard HEAD && git clean -fd",
-                            { rerender = true }
-                        )
+                        run_hidden_cmd("git reset --hard HEAD && git clean -fd", { rerender = true })
                     end,
                 },
                 {
                     keys = "h",
                     description = "Hard reset",
                     action = function()
-                        require("trunks._core.run_cmd").run_hidden_cmd("git reset --hard HEAD", { rerender = true })
+                        run_hidden_cmd("git reset --hard HEAD", { rerender = true })
                     end,
                 },
                 {
                     keys = "s",
                     description = "Soft reset",
                     action = function()
-                        require("trunks._core.run_cmd").run_hidden_cmd("git reset --soft HEAD", { rerender = true })
+                        run_hidden_cmd("git reset --soft HEAD", { rerender = true })
                     end,
                 },
                 {
                     keys = "m",
                     description = "Mixed reset",
                     action = function()
-                        require("trunks._core.run_cmd").run_hidden_cmd("git reset --mixed HEAD", { rerender = true })
+                        run_hidden_cmd("git reset --mixed HEAD", { rerender = true })
                     end,
                 },
             },
@@ -245,23 +239,17 @@ function M.set_keymaps(bufnr)
                 return
             end
             if statuses.staged ~= "" then
-                require("trunks._core.run_cmd").run_hidden_cmd(
+                run_hidden_cmd(
                     string.format("git reset -- %s && git clean -f -- %s", statuses.staged, statuses.staged),
                     { rerender = true }
                 )
             end
             if statuses.unstaged ~= "" then
-                require("trunks._core.run_cmd").run_hidden_cmd(
-                    "git restore -- " .. statuses.unstaged,
-                    { rerender = true }
-                )
+                run_hidden_cmd("git restore -- " .. statuses.unstaged, { rerender = true })
             end
             if statuses.untracked ~= "" then
                 --
-                require("trunks._core.run_cmd").run_hidden_cmd(
-                    "git clean -f -- " .. statuses.untracked,
-                    { rerender = true }
-                )
+                run_hidden_cmd("git clean -f -- " .. statuses.untracked, { rerender = true })
             end
         end)
     end, keymap_opts)
@@ -312,6 +300,41 @@ local function get_diff_cmd(status, safe_filename, raw_filename, bufnr)
         return "diff -- " .. safe_filename
     end
     return "diff -- " .. safe_filename
+end
+
+---@class trunks.StatusSetLinesContext
+---@field get_files? fun(): string[]
+---@field diff_stat_text? string
+
+---@param bufnr integer
+---@param ctx? trunks.StatusSetLinesContext
+function M._set_lines(bufnr, ctx)
+    ctx = ctx or {}
+    local set = require("trunks._ui.utils.buffer_text").set
+
+    local Command = require("trunks._core.command")
+    local head_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
+    local head_cmd_output, head_cmd_exit_code = run_cmd(head_cmd)
+    if head_cmd_exit_code == 0 then
+        set(bufnr, { "Head: " .. head_cmd_output[1] })
+    else
+        local hash_cmd = Command.base_command("rev-parse --short HEAD"):build()
+        local hash_cmd_output, hash_cmd_exit_code = run_cmd(hash_cmd)
+        if hash_cmd_output[1] and hash_cmd_exit_code == 0 then
+            set(bufnr, { "Head: " .. hash_cmd_output[1] .. "(detached head)" })
+        else
+            set(bufnr, { "Head: unable to find current HEAD" })
+        end
+    end
+
+    set(bufnr, { "Help: g?" }, 1)
+
+    local diff_stat_text = status_utils.get_diff_stat(ctx.diff_stat_text)
+    set(bufnr, { diff_stat_text }, 2)
+
+    local files = status_utils.get_status_files(ctx.get_files)
+    set(bufnr, { "", string.format("Unstaged (%d)", #files.unstaged + #files.untracked) }, 3)
+    set(bufnr, { "", string.format("Staged (%d)", #files.staged) }, 5)
 end
 
 ---@param bufnr integer

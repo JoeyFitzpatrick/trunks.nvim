@@ -14,4 +14,60 @@ function M.should_stage_files(files)
     return false
 end
 
+---@class trunks.StatusFiles
+---@field staged string[]
+---@field unstaged string[]
+---@field untracked string[]
+
+---@param get_files_fn? fun(): string[]
+---@return trunks.StatusFiles
+function M.get_status_files(get_files_fn)
+    get_files_fn = get_files_fn
+        or function()
+            local Command = require("trunks._core.command")
+            local cmd = Command.base_command("git status -s"):build()
+            local files = require("trunks._core.run_cmd").run_cmd(cmd)
+            return files
+        end
+
+    local files = get_files_fn()
+
+    local staged = {}
+    local unstaged = {}
+    local untracked = {}
+
+    for _, file in ipairs(files) do
+        local filename = file:sub(4)
+        if file:sub(1, 2) == "??" then
+            table.insert(untracked, "? " .. filename)
+        else
+            local first_char = file:sub(1, 1)
+            local second_char = file:sub(2, 2)
+            if first_char ~= " " then
+                table.insert(staged, first_char .. " " .. filename)
+            end
+            if second_char ~= " " then
+                table.insert(unstaged, second_char .. " " .. filename)
+            end
+        end
+    end
+
+    return { staged = staged, unstaged = unstaged, untracked = untracked }
+end
+
+---@param diff_stat_text? string
+function M.get_diff_stat(diff_stat_text)
+    if diff_stat_text then
+        return diff_stat_text
+    end
+    local Command = require("trunks._core.command")
+    local diff_stat_cmd = Command.base_command("diff --staged --shortstat"):build({ no_pager = true })
+    local diff_stat_cmd_output, diff_stat_cmd_exit_code = require("trunks._core.run_cmd").run_cmd(diff_stat_cmd)
+    if diff_stat_cmd_exit_code == 0 and diff_stat_cmd_output[1] then
+        return diff_stat_cmd_output[1]
+    else
+        return "No staged changes"
+    end
+end
+
 return M
