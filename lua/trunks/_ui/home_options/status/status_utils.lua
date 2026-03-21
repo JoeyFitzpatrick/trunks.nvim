@@ -18,6 +18,7 @@ end
 ---@field staged string[]
 ---@field unstaged string[]
 ---@field untracked string[]
+---@field unstaged_and_untracked string[]
 
 ---@param get_files_fn? fun(): string[]
 ---@return trunks.StatusFiles
@@ -52,7 +53,28 @@ function M.get_status_files(get_files_fn)
         end
     end
 
-    return { staged = staged, unstaged = unstaged, untracked = untracked }
+    local unstaged_and_untracked = {}
+    for _, file in ipairs(unstaged) do
+        table.insert(unstaged_and_untracked, file)
+    end
+    for _, file in ipairs(untracked) do
+        table.insert(unstaged_and_untracked, file)
+    end
+
+    local result = {
+        staged = staged,
+        unstaged = unstaged,
+        untracked = untracked,
+        unstaged_and_untracked = unstaged_and_untracked,
+    }
+
+    for _, tbl in pairs(result) do
+        table.sort(tbl, function(left, right)
+            return left:sub(3) < right:sub(3)
+        end)
+    end
+
+    return result
 end
 
 ---@param diff_stat_text? string

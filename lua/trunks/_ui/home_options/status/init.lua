@@ -334,7 +334,10 @@ function M._set_lines(bufnr, ctx)
 
     local files = status_utils.get_status_files(ctx.get_files)
     set(bufnr, { "", string.format("Unstaged (%d)", #files.unstaged + #files.untracked) }, 3)
-    set(bufnr, { "", string.format("Staged (%d)", #files.staged) }, 5)
+    set(bufnr, files.unstaged_and_untracked, 5)
+    local index = 6 + #files.unstaged_and_untracked
+    set(bufnr, { "", string.format("Staged (%d)", #files.staged) }, index)
+    set(bufnr, files.staged, index + 1)
 end
 
 ---@param bufnr integer

@@ -33,4 +33,34 @@ describe("get_status_files", function()
             "? untrack2",
         })
     end)
+
+    it("sorts files by filename", function()
+        local function generate_files()
+            return {
+                "A  b",
+                "A  c",
+                "M  a",
+                "M  d",
+                " M b",
+                " M c",
+                "?? a",
+                "?? d",
+            }
+        end
+        local files = get_status_files(generate_files)
+
+        assert.are.same(files.staged, {
+            "M a",
+            "A b",
+            "A c",
+            "M d",
+        })
+
+        assert.are.same(files.unstaged_and_untracked, {
+            "? a",
+            "M b",
+            "M c",
+            "? d",
+        })
+    end)
 end)

@@ -26,7 +26,7 @@ describe("status set_lines", function()
         assert.are.same("Staged (0)", staged_changes_line)
     end)
 
-    it("displays number of staged and unstaged files", function()
+    it("displays staged and unstaged files", function()
         local function generate_files()
             return {
                 "A  added1",
@@ -45,8 +45,16 @@ describe("status set_lines", function()
 
         local unstaged_changes_line = lines[5]
         assert.are.same("Unstaged (4)", unstaged_changes_line)
+        assert.are.same("M modunstage1", lines[6])
+        assert.are.same("M modunstage2", lines[7])
+        assert.are.same("? untrack1", lines[8])
+        assert.are.same("? untrack2", lines[9])
 
-        local staged_changes_line = lines[7]
+        local staged_changes_line = lines[11]
         assert.are.same("Staged (4)", staged_changes_line)
+        assert.are.same("A added1", lines[12])
+        assert.are.same("A added2", lines[13])
+        assert.are.same("M modstage1", lines[14])
+        assert.are.same("M modstage2", lines[15])
     end)
 end)
