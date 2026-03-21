@@ -26,8 +26,9 @@ function M.get_status_files(get_files_fn)
     get_files_fn = get_files_fn
         or function()
             local Command = require("trunks._core.command")
-            local cmd = Command.base_command("git status -s"):build()
+            local cmd = Command.base_command("status -s"):build()
             local files = require("trunks._core.run_cmd").run_cmd(cmd)
+            vim.print(files)
             return files
         end
 
