@@ -28,7 +28,6 @@ function M.get_status_files(get_files_fn)
             local Command = require("trunks._core.command")
             local cmd = Command.base_command("status -s"):build()
             local files = require("trunks._core.run_cmd").run_cmd(cmd)
-            vim.print(files)
             return files
         end
 
@@ -91,6 +90,39 @@ function M.get_diff_stat(diff_stat_text)
     else
         return "No staged changes"
     end
+end
+
+---@param remote_branch_text? string
+function M.get_remote_branch(remote_branch_text)
+    if remote_branch_text then
+        return remote_branch_text
+    end
+    local run_cmd = require("trunks._core.run_cmd").run_cmd
+    local Command = require("trunks._core.command")
+
+    local upstream_cmd = Command.base_command("rev-parse --abbrev-ref --symbolic-full-name @{u}"):build()
+    local upstream_output, upstream_exit_code = run_cmd(upstream_cmd)
+
+    if upstream_exit_code ~= 0 or not upstream_output[1] then
+        local branch_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
+        local branch_output, branch_exit_code = run_cmd(branch_cmd)
+        local branch = (branch_exit_code == 0 and branch_output[1]) or "HEAD"
+        return "Push: " .. branch
+    end
+
+    local upstream = upstream_output[1]
+
+    local rebase_cmd = Command.base_command("config pull.rebase"):build()
+    local rebase_output, rebase_exit_code = run_cmd(rebase_cmd)
+
+    local prefix
+    if rebase_exit_code == 0 and rebase_output[1] and rebase_output[1] ~= "false" then
+        prefix = "Rebase: "
+    else
+        prefix = "Merge: "
+    end
+
+    return prefix .. upstream
 end
 
 return M

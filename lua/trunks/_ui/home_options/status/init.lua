@@ -305,6 +305,7 @@ end
 ---@class trunks.StatusSetLinesContext
 ---@field get_files? fun(): string[]
 ---@field diff_stat_text? string
+---@field remote_branch_text? string
 
 ---@param bufnr integer
 ---@param ctx? trunks.StatusSetLinesContext
@@ -327,15 +328,18 @@ function M._set_lines(bufnr, ctx)
         end
     end
 
-    set(bufnr, { "Help: g?" }, 1)
+    local remote_branch_text = status_utils.get_remote_branch(ctx.remote_branch_text)
+    set(bufnr, { remote_branch_text }, 1)
+
+    set(bufnr, { "Help: g?" }, 2)
 
     local diff_stat_text = status_utils.get_diff_stat(ctx.diff_stat_text)
-    set(bufnr, { diff_stat_text }, 2)
+    set(bufnr, { diff_stat_text }, 3)
 
     local files = status_utils.get_status_files(ctx.get_files)
-    set(bufnr, { "", string.format("Unstaged (%d)", #files.unstaged + #files.untracked) }, 3)
-    set(bufnr, files.unstaged_and_untracked, 5)
-    local index = 6 + #files.unstaged_and_untracked
+    set(bufnr, { "", string.format("Unstaged (%d)", #files.unstaged + #files.untracked) }, 4)
+    set(bufnr, files.unstaged_and_untracked, 6)
+    local index = 7 + #files.unstaged_and_untracked
     set(bufnr, { "", string.format("Staged (%d)", #files.staged) }, index)
     set(bufnr, files.staged, index + 1)
 end
