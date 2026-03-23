@@ -18,10 +18,6 @@ describe("status set_lines", function()
             "Rebase: origin/main",
             "Help: g?",
             "No staged changes",
-            "",
-            "Unstaged (0)",
-            "",
-            "Staged (0)",
         }, lines)
     end)
 
@@ -64,6 +60,60 @@ describe("status set_lines", function()
             "A added2",
             "M modstage1",
             "M modstage2",
+        }, lines)
+    end)
+
+    it("doesn't display an empty unstaged files section", function()
+        local function generate_files()
+            return {
+                "A  added1",
+                "A  added2",
+            }
+        end
+        local bufnr = vim.api.nvim_create_buf(false, true)
+        set_lines(bufnr, {
+            get_files = generate_files,
+            diff_stat_text = "No staged changes",
+            remote_branch_text = "Rebase: origin/main",
+        })
+        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+        assert.are.same({
+            "Head: main",
+            "Rebase: origin/main",
+            "Help: g?",
+            "No staged changes",
+            "",
+            "Staged (2)",
+            "A added1",
+            "A added2",
+        }, lines)
+    end)
+
+    it("doesn't display an empty staged files section", function()
+        local function generate_files()
+            return {
+                " M mod",
+                "?? untracked",
+            }
+        end
+        local bufnr = vim.api.nvim_create_buf(false, true)
+        set_lines(bufnr, {
+            get_files = generate_files,
+            diff_stat_text = "No staged changes",
+            remote_branch_text = "Rebase: origin/main",
+        })
+        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+        assert.are.same({
+            "Head: main",
+            "Rebase: origin/main",
+            "Help: g?",
+            "No staged changes",
+            "",
+            "Unstaged (2)",
+            "M mod",
+            "? untracked",
         }, lines)
     end)
 end)

@@ -311,7 +311,16 @@ end
 ---@param ctx? trunks.StatusSetLinesContext
 function M._set_lines(bufnr, ctx)
     ctx = ctx or {}
-    local set = require("trunks._ui.utils.buffer_text").set
+
+    local index = 0
+    ---@param lines string[]
+    local set = function(lines)
+        if lines == {} then
+            return
+        end
+        require("trunks._ui.utils.buffer_text").set(bufnr, lines, index)
+        index = index + #lines
+    end
 
     local Command = require("trunks._core.command")
     local head_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
@@ -320,7 +329,7 @@ function M._set_lines(bufnr, ctx)
 
     if head_cmd_exit_code == 0 then
         branch = head_cmd_output[1]
-        set(bufnr, { "Head: " .. branch })
+        set({ "Head: " .. branch })
     else
         local hash_cmd = Command.base_command("rev-parse --short HEAD"):build()
         local hash_cmd_output, hash_cmd_exit_code = run_cmd(hash_cmd)
@@ -339,19 +348,23 @@ function M._set_lines(bufnr, ctx)
     end
 
     local remote_branch_text = status_utils.get_remote_branch(ctx.remote_branch_text)
-    set(bufnr, { remote_branch_text }, 1)
+    set({ remote_branch_text }, 1)
 
-    set(bufnr, { "Help: g?" }, 2)
+    set({ "Help: g?" })
 
     local diff_stat_text = status_utils.get_diff_stat(ctx.diff_stat_text)
-    set(bufnr, { diff_stat_text }, 3)
+    set({ diff_stat_text })
 
     local files = status_utils.get_status_files(ctx.get_files)
-    set(bufnr, { "", string.format("Unstaged (%d)", #files.unstaged + #files.untracked) }, 4)
-    set(bufnr, files.unstaged_and_untracked, 6)
-    local index = 7 + #files.unstaged_and_untracked
-    set(bufnr, { "", string.format("Staged (%d)", #files.staged) }, index)
-    set(bufnr, files.staged, index + 1)
+    if #files.unstaged_and_untracked > 0 then
+        set({ "", string.format("Unstaged (%d)", #files.unstaged_and_untracked) })
+        set(files.unstaged_and_untracked)
+    end
+
+    if #files.staged > 0 then
+        set({ "", string.format("Staged (%d)", #files.staged) })
+        set(files.staged)
+    end
 end
 
 ---@param bufnr integer
