@@ -20,6 +20,21 @@ end
 ---@return trunks.StatusLineData | nil
 function M.get_line(bufnr, line_num)
     line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
+
+    local status_files = vim.b[bufnr].trunks_status_files
+    if status_files then
+        local file = status_files[line_num]
+        if file then
+            local filename = file.filename
+            return {
+                filename = filename,
+                safe_filename = "'" .. filename .. "'",
+                status = file.status,
+                staged = file.staged,
+            }
+        end
+    end
+
     if line_num <= ui_utils.get_start_line(bufnr) then
         return nil
     end
@@ -41,9 +56,7 @@ end
 
 ---@param bufnr integer
 function M.set_keymaps(bufnr)
-    local default_ui_keymap_opts = { auto_display_keymaps = true }
-    local ui_keymap_opts = vim.tbl_extend("force", default_ui_keymap_opts, {})
-    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "status", ui_keymap_opts)
+    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "status", { auto_display_keymaps = true })
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
     local with_line = require("trunks._ui.keymaps.set").with_line
@@ -356,15 +369,24 @@ function M._set_lines(bufnr, ctx)
     set({ diff_stat_text })
 
     local files = status_utils.get_status_files(ctx.get_files)
+    local unstaged_untracked_index
     if #files.unstaged_and_untracked > 0 then
         set({ "", string.format("Unstaged (%d)", #files.unstaged_and_untracked) })
+        unstaged_untracked_index = index
         set(files.unstaged_and_untracked)
     end
 
+    local staged_index
     if #files.staged > 0 then
         set({ "", string.format("Staged (%d)", #files.staged) })
+        staged_index = index
         set(files.staged)
     end
+
+    status_utils.set_status_files_variable(
+        bufnr,
+        { files = files, staged_index = staged_index, unstaged_untracked_index = unstaged_untracked_index }
+    )
 end
 
 ---@param bufnr integer

@@ -116,4 +116,46 @@ describe("status set_lines", function()
             "? untracked",
         }, lines)
     end)
+
+    it("sets a buffer-local variable with files at line numbers", function()
+        local function generate_files()
+            return {
+                "A  added1",
+                "A  added2",
+                "M  modstage1",
+                "M  modstage2",
+                " M modunstage1",
+                " M modunstage2",
+                "?? untrack1",
+                "?? untrack2",
+            }
+        end
+        local bufnr = vim.api.nvim_create_buf(false, true)
+        set_lines(bufnr, {
+            get_files = generate_files,
+            diff_stat_text = "No staged changes",
+            remote_branch_text = "Rebase: origin/main",
+        })
+
+        local status_files_from_buf_variable = vim.b[bufnr].trunks_status_files
+
+        assert.are.same({
+            vim.NIL,
+            vim.NIL,
+            vim.NIL,
+            vim.NIL,
+            vim.NIL,
+            vim.NIL,
+            { filename = "modunstage1", status = "M", staged = false },
+            { filename = "modunstage2", status = "M", staged = false },
+            { filename = "untrack1", status = "?", staged = false },
+            { filename = "untrack2", status = "?", staged = false },
+            vim.NIL,
+            vim.NIL,
+            { filename = "added1", status = "A", staged = true },
+            { filename = "added2", status = "A", staged = true },
+            { filename = "modstage1", status = "M", staged = true },
+            { filename = "modstage2", status = "M", staged = true },
+        }, status_files_from_buf_variable)
+    end)
 end)

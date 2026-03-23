@@ -125,4 +125,30 @@ function M.get_remote_branch(remote_branch_text)
     return prefix .. upstream
 end
 
+---@class trunks.SetStatusFilesVariableParams
+---@field files trunks.StatusFiles
+---@field unstaged_untracked_index? integer
+---@field staged_index? integer
+
+---@param bufnr integer
+---@param opts trunks.SetStatusFilesVariableParams
+function M.set_status_files_variable(bufnr, opts)
+    local trunks_status_files = {}
+
+    if opts.unstaged_untracked_index then
+        for i, file in ipairs(opts.files.unstaged_and_untracked) do
+            trunks_status_files[i + opts.unstaged_untracked_index] =
+                { filename = file:sub(3), status = file:sub(1, 1), staged = false }
+        end
+    end
+
+    if opts.staged_index then
+        for i, file in ipairs(opts.files.staged) do
+            trunks_status_files[i + opts.staged_index] =
+                { filename = file:sub(3), status = file:sub(1, 1), staged = true }
+        end
+    end
+    vim.b[bufnr].trunks_status_files = trunks_status_files
+end
+
 return M
