@@ -316,8 +316,11 @@ function M._set_lines(bufnr, ctx)
     local Command = require("trunks._core.command")
     local head_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
     local head_cmd_output, head_cmd_exit_code = run_cmd(head_cmd)
+    local branch
+
     if head_cmd_exit_code == 0 then
-        set(bufnr, { "Head: " .. head_cmd_output[1] })
+        branch = head_cmd_output[1]
+        set(bufnr, { "Head: " .. branch })
     else
         local hash_cmd = Command.base_command("rev-parse --short HEAD"):build()
         local hash_cmd_output, hash_cmd_exit_code = run_cmd(hash_cmd)
@@ -326,6 +329,13 @@ function M._set_lines(bufnr, ctx)
         else
             set(bufnr, { "Head: unable to find current HEAD" })
         end
+    end
+
+    if branch then
+        require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(
+            bufnr,
+            { line_num = 0, branch = branch }
+        )
     end
 
     local remote_branch_text = status_utils.get_remote_branch(ctx.remote_branch_text)
