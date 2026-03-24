@@ -261,7 +261,6 @@ function M.set_keymaps(bufnr)
                 run_hidden_cmd("git restore -- " .. statuses.unstaged, { rerender = true })
             end
             if statuses.untracked ~= "" then
-                --
                 run_hidden_cmd("git clean -f -- " .. statuses.untracked, { rerender = true })
             end
         end)
@@ -387,6 +386,27 @@ function M._set_lines(bufnr, ctx)
         bufnr,
         { files = files, staged_index = staged_index, unstaged_untracked_index = unstaged_untracked_index }
     )
+end
+
+---@param bufnr integer
+function M.new_render(bufnr)
+    require("trunks._ui.home_options.status")._set_lines(bufnr)
+    require("trunks._ui.home_options.status").set_keymaps(bufnr)
+    vim.b[bufnr].trunks_rerender_fn = function()
+        if not vim.api.nvim_buf_is_valid(bufnr) then
+            return
+        end
+        local win = vim.fn.bufwinid(bufnr)
+        if not vim.api.nvim_win_is_valid(win) then
+            return
+        end
+        local cursor = vim.api.nvim_win_get_cursor(win)
+        vim.bo[bufnr].modifiable = true
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+        M._set_lines(bufnr)
+        vim.bo[bufnr].modifiable = false
+        vim.api.nvim_win_set_cursor(win, cursor)
+    end
 end
 
 ---@param bufnr integer
