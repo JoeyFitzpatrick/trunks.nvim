@@ -5,6 +5,7 @@ local ui_utils = require("trunks._ui.utils.ui_utils")
 local status_utils = require("trunks._ui.home_options.status.status_utils")
 local run_hidden_cmd = require("trunks._core.run_cmd").run_hidden_cmd
 local run_cmd = require("trunks._core.run_cmd").run_cmd
+local Command = require("trunks._core.command")
 
 local function get_status(line)
     return line:sub(1, 2)
@@ -334,7 +335,6 @@ function M._set_lines(bufnr, ctx)
         index = index + #lines
     end
 
-    local Command = require("trunks._core.command")
     local head_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
     local head_cmd_output, head_cmd_exit_code = run_cmd(head_cmd)
     local branch
@@ -392,6 +392,26 @@ end
 function M.new_render(bufnr)
     require("trunks._ui.home_options.status")._set_lines(bufnr)
     require("trunks._ui.home_options.status").set_keymaps(bufnr)
+    local with_line = require("trunks._ui.keymaps.set").with_line
+
+    require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
+        generate_cmd = with_line(bufnr, M.get_line, function(line_data)
+            local last_file = vim.b[bufnr].trunks_last_file
+            if last_file ~= line_data.filename then
+                vim.b[bufnr].trunks_show_unstaged_for = nil
+                vim.b[bufnr].trunks_last_file = line_data.filename
+            end
+            return Command.base_command(
+                get_diff_cmd(line_data.status, line_data.safe_filename, line_data.filename, bufnr)
+            )
+                :build()
+        end),
+        get_current_diff = with_line(bufnr, M.get_line, function(line_data)
+            return line_data.safe_filename
+        end),
+        strategy = { enter = false, display_strategy = "below", pty = false },
+    })
+
     vim.b[bufnr].trunks_rerender_fn = function()
         if not vim.api.nvim_buf_is_valid(bufnr) then
             return
@@ -420,7 +440,6 @@ function M.render(bufnr, opts)
     vim.api.nvim_win_set_cursor(term.win, { 3, 0 })
 
     local win = term.win
-    local Command = require("trunks._core.command")
     local with_line = require("trunks._ui.keymaps.set").with_line
     require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
         generate_cmd = with_line(bufnr, M.get_line, function(line_data)

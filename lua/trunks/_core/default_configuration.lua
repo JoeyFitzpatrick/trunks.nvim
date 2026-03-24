@@ -146,7 +146,7 @@ return {
         },
     },
     status = {
-        auto_display_on = true,
+        auto_display_on = false,
         keymaps = {
             commit_popup = "c",
             diff_file = "D",
