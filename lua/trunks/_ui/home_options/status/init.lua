@@ -1,6 +1,5 @@
 local M = {}
 
-local elements = require("trunks._ui.elements")
 local ui_utils = require("trunks._ui.utils.ui_utils")
 local status_utils = require("trunks._ui.home_options.status.status_utils")
 local run_hidden_cmd = require("trunks._core.run_cmd").run_hidden_cmd
@@ -389,9 +388,14 @@ function M._set_lines(bufnr, ctx)
 end
 
 ---@param bufnr integer
-function M.new_render(bufnr)
+---@param opts trunks.UiRenderOpts
+function M.render(bufnr, opts)
     require("trunks._ui.home_options.status")._set_lines(bufnr)
     require("trunks._ui.home_options.status").set_keymaps(bufnr)
+    if opts.set_keymaps then
+        opts.set_keymaps(bufnr)
+    end
+
     local with_line = require("trunks._ui.keymaps.set").with_line
 
     require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
@@ -411,6 +415,8 @@ function M.new_render(bufnr)
         end),
         strategy = { enter = false, display_strategy = "below", pty = false },
     })
+
+    require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, { "status", "home" })
 
     vim.b[bufnr].trunks_rerender_fn = function()
         if not vim.api.nvim_buf_is_valid(bufnr) then
@@ -427,55 +433,6 @@ function M.new_render(bufnr)
         vim.bo[bufnr].modifiable = false
         vim.api.nvim_win_set_cursor(win, cursor)
     end
-end
-
----@param bufnr integer
----@param opts? trunks.UiRenderOpts
----@return integer, integer -- bufnr, win
-function M.render(bufnr, opts)
-    opts = opts or {}
-
-    local term = elements.terminal(bufnr, "git status -s", { enter = true, display_strategy = "full" })
-    require("trunks._ui.utils.display_extra_info").display_extra_info(bufnr)
-    vim.api.nvim_win_set_cursor(term.win, { 3, 0 })
-
-    local win = term.win
-    local with_line = require("trunks._ui.keymaps.set").with_line
-    require("trunks._ui.auto_display").create_auto_display(bufnr, "status", {
-        generate_cmd = with_line(bufnr, M.get_line, function(line_data)
-            local last_file = vim.b[bufnr].trunks_last_file
-            if last_file ~= line_data.filename then
-                vim.b[bufnr].trunks_show_unstaged_for = nil
-                vim.b[bufnr].trunks_last_file = line_data.filename
-            end
-            return Command.base_command(
-                get_diff_cmd(line_data.status, line_data.safe_filename, line_data.filename, bufnr)
-            )
-                :build()
-        end),
-        get_current_diff = with_line(bufnr, M.get_line, function(line_data)
-            return line_data.safe_filename
-        end),
-        strategy = { enter = false, display_strategy = "below", pty = false },
-    })
-    M.set_keymaps(bufnr)
-    if opts.set_keymaps then
-        opts.set_keymaps(bufnr)
-    end
-
-    local ui_types = { "status" }
-    if opts.set_keymaps then
-        table.insert(ui_types, 1, "home")
-    end
-    require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, ui_types)
-
-    local original_rerender_fn = vim.b[bufnr].trunks_rerender_fn
-    vim.b[bufnr].trunks_rerender_fn = function()
-        original_rerender_fn()
-        require("trunks._ui.utils.display_extra_info").display_extra_info(bufnr)
-    end
-
-    return bufnr, win
 end
 
 return M

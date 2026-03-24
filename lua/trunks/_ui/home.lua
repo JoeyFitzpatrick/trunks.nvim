@@ -115,7 +115,8 @@ end
 ---@param existing_bufnr? integer
 function M.create_and_render_buffer(tab, existing_bufnr)
     local ui_opts = tab_render_map[tab]
-    local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = ui_opts.buffer_name })
+    local bufnr =
+        require("trunks._ui.elements").new_buffer({ buffer_name = ui_opts.buffer_name, show = tab == "Status" })
     ui_opts.render_fn(bufnr, { set_keymaps = set_keymaps, display_strategy = "full" })
 
     remove_leftover_new_tab_buffer(existing_bufnr)
