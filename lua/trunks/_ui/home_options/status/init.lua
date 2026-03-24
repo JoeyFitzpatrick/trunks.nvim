@@ -135,7 +135,11 @@ function M.set_keymaps(bufnr)
         "n",
         keymaps.diff_file,
         with_line(bufnr, M.get_line, function(line_data)
-            vim.cmd("G diff " .. line_data.filename)
+            if line_data.status == "D" then
+                vim.cmd("G diff HEAD -- " .. line_data.filename)
+            else
+                vim.cmd("G diff " .. line_data.filename)
+            end
         end),
         keymap_opts
     )
