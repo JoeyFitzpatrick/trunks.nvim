@@ -292,11 +292,6 @@ function M.set_keymaps(bufnr)
         "<S-Tab>",
         with_line(bufnr, M.get_line, function(line_data)
             if require("trunks._core.git").is_modified(line_data.status) then
-                if vim.b[bufnr].trunks_show_unstaged_for == line_data.filename then
-                    vim.b[bufnr].trunks_show_unstaged_for = nil
-                else
-                    vim.b[bufnr].trunks_show_unstaged_for = line_data.filename
-                end
                 require("trunks._ui.auto_display").refresh(bufnr)
             end
         end),
@@ -304,30 +299,27 @@ function M.set_keymaps(bufnr)
     )
 end
 
----@param status string
----@param safe_filename string
----@param raw_filename string
----@param bufnr integer
+---@param line_data trunks.StatusLineData
 ---@return string
-local function get_diff_cmd(status, safe_filename, raw_filename, bufnr)
-    local status_checks = require("trunks._core.git")
-    if status_checks.is_untracked(status) then
+local function get_diff_cmd(line_data)
+    local status = line_data.status
+    local safe_filename = line_data.safe_filename
+    local is_staged = line_data.staged
+
+    local is_untracked = status == "?"
+    if is_untracked then
         return "diff --no-index /dev/null -- " .. safe_filename
     end
-    if status_checks.is_modified(status) then
-        local show_unstaged = vim.b[bufnr].trunks_show_unstaged_for == raw_filename
-        if show_unstaged then
-            return "diff -- " .. safe_filename
-        else
-            return "diff --staged -- " .. safe_filename
-        end
-    end
-    if status_checks.is_staged(status) then
+
+    if is_staged then
         return "diff --staged -- " .. safe_filename
     end
-    if status_checks.is_deleted(status) then
+
+    local is_modified = status == "M"
+    if is_modified then
         return "diff -- " .. safe_filename
     end
+
     return "diff -- " .. safe_filename
 end
 
@@ -407,6 +399,7 @@ end
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
+    vim.bo[bufnr].filetype = "trunks"
     require("trunks._ui.home_options.status")._set_lines(bufnr)
     require("trunks._ui.home_options.status").set_keymaps(bufnr)
     if opts.set_keymaps then
@@ -419,13 +412,9 @@ function M.render(bufnr, opts)
         generate_cmd = with_line(bufnr, M.get_line, function(line_data)
             local last_file = vim.b[bufnr].trunks_last_file
             if last_file ~= line_data.filename then
-                vim.b[bufnr].trunks_show_unstaged_for = nil
                 vim.b[bufnr].trunks_last_file = line_data.filename
             end
-            return Command.base_command(
-                get_diff_cmd(line_data.status, line_data.safe_filename, line_data.filename, bufnr)
-            )
-                :build()
+            return Command.base_command(get_diff_cmd(line_data)):build()
         end),
         get_current_diff = with_line(bufnr, M.get_line, function(line_data)
             return line_data.safe_filename

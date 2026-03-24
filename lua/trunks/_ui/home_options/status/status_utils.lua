@@ -26,7 +26,18 @@ function M.get_status_files(get_files_fn)
     for _, file in ipairs(files) do
         local filename = file:sub(4)
         if file:sub(1, 2) == "??" then
-            table.insert(untracked, "? " .. filename)
+            if filename:sub(-1) == "/" then
+                local Command = require("trunks._core.command")
+                local ls_cmd = Command.base_command("ls-files --others --exclude-standard -- " .. filename):build()
+                local dir_files = require("trunks._core.run_cmd").run_cmd(ls_cmd)
+                for _, dir_file in ipairs(dir_files) do
+                    if dir_file ~= "" then
+                        table.insert(untracked, "? " .. dir_file)
+                    end
+                end
+            else
+                table.insert(untracked, "? " .. filename)
+            end
         else
             local first_char = file:sub(1, 1)
             local second_char = file:sub(2, 2)
