@@ -65,7 +65,7 @@ function M.set_keymaps(bufnr)
         "n",
         keymaps.stage,
         with_line(bufnr, M.get_line, function(line_data)
-            if not require("trunks._core.git").is_staged(line_data.status) then
+            if not line_data.staged then
                 run_hidden_cmd("git add -- " .. line_data.filename, { rerender = true })
             else
                 run_hidden_cmd("git reset HEAD -- " .. line_data.filename, { rerender = true })
@@ -76,12 +76,22 @@ function M.set_keymaps(bufnr)
 
     set("v", keymaps.stage, function()
         local visual_start_line, end_line = require("trunks._ui.utils.ui_utils").get_visual_line_nums()
-        local files = vim.api.nvim_buf_get_lines(bufnr, visual_start_line, end_line, false)
-        local should_stage = status_utils.should_stage_files(files)
+        local files_to_stage = {}
+        local status_files = vim.b[bufnr].trunks_status_files
+        local should_stage = false
+        for i = visual_start_line, end_line do
+            local file = status_files[i]
+            if file and file ~= vim.NIL then
+                table.insert(files_to_stage, file)
+                if not file.staged then
+                    should_stage = true
+                end
+            end
+        end
         local files_as_string = ""
-        for i, file in ipairs(files) do
+        for i, file in ipairs(files_to_stage) do
             -- don't add space for first file, and don't include status
-            files_as_string = files_as_string .. (i == 0 and "" or " ") .. file:sub(4)
+            files_as_string = files_as_string .. (i == 0 and "" or " ") .. file.filename
         end
         if should_stage then
             run_hidden_cmd("git add " .. files_as_string, { rerender = true })
@@ -91,9 +101,12 @@ function M.set_keymaps(bufnr)
     end, keymap_opts)
 
     set("n", keymaps.stage_all, function()
-        local should_stage = status_utils.should_stage_files(
-            vim.api.nvim_buf_get_lines(bufnr, ui_utils.get_start_line(bufnr), -1, false)
-        )
+        local should_stage = false
+        for _, file in ipairs(vim.b[bufnr].trunks_status_files) do
+            if file and file ~= vim.NIL and not file.staged then
+                should_stage = true
+            end
+        end
         if should_stage then
             run_hidden_cmd("git add -A", { rerender = true })
             return
@@ -122,7 +135,7 @@ function M.set_keymaps(bufnr)
         "n",
         keymaps.diff_file,
         with_line(bufnr, M.get_line, function(line_data)
-            vim.api.nvim_exec2("G diff " .. line_data.filename, {})
+            vim.cmd("G diff " .. line_data.filename)
         end),
         keymap_opts
     )

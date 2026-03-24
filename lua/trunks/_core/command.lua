@@ -136,13 +136,6 @@ end
 function Command:build(opts)
     opts = opts or {}
     local pager = self._pager
-    if pager and not opts.no_pager then
-        if pager.type == "postfix" and not vim.tbl_contains(self._postfix_args, pager.command) then
-            self:add_postfix_args("| " .. pager.command)
-        elseif pager.type == "prefix" and not vim.tbl_contains(self._prefix_args, pager.command) then
-            self:add_prefix_args(pager.command)
-        end
-    end
 
     local unpack = unpack or table.unpack
     local cmd_parts
@@ -153,12 +146,18 @@ function Command:build(opts)
     end
     if not opts.skip_prefix then
         table_insert_if_exists(cmd_parts, self._prefix_args)
+        if pager and pager.type == "prefix" and not opts.no_pager then
+            table_insert_if_exists(cmd_parts, { pager.command })
+        end
     end
     if self.base then
         table.insert(cmd_parts, self.base)
     end
     table_insert_if_exists(cmd_parts, self._args)
     table_insert_if_exists(cmd_parts, self._postfix_args)
+    if pager and pager.type == "postfix" and not opts.no_pager then
+        table_insert_if_exists(cmd_parts, { "| " .. pager.command })
+    end
     local built_cmd = table.concat(cmd_parts, " ")
 
     return built_cmd

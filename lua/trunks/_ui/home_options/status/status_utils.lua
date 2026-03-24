@@ -1,19 +1,5 @@
 local M = {}
 
---- Given a list of files, return true if all files should be staged,
---- and false otherwise.
---- This returns true if any of the given files are not staged.
----@param files string[]
----@return boolean
-function M.should_stage_files(files)
-    for _, file in ipairs(files) do
-        if file:match("^.%S") then
-            return true
-        end
-    end
-    return false
-end
-
 ---@class trunks.StatusFiles
 ---@field staged string[]
 ---@field unstaged string[]
@@ -84,9 +70,10 @@ function M.get_diff_stat(diff_stat_text)
     end
     local Command = require("trunks._core.command")
     local diff_stat_cmd = Command.base_command("diff --staged --shortstat"):build({ no_pager = true })
-    local diff_stat_cmd_output, diff_stat_cmd_exit_code = require("trunks._core.run_cmd").run_cmd(diff_stat_cmd)
-    if diff_stat_cmd_exit_code == 0 and diff_stat_cmd_output[1] then
-        return diff_stat_cmd_output[1]
+    local diff_cmd_output, exit_code = require("trunks._core.run_cmd").run_cmd(diff_stat_cmd)
+    local output = diff_cmd_output[1]
+    if exit_code == 0 and output then
+        return vim.trim(output)
     else
         return "No staged changes"
     end
