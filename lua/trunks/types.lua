@@ -197,6 +197,7 @@
 ---@field stage? string
 ---@field stage_all? string
 ---@field stash_popup? string
+---@field toggle_inline_diff? string
 
 ---@class trunks.TimeMachineFileKeymaps
 ---@field next? string

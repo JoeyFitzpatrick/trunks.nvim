@@ -1,6 +1,5 @@
 local M = {}
 
-local ui_utils = require("trunks._ui.utils.ui_utils")
 local status_utils = require("trunks._ui.home_options.status.status_utils")
 local run_hidden_cmd = require("trunks._core.run_cmd").run_hidden_cmd
 local run_cmd = require("trunks._core.run_cmd").run_cmd
@@ -10,41 +9,64 @@ local function get_status(line)
     return line:sub(1, 2)
 end
 
+local SECTIONS = {
+    STAGED = "Staged",
+    UNSTAGED = "Unstaged",
+}
+
 ---@class trunks.StatusLineData
 ---@field filename string
 ---@field safe_filename string
 ---@field status string
+---@field staged boolean
 
 ---@param bufnr integer
 ---@param line_num? integer
 ---@return trunks.StatusLineData | nil
 function M.get_line(bufnr, line_num)
     line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local staged = false
 
-    local status_files = vim.b[bufnr].trunks_status_files
-    if status_files then
-        local file = status_files[line_num]
-        if file then
-            local filename = file.filename
-            return {
-                filename = filename,
-                safe_filename = "'" .. filename .. "'",
-                status = file.status,
-                staged = file.staged,
-            }
+    local current_line = lines[line_num]
+    if current_line:find("^[%+%-@ ]") then
+        for i = line_num, 1, -1 do
+            if not lines[i]:find("^[%+%-@ ]") then
+                line_num = i
+                break
+            end
         end
     end
 
-    if line_num <= ui_utils.get_start_line(bufnr) then
+    if line_num == 1 then
         return nil
+    end
+    -- Walk backwards to see which section we're in, if any
+    for i = line_num - 1, 1, -1 do
+        local line = lines[i]
+        local is_staged_section = vim.startswith(line, SECTIONS.STAGED)
+        local is_unstaged_section = vim.startswith(line, SECTIONS.UNSTAGED)
+        if is_staged_section or is_unstaged_section then
+            staged = is_staged_section
+            break
+        end
+        -- If no section found, we're not on a file. Return nil.
+        if i == 1 then
+            return nil
+        end
     end
 
-    local line = vim.api.nvim_buf_get_lines(bufnr, line_num - 1, line_num, false)[1]
-    if not line or not line:match("^%s?[%w%?]") then
-        return nil
-    end
-    local filename = line:sub(4)
-    return { filename = filename, safe_filename = "'" .. filename .. "'", status = get_status(line) }
+    local split_line = vim.split(lines[line_num], " ")
+    local status = split_line[1]
+    local filename = split_line[2]
+    local safe_filename = require("trunks._core.texter").surround_with_quotes(filename)
+
+    return {
+        filename = filename,
+        safe_filename = safe_filename,
+        status = status,
+        staged = staged,
+    }
 end
 
 local function remove_untracked_file(filename)
@@ -53,6 +75,10 @@ local function remove_untracked_file(filename)
     -- File/dir can still exist in some edge cases, for example, if it's an empty dir with a .git folder.
     -- In this case, currently we no-op, but documenting here for future reference.
 end
+
+---@param bufnr integer
+---@param status_file trunks.StatusLineData
+function M._toggle_inline_diff(bufnr, status_file) end
 
 ---@param bufnr integer
 function M.set_keymaps(bufnr)
@@ -101,15 +127,12 @@ function M.set_keymaps(bufnr)
     end, keymap_opts)
 
     set("n", keymaps.stage_all, function()
-        local should_stage = false
-        for _, file in ipairs(vim.b[bufnr].trunks_status_files) do
-            if file and file ~= vim.NIL and not file.staged then
-                should_stage = true
+        local status_files = vim.b[bufnr].trunks_status_files
+        for _, file in pairs(status_files.unstaged) do
+            if file then
+                run_hidden_cmd("git add -A", { rerender = true })
+                return
             end
-        end
-        if should_stage then
-            run_hidden_cmd("git add -A", { rerender = true })
-            return
         end
         run_hidden_cmd("git reset", { rerender = true })
     end, keymap_opts)

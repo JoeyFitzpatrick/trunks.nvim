@@ -117,7 +117,7 @@ describe("status set_lines", function()
         }, lines)
     end)
 
-    it("sets a buffer-local variable with files at line numbers", function()
+    it("sets a buffer-local variable with files", function()
         local function generate_files()
             return {
                 "A  added1",
@@ -138,24 +138,21 @@ describe("status set_lines", function()
         })
 
         local status_files_from_buf_variable = vim.b[bufnr].trunks_status_files
+        local expected = {
+            unstaged = {
+                ["modunstage1"] = { status = "M", staged = false, expanded = false },
+                ["modunstage2"] = { status = "M", staged = false, expanded = false },
+                ["untrack1"] = { status = "?", staged = false, expanded = false },
+                ["untrack2"] = { status = "?", staged = false, expanded = false },
+            },
+            staged = {
+                ["added1"] = { status = "A", staged = true, expanded = false },
+                ["added2"] = { status = "A", staged = true, expanded = false },
+                ["modstage1"] = { status = "M", staged = true, expanded = false },
+                ["modstage2"] = { status = "M", staged = true, expanded = false },
+            },
+        }
 
-        assert.are.same({
-            vim.NIL,
-            vim.NIL,
-            vim.NIL,
-            vim.NIL,
-            vim.NIL,
-            vim.NIL,
-            { filename = "modunstage1", status = "M", staged = false },
-            { filename = "modunstage2", status = "M", staged = false },
-            { filename = "untrack1", status = "?", staged = false },
-            { filename = "untrack2", status = "?", staged = false },
-            vim.NIL,
-            vim.NIL,
-            { filename = "added1", status = "A", staged = true },
-            { filename = "added2", status = "A", staged = true },
-            { filename = "modstage1", status = "M", staged = true },
-            { filename = "modstage2", status = "M", staged = true },
-        }, status_files_from_buf_variable)
+        assert.are.same(expected, status_files_from_buf_variable)
     end)
 end)

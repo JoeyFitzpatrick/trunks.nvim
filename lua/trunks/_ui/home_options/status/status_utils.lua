@@ -131,19 +131,19 @@ end
 ---@param bufnr integer
 ---@param opts trunks.SetStatusFilesVariableParams
 function M.set_status_files_variable(bufnr, opts)
-    local trunks_status_files = {}
+    local trunks_status_files = { staged = {}, unstaged = {} }
 
     if opts.unstaged_untracked_index then
-        for i, file in ipairs(opts.files.unstaged_and_untracked) do
-            trunks_status_files[i + opts.unstaged_untracked_index] =
-                { filename = file:sub(3), status = file:sub(1, 1), staged = false }
+        for _, file in ipairs(opts.files.unstaged_and_untracked) do
+            local filename = file:sub(3)
+            trunks_status_files.unstaged[filename] = { status = file:sub(1, 1), staged = false, expanded = false }
         end
     end
 
     if opts.staged_index then
-        for i, file in ipairs(opts.files.staged) do
-            trunks_status_files[i + opts.staged_index] =
-                { filename = file:sub(3), status = file:sub(1, 1), staged = true }
+        for _, file in ipairs(opts.files.staged) do
+            local filename = file:sub(3)
+            trunks_status_files.staged[filename] = { status = file:sub(1, 1), staged = true, expanded = false }
         end
     end
     vim.b[bufnr].trunks_status_files = trunks_status_files
