@@ -1,5 +1,7 @@
 local M = {}
 
+local Command = require("trunks._core.command")
+
 ---@class trunks.StatusFiles
 ---@field staged string[]
 ---@field unstaged string[]
@@ -11,7 +13,6 @@ local M = {}
 function M.get_status_files(get_files_fn)
     get_files_fn = get_files_fn
         or function()
-            local Command = require("trunks._core.command")
             local cmd = Command.base_command("status -s"):build()
             local files = require("trunks._core.run_cmd").run_cmd(cmd)
             return files
@@ -27,7 +28,6 @@ function M.get_status_files(get_files_fn)
         local filename = file:sub(4)
         if file:sub(1, 2) == "??" then
             if filename:sub(-1) == "/" then
-                local Command = require("trunks._core.command")
                 local ls_cmd = Command.base_command("ls-files --others --exclude-standard -- " .. filename):build()
                 local dir_files = require("trunks._core.run_cmd").run_cmd(ls_cmd)
                 for _, dir_file in ipairs(dir_files) do
@@ -79,7 +79,6 @@ function M.get_diff_stat(diff_stat_text)
     if diff_stat_text then
         return diff_stat_text
     end
-    local Command = require("trunks._core.command")
     local diff_stat_cmd = Command.base_command("diff --staged --shortstat"):build({ no_pager = true })
     local diff_cmd_output, exit_code = require("trunks._core.run_cmd").run_cmd(diff_stat_cmd)
     local output = diff_cmd_output[1]
@@ -96,7 +95,6 @@ function M.get_remote_branch(remote_branch_text)
         return remote_branch_text
     end
     local run_cmd = require("trunks._core.run_cmd").run_cmd
-    local Command = require("trunks._core.command")
 
     local upstream_cmd = Command.base_command("rev-parse --abbrev-ref --symbolic-full-name @{u}"):build()
     local upstream_output, upstream_exit_code = run_cmd(upstream_cmd)
@@ -128,8 +126,18 @@ end
 ---@field unstaged_untracked_index? integer
 ---@field staged_index? integer
 
+---@class trunks.StatusFilesBufferVariableEntry
+---@field status string
+---@field staged boolean
+---@field expanded boolean
+
+---@class trunks.StatusFilesBufferVariable
+---@field staged table<string, trunks.StatusFilesBufferVariableEntry>
+---@field unstaged table<string, trunks.StatusFilesBufferVariableEntry>
+
 ---@param bufnr integer
 ---@param opts trunks.SetStatusFilesVariableParams
+---@return trunks.StatusFilesBufferVariable
 function M.set_status_files_variable(bufnr, opts)
     local trunks_status_files = { staged = {}, unstaged = {} }
 
@@ -147,6 +155,81 @@ function M.set_status_files_variable(bufnr, opts)
         end
     end
     vim.b[bufnr].trunks_status_files = trunks_status_files
+    return trunks_status_files
+end
+
+---@param line_data trunks.StatusLineData
+---@return string
+function M.get_diff_cmd(line_data)
+    local status = line_data.status
+    local safe_filename = line_data.safe_filename
+    local is_staged = line_data.staged
+
+    local is_untracked = status == "?"
+    if is_untracked then
+        return "diff --no-index /dev/null -- " .. safe_filename
+    end
+
+    if is_staged then
+        return "diff --staged -- " .. safe_filename
+    end
+
+    local is_modified = status == "M"
+    if is_modified then
+        return "diff -- " .. safe_filename
+    end
+
+    return "diff -- " .. safe_filename
+end
+
+---@param bufnr integer
+---@param line_num integer
+---@param line_data trunks.StatusLineData
+---@param run_cmd_fn? fun(cmd: string[]): string[], integer
+function M.toggle_inline_diff(bufnr, line_num, line_data, run_cmd_fn)
+    run_cmd_fn = run_cmd_fn or require("trunks._core.run_cmd").run_cmd
+    local status_files = vim.b[bufnr].trunks_status_files
+    local file
+    if line_data.staged then
+        file = status_files.staged[line_data.filename]
+    else
+        file = status_files.unstaged[line_data.filename]
+    end
+
+    if not file.expanded then
+        local cmd = Command.base_command(M.get_diff_cmd(line_data):gsub("^diff", "diff --no-color"))
+            :build({ no_pager = true })
+        local diff_output, exit_code = run_cmd_fn(cmd)
+        if exit_code == 0 then
+            local start = 1
+            for i, line in ipairs(diff_output) do
+                if line:match("^@@") then
+                    start = i
+                    break
+                end
+            end
+            local diff = vim.list_slice(diff_output, start)
+            require("trunks._ui.utils.buffer_text").set(bufnr, diff, line_num, line_num)
+            file.expanded = true
+            vim.b[bufnr].trunks_status_files = status_files
+        end
+    else
+        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+        local diff_start = line_num
+        local diff_end = #lines
+
+        for i = line_num + 1, #lines do
+            local filename = lines[i]:sub(3)
+            if status_files.staged[filename] or status_files.unstaged[filename] then
+                diff_end = i - 1
+                break
+            end
+        end
+
+        require("trunks._ui.utils.buffer_text").set(bufnr, {}, diff_start, diff_end)
+        file.expanded = false
+        vim.b[bufnr].trunks_status_files = status_files
+    end
 end
 
 return M

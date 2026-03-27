@@ -77,10 +77,6 @@ local function remove_untracked_file(filename)
 end
 
 ---@param bufnr integer
----@param status_file trunks.StatusLineData
-function M._toggle_inline_diff(bufnr, status_file) end
-
----@param bufnr integer
 function M.set_keymaps(bufnr)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "status", { auto_display_keymaps = true })
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
@@ -312,6 +308,16 @@ function M.set_keymaps(bufnr)
 
     set(
         "n",
+        keymaps.toggle_inline_diff,
+        with_line(bufnr, M.get_line, function(line_data)
+            local line_num = vim.api.nvim_win_get_cursor(0)[1]
+            status_utils.toggle_inline_diff(bufnr, line_num, line_data)
+        end),
+        keymap_opts
+    )
+
+    set(
+        "n",
         "<S-Tab>",
         with_line(bufnr, M.get_line, function(line_data)
             if require("trunks._core.git").is_modified(line_data.status) then
@@ -320,30 +326,6 @@ function M.set_keymaps(bufnr)
         end),
         keymap_opts
     )
-end
-
----@param line_data trunks.StatusLineData
----@return string
-local function get_diff_cmd(line_data)
-    local status = line_data.status
-    local safe_filename = line_data.safe_filename
-    local is_staged = line_data.staged
-
-    local is_untracked = status == "?"
-    if is_untracked then
-        return "diff --no-index /dev/null -- " .. safe_filename
-    end
-
-    if is_staged then
-        return "diff --staged -- " .. safe_filename
-    end
-
-    local is_modified = status == "M"
-    if is_modified then
-        return "diff -- " .. safe_filename
-    end
-
-    return "diff -- " .. safe_filename
 end
 
 ---@class trunks.StatusSetLinesContext
@@ -437,7 +419,7 @@ function M.render(bufnr, opts)
             if last_file ~= line_data.filename then
                 vim.b[bufnr].trunks_last_file = line_data.filename
             end
-            return Command.base_command(get_diff_cmd(line_data)):build()
+            return Command.base_command(status_utils.get_diff_cmd(line_data)):build()
         end),
         get_current_diff = with_line(bufnr, M.get_line, function(line_data)
             return line_data.safe_filename

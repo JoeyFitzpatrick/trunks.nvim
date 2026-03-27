@@ -207,6 +207,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     stage = "s", -- (un)stage file under cursor
                     stage_all = "a",
                     stash_popup = "S",
+                    toggle_inline_diff = "=", -- Toggle inline diff for file under cursor
                 },
             },
             -- End of default configuration
