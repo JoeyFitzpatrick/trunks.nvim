@@ -95,7 +95,9 @@ describe("toggle_inline_diff", function()
             safe_filename = "'lua/trunks/_ui/home_options/status/init.lua'",
             status = "M",
             staged = false,
-        }, function(_) return mock_diff, 0 end)
+        }, function(_)
+            return mock_diff, 0
+        end)
         assert.are.same(expected_lines, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
     end)
 
@@ -164,35 +166,43 @@ describe("toggle_inline_diff", function()
             "? spec/unit/_ui/status/toggle_inline_diff_spec.lua",
         }
 
-        local bufnr = vim.api.nvim_create_buf(false, true)
-        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, start_lines)
-        vim.b[bufnr].trunks_status_files = {
-            staged = {},
-            unstaged = {
-                ["lua/trunks/_ui/home_options/status/init.lua"] = {
-                    expanded = true,
-                    staged = false,
-                    status = "M",
+        -- Test toggling off from:
+        -- line 7: line with filename
+        -- line 8: first diff line (starts with @@)
+        -- line 9: first non-@@ line
+        -- line 47: last line of diff
+        local line_nums_to_test = { 7, 8, 9, 47 }
+        for _, line_num in ipairs(line_nums_to_test) do
+            local bufnr = vim.api.nvim_create_buf(false, true)
+            vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, start_lines)
+            vim.b[bufnr].trunks_status_files = {
+                staged = {},
+                unstaged = {
+                    ["lua/trunks/_ui/home_options/status/init.lua"] = {
+                        expanded = true,
+                        staged = false,
+                        status = "M",
+                    },
+                    ["lua/trunks/_ui/home_options/status/status_utils.lua"] = {
+                        expanded = false,
+                        staged = false,
+                        status = "M",
+                    },
+                    ["spec/unit/_ui/status/toggle_inline_diff_spec.lua"] = {
+                        expanded = false,
+                        staged = false,
+                        status = "?",
+                    },
                 },
-                ["lua/trunks/_ui/home_options/status/status_utils.lua"] = {
-                    expanded = false,
-                    staged = false,
-                    status = "M",
-                },
-                ["spec/unit/_ui/status/toggle_inline_diff_spec.lua"] = {
-                    expanded = false,
-                    staged = false,
-                    status = "?",
-                },
-            },
-        }
+            }
 
-        toggle_inline_diff(bufnr, 7, {
-            filename = "lua/trunks/_ui/home_options/status/init.lua",
-            safe_filename = "'lua/trunks/_ui/home_options/status/init.lua'",
-            status = "M",
-            staged = false,
-        })
-        assert.are.same(expected_lines, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+            toggle_inline_diff(bufnr, line_num, {
+                filename = "lua/trunks/_ui/home_options/status/init.lua",
+                safe_filename = "'lua/trunks/_ui/home_options/status/init.lua'",
+                status = "M",
+                staged = false,
+            })
+            assert.are.same(expected_lines, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+        end
     end)
 end)

@@ -215,18 +215,36 @@ function M.toggle_inline_diff(bufnr, line_num, line_data, run_cmd_fn)
         end
     else
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-        local diff_start = line_num
-        local diff_end = #lines
+        local diff_line_pattern = "^[%+%-@ ]"
 
-        for i = line_num + 1, #lines do
-            local filename = lines[i]:sub(3)
-            if status_files.staged[filename] or status_files.unstaged[filename] then
-                diff_end = i - 1
+        -- Walk back until a non-diff line is found
+        local diff_start = nil
+        while line_num > 0 and not diff_start do
+            local line = lines[line_num]
+            if not line:match(diff_line_pattern) then
+                diff_start = line_num
                 break
             end
+            line_num = line_num - 1
         end
 
-        require("trunks._ui.utils.buffer_text").set(bufnr, {}, diff_start, diff_end)
+        -- Walk forward until non-diff line is found
+
+        local diff_end = nil
+        line_num = line_num + 1
+        while line_num <= #lines and not diff_end do
+            local line = lines[line_num]
+            if not line:match(diff_line_pattern) then
+                diff_end = line_num
+                break
+            end
+            line_num = line_num + 1
+        end
+        if not diff_end then
+            diff_end = line_num
+        end
+
+        require("trunks._ui.utils.buffer_text").set(bufnr, {}, diff_start, diff_end - 1)
         file.expanded = false
         vim.b[bufnr].trunks_status_files = status_files
     end
