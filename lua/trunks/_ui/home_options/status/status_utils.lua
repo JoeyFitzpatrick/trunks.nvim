@@ -200,7 +200,7 @@ function M.toggle_inline_diff(bufnr, line_num, line_data, run_cmd_fn)
         local cmd = Command.base_command(M.get_diff_cmd(line_data):gsub("^diff", "diff --no-color"))
             :build({ no_pager = true })
         local diff_output, exit_code = run_cmd_fn(cmd)
-        if exit_code == 0 then
+        if exit_code == 0 or (exit_code == 1 and line_data.status == "?") then
             local start = 1
             for i, line in ipairs(diff_output) do
                 if line:match("^@@") then
