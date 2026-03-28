@@ -5,6 +5,8 @@ endif
 syn sync fromstart
 syn spell notoplevel
 
+syn include @trunksDiff syntax/diff.vim
+
 " ── Headers ──────────────────────────────────────────────────────────────────
 syn match trunksHeader /^[A-Z][a-z][^:]*:/
 syn match trunksHeader /^Head:/ nextgroup=trunksSymbolicRef,trunksHash skipwhite
@@ -21,9 +23,14 @@ syn match trunksCommitsAhead  /↑\d\+/
 
 " ── Section headings ─────────────────────────────────────────────────────────
 syn region trunksUnstagedSection start=/^Unstaged (\d\+)$/ end=/^$\|^Staged / fold
-  \ contains=trunksUnstagedHeading,trunksCount,trunksUnstagedModifier
+  \ contains=trunksUnstagedHeading,trunksCount,trunksUnstagedModifier,trunksHunk
 syn region trunksStagedSection   start=/^Staged (\d\+)$/   end=/^$/ fold
-  \ contains=trunksStagedHeading,trunksCount,trunksStagedModifier
+  \ contains=trunksStagedHeading,trunksCount,trunksStagedModifier,trunksHunk
+
+" ── Inline diff hunks ────────────────────────────────────────────────────────
+syn region trunksHunk start=/^\%(@@\+ -\)\@=/ end=/^\%([A-Za-z?@]\|$\)\@=/ fold
+  \ contains=diffLine,diffRemoved,diffAdded,diffNoEOL
+  \ containedin=trunksUnstagedSection,trunksStagedSection
 
 " \ze ends the match before ' (' so only the word is highlighted
 syn match trunksUnstagedHeading /^Unstaged\ze (/ contained
@@ -34,7 +41,7 @@ syn match trunksUnstagedModifier /^[MADRCU?] / contained containedin=trunksUnsta
 syn match trunksStagedModifier   /^[MADRCU?] / contained containedin=trunksStagedSection
 
 " ── Diff stat ────────────────────────────────────────────────────────────────
-syn match trunksDiffStat /^\d\+ file[s]\? changed.*$/
+syn match trunksDiffStat /^\d\+ file[s]\? changed.*$\|^No staged changes$/
 
 " ── Fallback definitions if vim-fugitive is not installed ─────────────────────
 " These are no-ops when fugitive is already loaded (hi def link only sets if
