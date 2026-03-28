@@ -1,4 +1,4 @@
-*trunks.txt*          For Neovim >= 0.11.0          Last change: 2026 March 24
+*trunks.txt*          For Neovim >= 0.11.0          Last change: 2026 March 28
 
 ==============================================================================
 Table of Contents                                   *trunks-table-of-contents*
@@ -218,6 +218,7 @@ able to lazy load it however you normally lazy load plugins.
                         stage = "s", -- (un)stage file under cursor
                         stage_all = "a",
                         stash_popup = "S",
+                        toggle_inline_diff = "=", -- Toggle inline diff for file under cursor
                     },
                 },
                 -- End of default configuration
