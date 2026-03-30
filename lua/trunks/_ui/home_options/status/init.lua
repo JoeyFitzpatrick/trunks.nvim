@@ -76,6 +76,18 @@ local function remove_untracked_file(filename)
     -- In this case, currently we no-op, but documenting here for future reference.
 end
 
+---@param line_data trunks.StatusLineData
+function M._stage_single_file(line_data)
+    local base_cmd
+    if not line_data.staged then
+        base_cmd = "git add -- " .. line_data.filename
+    else
+        base_cmd = "git reset HEAD -- " .. line_data.filename
+    end
+    run_hidden_cmd(base_cmd, { rerender = true })
+    return base_cmd
+end
+
 ---@param bufnr integer
 function M.set_keymaps(bufnr)
     local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "status", { auto_display_keymaps = true })
@@ -83,18 +95,7 @@ function M.set_keymaps(bufnr)
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
     local with_line = require("trunks._ui.keymaps.set").with_line
 
-    set(
-        "n",
-        keymaps.stage,
-        with_line(bufnr, M.get_line, function(line_data)
-            if not line_data.staged then
-                run_hidden_cmd("git add -- " .. line_data.filename, { rerender = true })
-            else
-                run_hidden_cmd("git reset HEAD -- " .. line_data.filename, { rerender = true })
-            end
-        end),
-        keymap_opts
-    )
+    set("n", keymaps.stage, with_line(bufnr, M.get_line, M._stage_single_file), keymap_opts)
 
     set("v", keymaps.stage, function()
         local visual_start_line, end_line = require("trunks._ui.utils.ui_utils").get_visual_line_nums()
