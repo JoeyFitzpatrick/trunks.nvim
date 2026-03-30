@@ -11,7 +11,7 @@ local base_lines = {
     "M lua/trunks/types.lua",
     "? spec/unit/_ui/status/get_line_spec.lua",
     "",
-    "Staged (2)",
+    "Staged (4)",
     "M lua/trunks/_constants/keymap_descriptions.lua",
     "M lua/trunks/_core/default_configuration.lua",
     "M lua/trunks/_ui/utils/ui_utils.lua",

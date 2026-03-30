@@ -9,10 +9,8 @@ local function get_status(line)
     return line:sub(1, 2)
 end
 
-local SECTIONS = {
-    STAGED = "Staged",
-    UNSTAGED = "Unstaged",
-}
+local STAGED = "Staged"
+local UNSTAGED = "Unstaged"
 
 ---@class trunks.StatusLineData
 ---@field filename string
@@ -29,6 +27,9 @@ function M.get_line(bufnr, line_num)
     local staged = false
 
     local current_line = lines[line_num]
+    if not current_line then
+        return nil
+    end
     if current_line:find("^[%+%-@ ]") then
         for i = line_num, 1, -1 do
             if not lines[i]:find("^[%+%-@ ]") then
@@ -44,8 +45,8 @@ function M.get_line(bufnr, line_num)
     -- Walk backwards to see which section we're in, if any
     for i = line_num - 1, 1, -1 do
         local line = lines[i]
-        local is_staged_section = vim.startswith(line, SECTIONS.STAGED)
-        local is_unstaged_section = vim.startswith(line, SECTIONS.UNSTAGED)
+        local is_staged_section = vim.startswith(line, STAGED)
+        local is_unstaged_section = vim.startswith(line, UNSTAGED)
         if is_staged_section or is_unstaged_section then
             staged = is_staged_section
             break
@@ -402,11 +403,135 @@ function M._set_lines(bufnr, ctx)
     )
 end
 
+---@param line string
+---@return boolean
+local function is_section_header(line)
+    local is_staged_section = vim.startswith(line, STAGED)
+    local is_unstaged_section = vim.startswith(line, UNSTAGED)
+    return is_staged_section or is_unstaged_section
+end
+
+---@class trunks.StatusCursorState
+---@field cursor [integer, integer]
+---@field line_data? trunks.StatusLineData
+---@field line string
+---@field section? "Staged" | "Unstaged"
+---@field section_header_line? integer
+
+---@param bufnr integer
+---@param win integer
+---@return trunks.StatusCursorState
+function M._get_cursor_state(bufnr, win)
+    local cursor = vim.api.nvim_win_get_cursor(win)
+    local line_data = M.get_line(bufnr)
+    local line_num = cursor[1]
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local line = lines[line_num]
+
+    local section, section_header_line
+    for i = line_num, 1, -1 do
+        if is_section_header(lines[i]) then
+            section = lines[i]:match("^%a+")
+            section_header_line = i
+            break
+        end
+    end
+
+    return {
+        cursor = cursor,
+        line_data = line_data,
+        line = line,
+        section = section,
+        section_header_line = section_header_line,
+    }
+end
+
+---@param lines string[]
+---@return table<"Staged" | "Unstaged", integer>
+local function get_section_header_line_nums(lines)
+    local section_header_lines = { [STAGED] = nil, [UNSTAGED] = nil }
+
+    for i, line in ipairs(lines) do
+        if vim.startswith(line, STAGED) then
+            section_header_lines[STAGED] = i
+        end
+        if vim.startswith(line, UNSTAGED) then
+            section_header_lines[UNSTAGED] = i
+        end
+    end
+
+    return section_header_lines
+end
+
+---@param win integer
+---@param section_header_line_nums table<"Staged" | "Unstaged", integer>
+---@param prev_cursor_state? trunks.StatusCursorState
+---@param num_lines integer
+local function set_cursor_to_first_section(win, section_header_line_nums, prev_cursor_state, num_lines)
+    local new_cursor_pos
+    if section_header_line_nums[UNSTAGED] then
+        new_cursor_pos = { section_header_line_nums[UNSTAGED] + 1, 0 }
+    elseif section_header_line_nums[STAGED] then
+        new_cursor_pos = { section_header_line_nums[STAGED] + 1, 0 }
+    elseif prev_cursor_state then
+        new_cursor_pos = { math.min(prev_cursor_state.cursor[1], num_lines), prev_cursor_state.cursor[2] }
+    end
+
+    if not new_cursor_pos then
+        new_cursor_pos = { 1, 0 }
+    end
+    vim.api.nvim_win_set_cursor(win, new_cursor_pos)
+    return new_cursor_pos
+end
+
+---@param bufnr integer
+---@param win integer
+---@param prev_cursor_state? trunks.StatusCursorState
+---@return [integer, integer] -- new cursor position
+function M._set_cursor(bufnr, win, prev_cursor_state)
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local num_lines = #lines
+    local section_header_line_nums = get_section_header_line_nums(lines)
+
+    local is_first_render = not prev_cursor_state
+    if is_first_render then
+        return set_cursor_to_first_section(win, section_header_line_nums, prev_cursor_state, num_lines)
+    end
+
+    local prev_cursor_not_in_section = not prev_cursor_state.section or not prev_cursor_state.section_header_line
+    if prev_cursor_not_in_section then
+        return set_cursor_to_first_section(win, section_header_line_nums, prev_cursor_state, num_lines)
+    end
+
+    local section_was_removed = not section_header_line_nums[prev_cursor_state.section]
+    if section_was_removed then
+        return set_cursor_to_first_section(win, section_header_line_nums, prev_cursor_state, num_lines)
+    end
+
+    local prev_section_line = section_header_line_nums[prev_cursor_state.section]
+    local difference_between_line_and_section_header = prev_cursor_state.cursor[1]
+        - prev_cursor_state.section_header_line
+
+    local new_cursor_pos = {
+        math.min(num_lines, prev_section_line + difference_between_line_and_section_header),
+        prev_cursor_state.cursor[2],
+    }
+    vim.api.nvim_win_set_cursor(win, new_cursor_pos)
+    return new_cursor_pos
+end
+
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
+    local win = vim.fn.bufwinid(bufnr)
+    if not vim.api.nvim_win_is_valid(win) then
+        return
+    end
+
     vim.bo[bufnr].filetype = "trunks"
     require("trunks._ui.home_options.status")._set_lines(bufnr)
+    M._set_cursor(bufnr, win)
+
     require("trunks._ui.home_options.status").set_keymaps(bufnr)
     if opts.set_keymaps then
         opts.set_keymaps(bufnr)
@@ -434,16 +559,16 @@ function M.render(bufnr, opts)
         if not vim.api.nvim_buf_is_valid(bufnr) then
             return
         end
-        local win = vim.fn.bufwinid(bufnr)
-        if not vim.api.nvim_win_is_valid(win) then
+        local buf_win = vim.fn.bufwinid(bufnr)
+        if not vim.api.nvim_win_is_valid(buf_win) then
             return
         end
-        local cursor = vim.api.nvim_win_get_cursor(win)
+        local cursor_state = M._get_cursor_state(bufnr, buf_win)
         vim.bo[bufnr].modifiable = true
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
         M._set_lines(bufnr)
         vim.bo[bufnr].modifiable = false
-        vim.api.nvim_win_set_cursor(win, cursor)
+        M._set_cursor(bufnr, buf_win, cursor_state)
     end
 end
 
