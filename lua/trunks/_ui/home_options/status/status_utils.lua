@@ -14,8 +14,10 @@ function M.get_status_files(get_files_fn)
     get_files_fn = get_files_fn
         or function()
             local cmd = Command.base_command("status -s"):build()
-            local files = require("trunks._core.run_cmd").run_cmd(cmd)
-            return files
+            local files = require("trunks._core.run_cmd").system(cmd)
+            return vim.tbl_filter(function(output_line)
+                return output_line ~= ""
+            end, files.output)
         end
 
     local files = get_files_fn()
@@ -80,9 +82,9 @@ function M.get_diff_stat(diff_stat_text)
         return diff_stat_text
     end
     local diff_stat_cmd = Command.base_command("diff --staged --shortstat"):build({ no_pager = true })
-    local diff_cmd_output, exit_code = require("trunks._core.run_cmd").run_cmd(diff_stat_cmd)
-    local output = diff_cmd_output[1]
-    if exit_code == 0 and output then
+    local diff_result = require("trunks._core.run_cmd").system(diff_stat_cmd)
+    local output = diff_result.output[1]
+    if diff_result.code == 0 and output and output ~= "" then
         return vim.trim(output)
     else
         return "No staged changes"
@@ -90,29 +92,30 @@ function M.get_diff_stat(diff_stat_text)
 end
 
 ---@param remote_branch_text? string
+---@return string
 function M.get_remote_branch(remote_branch_text)
     if remote_branch_text then
         return remote_branch_text
     end
-    local run_cmd = require("trunks._core.run_cmd").run_cmd
+    local system = require("trunks._core.run_cmd").system
 
     local upstream_cmd = Command.base_command("rev-parse --abbrev-ref --symbolic-full-name @{u}"):build()
-    local upstream_output, upstream_exit_code = run_cmd(upstream_cmd)
+    local upstream_result = system(upstream_cmd)
 
-    if upstream_exit_code ~= 0 or not upstream_output[1] then
+    if upstream_result.code ~= 0 or not upstream_result.output[1] then
         local branch_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
-        local branch_output, branch_exit_code = run_cmd(branch_cmd)
-        local branch = (branch_exit_code == 0 and branch_output[1]) or "HEAD"
+        local branch_result = system(branch_cmd)
+        local branch = (branch_result.code == 0 and branch_result.output[1]) or "HEAD"
         return "Push: " .. branch
     end
 
-    local upstream = upstream_output[1]
+    local upstream = upstream_result.output[1]
 
     local rebase_cmd = Command.base_command("config pull.rebase"):build()
-    local rebase_output, rebase_exit_code = run_cmd(rebase_cmd)
+    local rebase_result = system(rebase_cmd)
 
     local prefix
-    if rebase_exit_code == 0 and rebase_output[1] and rebase_output[1] ~= "false" then
+    if rebase_result.code == 0 and rebase_result.output[1] ~= "false" then
         prefix = "Rebase: "
     else
         prefix = "Merge: "

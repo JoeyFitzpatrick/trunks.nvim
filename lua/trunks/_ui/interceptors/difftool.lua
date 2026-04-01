@@ -114,11 +114,10 @@ local function parse_diff_revisions(cmd)
         -- Three-dot range: A...B means merge-base(A,B)..B
         local left, right = args:match("^(.-)%.%.%.(.+)$")
         if left and right then
-            -- Resolve the merge-base
             local merge_base_output = run_cmd("git merge-base " .. left .. " " .. right)
             if merge_base_output and #merge_base_output > 0 then
                 local merge_base = merge_base_output[1]:match("^%s*(.-)%s*$")
-                -- Resolve the right side
+
                 local right_resolved_output = run_cmd("git rev-parse " .. right)
                 local right_resolved = right_resolved_output and right_resolved_output[1]:match("^%s*(.-)%s*$")
                 return merge_base, right_resolved

@@ -10,6 +10,7 @@ describe("status set_lines", function()
             get_files = generate_files,
             diff_stat_text = "No staged changes",
             remote_branch_text = "Rebase: origin/main",
+            head_text = "Head: main",
         })
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
@@ -38,8 +39,8 @@ describe("status set_lines", function()
         set_lines(bufnr, {
             get_files = generate_files,
             diff_stat_text = "No staged changes",
-
             remote_branch_text = "Rebase: origin/main",
+            head_text = "Head: main",
         })
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
@@ -75,6 +76,7 @@ describe("status set_lines", function()
             get_files = generate_files,
             diff_stat_text = "No staged changes",
             remote_branch_text = "Rebase: origin/main",
+            head_text = "Head: main",
         })
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
@@ -102,6 +104,7 @@ describe("status set_lines", function()
             get_files = generate_files,
             diff_stat_text = "No staged changes",
             remote_branch_text = "Rebase: origin/main",
+            head_text = "Head: main",
         })
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
@@ -135,6 +138,7 @@ describe("status set_lines", function()
             get_files = generate_files,
             diff_stat_text = "No staged changes",
             remote_branch_text = "Rebase: origin/main",
+            head_text = "Head: main",
         })
 
         local status_files_from_buf_variable = vim.b[bufnr].trunks_status_files

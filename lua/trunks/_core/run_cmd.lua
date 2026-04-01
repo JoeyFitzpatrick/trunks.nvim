@@ -7,6 +7,32 @@
 
 local M = {}
 
+---@class trunks.SystemResult
+---@field output string[]
+---@field code integer
+---@field stdout string
+---@field stderr string
+
+--- Uses `vim.system` to separate stdout and stderr.
+--- Should only be used for read/query commands (status, log, etc).
+---@param cmd string | string[]
+---@return trunks.SystemResult
+function M.system(cmd)
+    if type(cmd) == "string" then
+        cmd = vim.split(cmd, " ")
+    end
+
+    local result = vim.system(cmd, { text = true }):wait()
+
+    if result.code == 0 then
+        result.output = vim.split(result.stdout, "\n")
+    else
+        result.output = vim.split(result.stderr, "\n")
+    end
+
+    return result
+end
+
 --- Runs a command and returns the output.
 ---@param cmd string | trunks.Command -- Command to run
 ---@param opts? trunks.RunCmdOpts -- options, such as special error handling

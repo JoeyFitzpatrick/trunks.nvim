@@ -2,7 +2,7 @@ local M = {}
 
 local status_utils = require("trunks._ui.home_options.status.status_utils")
 local run_hidden_cmd = require("trunks._core.run_cmd").run_hidden_cmd
-local run_cmd = require("trunks._core.run_cmd").run_cmd
+local system = require("trunks._core.run_cmd").system
 local Command = require("trunks._core.command")
 
 local function get_status(line)
@@ -334,6 +334,7 @@ end
 ---@field get_files? fun(): string[]
 ---@field diff_stat_text? string
 ---@field remote_branch_text? string
+---@field head_text? string
 
 ---@param bufnr integer
 ---@param ctx? trunks.StatusSetLinesContext
@@ -351,27 +352,26 @@ function M._set_lines(bufnr, ctx)
     end
 
     local head_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
-    local head_cmd_output, head_cmd_exit_code = run_cmd(head_cmd)
+    local head_cmd_result = system(head_cmd)
     local branch
 
-    if head_cmd_exit_code == 0 then
-        branch = head_cmd_output[1]
+    if ctx.head_text then
+        set({ ctx.head_text })
+    elseif head_cmd_result.code == 0 then
+        branch = head_cmd_result.output[1]
         set({ "Head: " .. branch })
     else
         local hash_cmd = Command.base_command("rev-parse --short HEAD"):build()
-        local hash_cmd_output, hash_cmd_exit_code = run_cmd(hash_cmd)
-        if hash_cmd_output[1] and hash_cmd_exit_code == 0 then
-            set(bufnr, { "Head: " .. hash_cmd_output[1] .. "(detached head)" })
+        local hash_cmd_result = system(hash_cmd)
+        if #hash_cmd_result.output > 0 and hash_cmd_result.code == 0 then
+            set({ "Head: " .. hash_cmd_result.output[1] .. " (detached head)" })
         else
-            set(bufnr, { "Head: unable to find current HEAD" })
+            set({ "Head: unable to find current HEAD" })
         end
     end
 
     if branch then
-        require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(
-            bufnr,
-            { line_num = 0, branch = branch }
-        )
+        require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(bufnr, { branch = branch })
     end
 
     local remote_branch_text = status_utils.get_remote_branch(ctx.remote_branch_text)
