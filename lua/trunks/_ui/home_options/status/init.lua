@@ -1,7 +1,7 @@
 local M = {}
 
 local status_utils = require("trunks._ui.home_options.status.status_utils")
-local run_async_cmd_and_rerender = require("trunks._core.run_cmd").run_async_cmd_and_rerender
+local run_write_cmd = require("trunks._core.run_cmd").run_write_cmd
 local Command = require("trunks._core.command")
 
 local function get_status(line)
@@ -69,12 +69,6 @@ function M.get_line(bufnr, line_num)
     }
 end
 
-local function remove_untracked_file(filename)
-    run_async_cmd_and_rerender("git clean -f " .. filename)
-
-    -- File/dir can still exist in some edge cases, for example, if it's an empty dir with a .git folder.
-    -- In this case, currently we no-op, but documenting here for future reference.
-end
 
 ---@param line_data trunks.StatusLineData
 function M._stage_single_file(line_data)
@@ -84,7 +78,7 @@ function M._stage_single_file(line_data)
     else
         base_cmd = "git reset HEAD -- " .. line_data.filename
     end
-    run_async_cmd_and_rerender(base_cmd)
+    run_write_cmd(base_cmd)
     return base_cmd
 end
 
@@ -117,21 +111,21 @@ function M.set_keymaps(bufnr)
             files_as_string = files_as_string .. (i == 0 and "" or " ") .. file.filename
         end
         if should_stage then
-            run_async_cmd_and_rerender("git add " .. files_as_string)
+            run_write_cmd("git add " .. files_as_string)
             return
         end
-        run_async_cmd_and_rerender("git restore --staged -- " .. files_as_string)
+        run_write_cmd("git restore --staged -- " .. files_as_string)
     end, keymap_opts)
 
     set("n", keymaps.stage_all, function()
         local status_files = vim.b[bufnr].trunks_status_files
         for _, file in pairs(status_files.unstaged) do
             if file then
-                run_async_cmd_and_rerender("git add -A")
+                run_write_cmd("git add -A")
                 return
             end
         end
-        run_async_cmd_and_rerender("git reset")
+        run_write_cmd("git reset")
     end, keymap_opts)
 
     local keymap_to_command_map = {
@@ -187,80 +181,7 @@ function M.set_keymaps(bufnr)
     set("n", keymaps.restore, function()
         -- We need to pass in line_num, otherwise it uses cursor position from popup
         local line_num = vim.api.nvim_win_get_cursor(0)[1]
-        require("trunks._ui.popups.popup").render_popup({
-            buffer_name = "TrunksStatusDeletePopup",
-            title = "Git Restore Type",
-            mappings = {
-                {
-                    keys = "f",
-                    description = "Just this file",
-                    action = function()
-                        local ok, line_data = pcall(M.get_line, bufnr, line_num)
-                        if not ok or not line_data then
-                            return
-                        end
-                        local filename = line_data.safe_filename
-                        local status = line_data.status
-                        local status_checks = require("trunks._core.git")
-                        if status_checks.is_untracked(status) then
-                            remove_untracked_file(filename)
-                        else
-                            local cmd = "git reset -- " .. filename .. " && git restore -- " .. filename
-                            run_async_cmd_and_rerender(cmd)
-                        end
-                    end,
-                },
-                {
-                    keys = "u",
-                    description = "Unstaged changes for this file",
-                    action = function()
-                        local ok, line_data = pcall(M.get_line, bufnr, line_num)
-                        if not ok or not line_data then
-                            return
-                        end
-                        local filename = line_data.safe_filename
-                        local status = line_data.status
-                        local status_checks = require("trunks._core.git")
-                        if status_checks.is_untracked(status) then
-                            remove_untracked_file(filename)
-                        else
-                            -- Worth noting that lazygit does git -c core.hooksPath=/dev/null checkout -- filename
-                            local cmd = "git restore -- " .. filename
-                            run_async_cmd_and_rerender(cmd)
-                        end
-                    end,
-                },
-                {
-                    keys = "n",
-                    description = "Nuke working tree",
-                    action = function()
-                        run_async_cmd_and_rerender("git reset --hard HEAD")
-                        run_async_cmd_and_rerender("git clean -fd")
-                    end,
-                },
-                {
-                    keys = "h",
-                    description = "Hard reset",
-                    action = function()
-                        run_async_cmd_and_rerender("git reset --hard HEAD")
-                    end,
-                },
-                {
-                    keys = "s",
-                    description = "Soft reset",
-                    action = function()
-                        run_async_cmd_and_rerender("git reset --soft HEAD")
-                    end,
-                },
-                {
-                    keys = "m",
-                    description = "Mixed reset",
-                    action = function()
-                        run_async_cmd_and_rerender("git reset --mixed HEAD")
-                    end,
-                },
-            },
-        })
+        require("trunks._ui.popups.restore_file_popup").render(bufnr, line_num, M.get_line)
     end, keymap_opts)
 
     set("v", keymaps.restore, function()
@@ -290,15 +211,13 @@ function M.set_keymaps(bufnr)
                 return
             end
             if statuses.staged ~= "" then
-                run_async_cmd_and_rerender(
-                    string.format("git reset -- %s && git clean -f -- %s", statuses.staged, statuses.staged)
-                )
+                run_write_cmd({ "git reset -- " .. statuses.staged, "git clean -f -- " .. statuses.staged })
             end
             if statuses.unstaged ~= "" then
-                run_async_cmd_and_rerender("git restore -- " .. statuses.unstaged)
+                run_write_cmd("git restore -- " .. statuses.unstaged)
             end
             if statuses.untracked ~= "" then
-                run_async_cmd_and_rerender("git clean -f -- " .. statuses.untracked)
+                run_write_cmd("git clean -f -- " .. statuses.untracked)
             end
         end)
     end, keymap_opts)
