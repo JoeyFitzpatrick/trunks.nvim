@@ -41,6 +41,9 @@ local function render_num_commits(bufnr, opts)
     local commits_str = get_num_commits_to_pull_and_push(branch)
     if #commits_str > 0 then
         local existing_line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
+        if not existing_line then
+            return
+        end
         local existing_line_without_commits_str = existing_line:gsub(" ↓%d+", ""):gsub(" ↑%d+", "")
         local new_line = { existing_line_without_commits_str .. " " .. commits_str }
         require("trunks._ui.utils.buffer_text").set(bufnr, new_line, 0, 1)
