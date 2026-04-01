@@ -134,7 +134,7 @@ M.long_descriptions = {
         push = PUSH_DESCRIPTION,
         restore = "Open git restore options, or restore visually selected lines",
         stage = "Stage file",
-        stage_all = "Stage all files",
+        stage_all = "Stage or unstage all files",
         stash_popup = "Open git stash options",
         toggle_inline_diff = "Toggle inline diff for file under cursor",
     },

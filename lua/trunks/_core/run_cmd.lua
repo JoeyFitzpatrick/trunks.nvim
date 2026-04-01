@@ -124,4 +124,22 @@ M.run_hidden_cmd = function(cmd, opts)
     return "success", error_code
 end
 
+--- Runs a command async, for performance reasons.
+--- Doesn't return anything, and triggers rerender, so only use for write commands.
+---@param cmd string
+function M.run_async_cmd_and_rerender(cmd)
+    vim.system(
+        vim.split(cmd, " "),
+        { text = true },
+        vim.schedule_wrap(function(result)
+            if result.code ~= 0 then
+                vim.notify(result.stderr, vim.log.levels.ERROR)
+            end
+
+            require("trunks._core.register").rerender_buffers()
+            vim.cmd.checktime()
+        end)
+    )
+end
+
 return M

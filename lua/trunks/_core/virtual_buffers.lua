@@ -143,6 +143,15 @@ local function load_virtual_buffer_content(bufnr, uri)
     return true
 end
 
+local EXCLUDED_URIS = {
+    ["trunks://status"] = true,
+    ["trunks://branch"] = true,
+}
+
+local function is_excluded_uri(uri)
+    return EXCLUDED_URIS[uri] or false
+end
+
 function M.setup()
     local group = vim.api.nvim_create_augroup("TrunksVirtualBuffers", { clear = true })
 
@@ -150,6 +159,9 @@ function M.setup()
         group = group,
         pattern = "trunks://*",
         callback = function(args)
+            if is_excluded_uri(args.file) then
+                return
+            end
             load_virtual_buffer_content(args.buf, args.file)
         end,
         desc = "Trunks: Load virtual buffer content from git",
@@ -160,6 +172,10 @@ function M.setup()
         group = group,
         pattern = "trunks://*",
         callback = function(args)
+            if is_excluded_uri(args.file) then
+                return
+            end
+
             -- Only load if buffer is empty (content wasn't loaded yet)
             local line_count = vim.api.nvim_buf_line_count(args.buf)
             local first_line = vim.api.nvim_buf_get_lines(args.buf, 0, 1, false)[1]
