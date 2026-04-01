@@ -9,13 +9,14 @@ syn include @trunksDiff syntax/diff.vim
 
 " ── Headers ──────────────────────────────────────────────────────────────────
 syn match trunksHeader /^[A-Z][a-z][^:]*:/
-syn match trunksHeader /^Head:/ nextgroup=trunksSymbolicRef,trunksHash skipwhite
+syn match trunksHeader /^Head:/ nextgroup=trunksSymbolicRef,trunksHash,trunksUnableToFindHead skipwhite
 syn match trunksHeader /^Push:\|^Merge:\|^Rebase:/ nextgroup=trunksSymbolicRef skipwhite
 syn match trunksHelpHeader /^Help:/ nextgroup=trunksHelpTag skipwhite
 syn match trunksHelpTag /\S\+/ contained
 
 syn match trunksSymbolicRef /\.\@!\%(\.\.\@!\|[^[:space:][:cntrl:]\:.]\)\+\.\@<!/ contained
 syn match trunksHash /\S\@<!\x\{4,\}\S\@!/ contained
+syn match trunksUnableToFindHead /unable to find current HEAD/ contained
 
 " ── Commit count indicators on Head: line (↓N = behind/pull, ↑N = ahead/push)
 syn match trunksCommitsBehind /↓\d\+/
@@ -62,17 +63,18 @@ hi def link fugitiveSymbolicRef     Function
 hi def link fugitiveCount           Number
 
 " ── Trunks highlight groups – fall back to fugitive equivalents ───────────────
-hi def link trunksHeader          fugitiveHeader
-hi def link trunksHelpHeader      fugitiveHelpHeader
-hi def link trunksHelpTag         fugitiveHelpTag
-hi def link trunksUnstagedHeading fugitiveUnstagedHeading
-hi def link trunksStagedHeading   fugitiveStagedHeading
-hi def link trunksCount           fugitiveCount
-hi def link trunksUnstagedModifier fugitiveUnstagedModifier
-hi def link trunksStagedModifier  fugitiveStagedModifier
-hi def link trunksHash            fugitiveHash
-hi def link trunksSymbolicRef     fugitiveSymbolicRef
-hi def link trunksDiffStat        Comment
+hi def link trunksHeader               fugitiveHeader
+hi def link trunksHelpHeader           fugitiveHelpHeader
+hi def link trunksHelpTag              fugitiveHelpTag
+hi def link trunksUnstagedHeading      fugitiveUnstagedHeading
+hi def link trunksStagedHeading        fugitiveStagedHeading
+hi def link trunksCount                fugitiveCount
+hi def link trunksUnstagedModifier     fugitiveUnstagedModifier
+hi def link trunksStagedModifier       fugitiveStagedModifier
+hi def link trunksHash                 fugitiveHash
+hi def link trunksSymbolicRef          fugitiveSymbolicRef
+hi def link trunksUnableToFindHead     fugitiveSymbolicRef
+hi def link trunksDiffStat             Comment
 
 " Commit count indicators have no fugitive equivalent
 hi def link trunksCommitsBehind WarningMsg
