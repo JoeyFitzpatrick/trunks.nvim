@@ -49,7 +49,7 @@ function M.render(filepath, commit)
     }
 
     local bufnr = require("trunks._ui.popups.popup").render_popup({
-        buffer_name = "TrunksRestorePopup",
+        buffer_name = "TrunksRestoreFromCommitPopup",
         title = string.format("Restore %s", filepath),
         mappings = mappings,
     })

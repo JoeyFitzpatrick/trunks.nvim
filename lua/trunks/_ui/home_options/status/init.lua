@@ -234,7 +234,8 @@ function M.set_keymaps(bufnr)
                     keys = "n",
                     description = "Nuke working tree",
                     action = function()
-                        run_async_cmd_and_rerender("git reset --hard HEAD && git clean -fd")
+                        run_async_cmd_and_rerender("git reset --hard HEAD")
+                        run_async_cmd_and_rerender("git clean -fd")
                     end,
                 },
                 {

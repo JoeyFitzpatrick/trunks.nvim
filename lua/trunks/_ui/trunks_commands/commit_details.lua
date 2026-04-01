@@ -155,7 +155,7 @@ local function set_keymaps(bufnr, commit)
         "n",
         keymaps.restore_popup,
         with_line(bufnr, M.get_line, function(line_data)
-            require("trunks._ui.popups.restore_popup").render(line_data.filename, commit)
+            require("trunks._ui.popups.restore_from_commit_popup").render(line_data.filename, commit)
         end),
         { buffer = bufnr }
     )
