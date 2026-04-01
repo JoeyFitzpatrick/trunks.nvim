@@ -2,7 +2,6 @@ local M = {}
 
 local status_utils = require("trunks._ui.home_options.status.status_utils")
 local run_hidden_cmd = require("trunks._core.run_cmd").run_hidden_cmd
-local system = require("trunks._core.run_cmd").system
 local Command = require("trunks._core.command")
 
 local function get_status(line)
@@ -351,27 +350,13 @@ function M._set_lines(bufnr, ctx)
         index = index + #lines
     end
 
-    local head_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
-    local head_cmd_result = system(head_cmd)
-    local branch
-
-    if ctx.head_text then
-        set({ ctx.head_text })
-    elseif head_cmd_result.code == 0 then
-        branch = head_cmd_result.output[1]
-        set({ "Head: " .. branch })
-    else
-        local hash_cmd = Command.base_command("rev-parse --short HEAD"):build()
-        local hash_cmd_result = system(hash_cmd)
-        if #hash_cmd_result.output > 0 and hash_cmd_result.code == 0 then
-            set({ "Head: " .. hash_cmd_result.output[1] .. " (detached head)" })
-        else
-            set({ "Head: unable to find current HEAD" })
-        end
-    end
-
-    if branch then
-        require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(bufnr, { branch = branch })
+    local head_text_result = status_utils.get_head(ctx.head_text)
+    set({ head_text_result.head_text })
+    if head_text_result.branch then
+        require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(
+            bufnr,
+            { branch = head_text_result.branch }
+        )
     end
 
     local remote_branch_text = status_utils.get_remote_branch(ctx.remote_branch_text)

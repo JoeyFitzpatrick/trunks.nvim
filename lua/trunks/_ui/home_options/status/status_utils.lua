@@ -91,6 +91,32 @@ function M.get_diff_stat(diff_stat_text)
     end
 end
 
+---@param head_text? string
+---@return { head_text: string, branch: string | nil}
+function M.get_head(head_text)
+    if head_text then
+        return { head_text = head_text }
+    end
+
+    local system = require("trunks._core.run_cmd").system
+    local head_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
+
+    local head_cmd_result = system(head_cmd)
+
+    if head_cmd_result.code == 0 then
+        local branch = head_cmd_result.output[1]
+        return { head_text = "Head: " .. branch, branch = branch }
+    else
+        local hash_cmd = Command.base_command("rev-parse --short HEAD"):build()
+        local hash_cmd_result = system(hash_cmd)
+        if #hash_cmd_result.output > 0 and hash_cmd_result.code == 0 then
+            return { head_text = "Head: " .. hash_cmd_result.output[1] .. " (detached head)" }
+        else
+            return { head_text = "Head: unable to find current HEAD" }
+        end
+    end
+end
+
 ---@param remote_branch_text? string
 ---@return string
 function M.get_remote_branch(remote_branch_text)
