@@ -55,6 +55,10 @@ local cmd_map = {
         require("trunks._ui.trunks_commands.log_qf").render(input_args)
     end,
 
+    ["reset-to-remote"] = function()
+        require("trunks._ui.trunks_commands.reset_to_remote").reset_to_remote()
+    end,
+
     vdiff = function(cmd)
         require("trunks._ui.interceptors.split_diff").split_diff(cmd, "right")
     end,

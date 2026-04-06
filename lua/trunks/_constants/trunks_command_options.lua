@@ -7,6 +7,7 @@ M.options = {
     ["commit-instant-fixup"] = {},
     edit = {},
     ["log-qf"] = {},
+    ["reset-to-remote"] = {},
     hdiff = { completion_type = "branch" },
     vdiff = { completion_type = "branch" },
 }
