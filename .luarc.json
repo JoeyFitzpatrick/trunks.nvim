@@ -1,15 +1,18 @@
 {
-  "diagnostics.libraryFiles": "Disable",
-  "runtime.version": "LuaJIT",
-  "workspace.checkThirdParty": "Disable",
-  "workspace.ignoreDir": [
-    ".dependencies"
-  ],
-  "workspace.library": [
-    ".dependencies/busted/library",
-    ".dependencies/luassert/library",
-    ".dependencies/luvit-meta/library",
-    "$VIMRUNTIME/lua",
-    "lua"
-  ]
+       "diagnostics.libraryFiles": "Disable",
+       "runtime.version": "LuaJIT",
+       "workspace.checkThirdParty": "Disable",
+       "workspace.ignoreDir": [
+              ".dependencies"
+       ],
+       "workspace.library": [
+              ".dependencies/busted/library",
+              ".dependencies/luassert/library",
+              ".dependencies/luvit-meta/library",
+              "$VIMRUNTIME/lua",
+              "lua"
+       ],
+       "diagnostics.globals": [
+              "vim"
+       ]
 }
