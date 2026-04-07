@@ -78,20 +78,7 @@ end
 ---@param path string
 ---@return string | nil
 function M._find_git_root(path)
-    local uv = vim.loop
-    local function exists(p)
-        local stat = uv.fs_stat(p)
-        return stat ~= nil
-    end
-    path = vim.fn.fnamemodify(path, ":p")
-    while path and path ~= "/" do
-        local git_dir = path .. "/.git"
-        if exists(git_dir) then
-            return path
-        end
-        path = vim.fn.fnamemodify(path, ":h")
-    end
-    return nil
+    return vim.fs.root(path, ".git")
 end
 
 ---@param path? string

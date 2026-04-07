@@ -61,8 +61,7 @@ local split_to_vim_cmd = {
 ---@param filename string
 ---@return string git_root
 local function get_git_root(filename)
-    local abs = vim.fn.fnamemodify(filename, ":p")
-    return require("trunks._core.parse_command")._find_git_root(abs) or vim.loop.cwd()
+    return require("trunks._core.parse_command")._find_git_root(filename) or vim.loop.cwd()
 end
 
 ---@param filename string

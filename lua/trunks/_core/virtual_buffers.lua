@@ -5,9 +5,8 @@
 
 local M = {}
 
--- URI format: trunks://<git_root>//commit/<hash>/<filepath>
---             trunks://<git_root>//show/<ref>
--- The `//` separates the git root from the object spec.
+-- URI format: trunks://<git_root>/.git//commit/<hash>/<filepath>
+--             trunks://<git_root>/.git//show/<ref>
 
 ---@param git_root string Absolute path to git repository root
 ---@param commit string
@@ -15,14 +14,14 @@ local M = {}
 ---@return string uri The trunks:// URI
 function M.create_uri(git_root, commit, filepath)
     local normalized_path = filepath:gsub("^/+", "")
-    return string.format("trunks://%s//commit/%s/%s", git_root, commit, normalized_path)
+    return string.format("trunks://%s.git//commit/%s/%s", git_root, commit, normalized_path)
 end
 
 ---@param git_root string Absolute path to git repository root
 ---@param ref string A git ref (commit hash, branch, tag, etc.)
 ---@return string uri The trunks:// URI for a git show view
 function M.create_show_uri(git_root, ref)
-    return string.format("trunks://%s//show/%s", git_root, ref)
+    return string.format("trunks://%s.git//show/%s", git_root, ref)
 end
 
 ---@param uri string
@@ -35,7 +34,7 @@ function M.parse_uri(uri)
     if not sep then
         return nil, nil, nil
     end
-    local git_root = rest:sub(1, sep - 1)
+    local git_root = rest:sub(1, sep - 1):gsub("%.git$", "")
     local spec = rest:sub(sep + 2)
     local commit, filepath = spec:match("^commit/([^/]+)/(.+)$")
     return git_root ~= "" and git_root or nil, commit, filepath
@@ -50,7 +49,7 @@ function M.parse_show_uri(uri)
     if not sep then
         return nil, nil
     end
-    local git_root = rest:sub(1, sep - 1)
+    local git_root = rest:sub(1, sep - 1):gsub("%.git$", "")
     local spec = rest:sub(sep + 2)
     local ref = spec:match("^show/(.+)$")
     return git_root ~= "" and git_root or nil, ref
@@ -139,6 +138,7 @@ local function load_virtual_buffer_content(bufnr, uri)
 
     vim.b[bufnr].trunks_commit = commit
     vim.b[bufnr].trunks_filepath = filepath
+    vim.b[bufnr].original_filename = filepath
 
     return true
 end

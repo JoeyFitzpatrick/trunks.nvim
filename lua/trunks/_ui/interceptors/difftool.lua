@@ -12,6 +12,7 @@
 ---@field right string
 
 local M = {}
+--
 
 ---@param lines string[]
 ---@return trunks.DiffQfHunk[]
@@ -96,20 +97,17 @@ end
 ---@param cmd string The full command string
 ---@return string|nil left_commit The left side of the diff (nil for working tree)
 ---@return string|nil right_commit The right side of the diff (nil for working tree)
-local function parse_diff_revisions(cmd)
+function M._parse_diff_revisions(cmd)
     local run_cmd = require("trunks._core.run_cmd").run_cmd
 
-    -- Extract arguments after 'difftool'
     local args = cmd:match("difftool%s+(.+)")
     if not args or args == "" then
-        -- No args: diff working tree against HEAD
         return "HEAD", nil
     end
 
     -- Trim whitespace
     args = args:match("^%s*(.-)%s*$")
 
-    -- Check if this is a range (contains ..)
     if args:match("%.%.%.") then
         -- Three-dot range: A...B means merge-base(A,B)..B
         local left, right = args:match("^(.-)%.%.%.(.+)$")
@@ -134,7 +132,6 @@ local function parse_diff_revisions(cmd)
             return left_resolved, right_resolved
         end
     else
-        -- Could be: single commit, two commits, or complex ref
         -- Split on whitespace to check for multiple commits
         local tokens = vim.split(args, "%s+")
         tokens = vim.tbl_filter(function(t)
@@ -144,34 +141,22 @@ local function parse_diff_revisions(cmd)
         if #tokens == 0 then
             return "HEAD", nil
         elseif #tokens == 1 then
-            -- Single commit: diff commit against its parent
+            -- Single commit: diff working tree against commit
             local commit = tokens[1]
-            local resolved_output = run_cmd("git rev-parse " .. commit)
-            local resolved = resolved_output and resolved_output[1]:match("^%s*(.-)%s*$")
-            if resolved then
-                -- Get parent commit
-                local parent_output = run_cmd("git rev-parse " .. resolved .. "^")
-                local parent = parent_output and parent_output[1]:match("^%s*(.-)%s*$")
-                return parent, resolved
-            end
+            return nil, commit
         elseif #tokens >= 2 then
-            -- Two commits: diff first against second
-            local left_resolved_output = run_cmd("git rev-parse " .. tokens[1])
-            local right_resolved_output = run_cmd("git rev-parse " .. tokens[2])
-            local left_resolved = left_resolved_output and left_resolved_output[1]:match("^%s*(.-)%s*$")
-            local right_resolved = right_resolved_output and right_resolved_output[1]:match("^%s*(.-)%s*$")
-            return left_resolved, right_resolved
+            -- Two commits: diff against each other
+            return tokens[1], tokens[2]
         end
     end
 
-    -- Fallback
     return "HEAD", nil
 end
 
 ---@param command_builder trunks.Command
 function M.render(command_builder)
     local cmd = command_builder.base or ""
-    local left_commit, right_commit = parse_diff_revisions(cmd)
+    local left_commit, right_commit = M._parse_diff_revisions(cmd)
 
     local qf_locations = get_qf_locations(command_builder)
     if #qf_locations == 0 then
@@ -192,7 +177,7 @@ function M.render(command_builder)
         for _, line in ipairs(location.lines) do
             -- Use virtual URI if right_commit is set (comparing two commits, not working tree)
             local qf_filename
-            if right_commit then
+            if left_commit then
                 qf_filename = virtual_buffers.create_uri(git_root, right_commit, location.filename)
             else
                 qf_filename = location.filename
@@ -229,20 +214,20 @@ function M.render(command_builder)
             -- Extract the real filepath for vdiff command
             local filepath
             if virtual_buffers.is_virtual_uri(bufname) then
-                local _, extracted_path = virtual_buffers.parse_uri(bufname)
+                local _, _, extracted_path = virtual_buffers.parse_uri(bufname)
                 filepath = extracted_path
             else
                 filepath = bufname
             end
 
-            if right_commit then
+            if right_commit and not left_commit then
+                -- Diff commit against working tree
+                -- Current buffer is working tree, open commit in split
+                vim.cmd("Trunks vdiff " .. right_commit)
+            elseif right_commit then
                 -- Diff between two specific commits
                 -- We're already viewing right_commit, so open left_commit in the split
                 require("trunks._core.open_file").open_file_in_split(filepath, left_commit, "right", {})
-            elseif left_commit then
-                -- Diff commit against working tree
-                -- Current buffer is working tree, open commit in split
-                vim.cmd("Trunks vdiff " .. left_commit)
             else
                 -- No commits specified, diff against working tree
                 vim.cmd("Trunks vdiff")
