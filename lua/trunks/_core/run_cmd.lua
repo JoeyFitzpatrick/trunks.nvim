@@ -19,7 +19,7 @@ local M = {}
 ---@return trunks.SystemResult
 function M.system(cmd)
     if type(cmd) == "string" then
-        cmd = vim.split(cmd, " ")
+        cmd = { "sh", "-c", cmd }
     end
 
     local result = vim.system(cmd, { text = true }):wait()

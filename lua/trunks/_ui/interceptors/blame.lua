@@ -141,11 +141,16 @@ end
 ---@param command_builder trunks.Command
 ---@return "success" | "error"
 function M.set_lines(bufnr, command_builder)
-    local output, error_code = run_cmd.run_cmd(command_builder, {})
-    if error_code ~= 0 then
-        vim.notify(output[1], vim.log.levels.ERROR)
+    local result = run_cmd.system(command_builder:build())
+    if result.code ~= 0 then
+        vim.notify(vim.split(result.stderr, "\n")[1], vim.log.levels.ERROR)
         vim.api.nvim_win_close(0, true)
         return "error"
+    end
+
+    local output = vim.split(result.stdout, "\n")
+    if output[#output] == "" then
+        table.remove(output)
     end
 
     local lines = {}
