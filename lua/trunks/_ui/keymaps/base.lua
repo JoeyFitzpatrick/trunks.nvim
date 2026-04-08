@@ -157,18 +157,18 @@ end
 
 function M.git_push_keymap()
     local Command = require("trunks._core.command")
-    local run_cmd = require("trunks._core.run_cmd").run_cmd
+    local system = require("trunks._core.run_cmd").system
 
-    local _, upstream_err = run_cmd(Command.base_command("rev-parse @{u}"))
-    if upstream_err ~= 0 then
+    local result = system(Command.base_command("rev-parse @{u}"):build())
+    if result.code ~= 0 then
         vim.cmd("G push")
         return
     end
 
-    local behind_output = run_cmd(Command.base_command("rev-list --count HEAD..@{u}"))
-    local behind = tonumber(behind_output[1]) or 0
+    local behind_result = system(Command.base_command("rev-list --count HEAD..@{u}"):build())
+    local behind = tonumber(behind_result.stdout)
 
-    if behind > 0 then
+    if type(behind) == "number" and behind > 0 then
         local should_force_push = require("trunks._ui.utils.confirm").confirm_choice(
             "Your branch has diverged from the remote branch. Force push?"
         )

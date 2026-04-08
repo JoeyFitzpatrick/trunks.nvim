@@ -50,7 +50,6 @@ local tabs = {
 
 local prefix = require("trunks._constants.constants").FILENAME_PREFIX
 
----@type table<trunks.TabOption, fun(bufnr: integer, opts: trunks.UiRenderOpts)>
 local tab_render_map = {
     Status = {
         buffer_name = prefix .. "status",
@@ -61,6 +60,10 @@ local tab_render_map = {
     Branch = {
         buffer_name = prefix .. "branch",
         render_fn = function(bufnr, opts)
+            local Command = require("trunks._core.command")
+            local command_builder = Command.base_command("branch --sort=-HEAD 2>/dev/null")
+            opts = opts or {}
+            opts.command_builder = command_builder
             return require("trunks._ui.home_options.branch").render(bufnr, opts)
         end,
     },
