@@ -23,6 +23,12 @@ function M._parse_split_diff_args(cmd)
     }
 end
 
+---@param filename string
+---@return string git_root
+local function get_git_root(filename)
+    return require("trunks._core.parse_command")._find_git_root(filename) or vim.loop.cwd()
+end
+
 ---@param cmd string
 ---@param split_type "below" | "right"
 function M.split_diff(cmd, split_type)
@@ -52,11 +58,18 @@ function M.split_diff(cmd, split_type)
     else
         -- Single commit: diff current buffer against commit version
         local bufnr = vim.api.nvim_get_current_buf()
+        local file_at_commit_uri = require("trunks._core.virtual_buffers").create_uri(
+            get_git_root(params.filepath),
+            params.right_commit,
+            params.filepath
+        )
 
-        vim.cmd("diffthis")
-        require("trunks._core.open_file").open_file_in_split(params.filepath, params.right_commit, split_type, {})
+        if split_type == "right" then
+            vim.cmd("vertical diffsplit " .. file_at_commit_uri)
+        else
+            vim.cmd("diffsplit " .. file_at_commit_uri)
+        end
         local split_bufnr = vim.api.nvim_get_current_buf()
-        vim.cmd("diffthis")
 
         vim.api.nvim_create_autocmd({ "BufHidden" }, {
             buffer = bufnr,
