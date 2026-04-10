@@ -50,20 +50,19 @@ end
 
 ---@return Trunks.BrowseParams, (string | nil) -- generated params or error
 function M._generate_browse_params()
-    local remote_url_lines, remote_url_exit_code = run_cmd.run_cmd("config --get remote.origin.url")
-    local remote_url = remote_url_lines[1]
+    local remote_url = run_cmd.system("git config --get remote.origin.url").stdout:gsub("\n", "")
     if vim.endswith(remote_url, ".git") then
         remote_url = remote_url:sub(1, #remote_url - 4)
     end
 
-    local hash, hash_exit_code = run_cmd.run_cmd("rev-parse HEAD")
+    local hash = run_cmd.system("git rev-parse HEAD").stdout:gsub("\n", "")
     local filepath = vim.fn.fnamemodify(vim.fn.expand("%"), ":~:.")
 
-    if remote_url_exit_code ~= 0 then
+    if remote_url == "" then
         return {}, "Trunks: couldn't get remote URL for browse command"
     end
 
-    if hash_exit_code ~= 0 then
+    if hash == "" then
         return {}, "Trunks: couldn't get hash for HEAD for browse command"
     end
 
@@ -73,7 +72,7 @@ function M._generate_browse_params()
 
     return {
         remote_url = remote_url,
-        hash = hash[1],
+        hash = hash,
         filepath = filepath,
     }
 end
