@@ -69,7 +69,6 @@ function M.get_line(bufnr, line_num)
     }
 end
 
-
 ---@param line_data trunks.StatusLineData
 function M._stage_single_file(line_data)
     local base_cmd
@@ -256,55 +255,78 @@ end
 
 ---@param bufnr integer
 ---@param ctx? trunks.StatusSetLinesContext
-function M._set_lines(bufnr, ctx)
+---@param on_done? fun()
+function M._set_lines(bufnr, ctx, on_done)
     ctx = ctx or {}
 
-    local index = 0
-    ---@param lines string[]
-    local set = function(lines)
-        if lines == {} then
-            return
+    local results = {}
+    local pending = 3
+
+    local function on_all_ready()
+        local files = status_utils.get_status_files(ctx.get_files)
+
+        local lines = {}
+        local unstaged_untracked_index
+        local staged_index
+
+        table.insert(lines, results.head or "Head:")
+        table.insert(lines, results.remote_branch or "")
+        table.insert(lines, "Help: g?")
+        table.insert(lines, results.diff_stat or "No staged changes")
+
+        if #files.unstaged_and_untracked > 0 then
+            table.insert(lines, "")
+            table.insert(lines, string.format("Unstaged (%d)", #files.unstaged_and_untracked))
+            unstaged_untracked_index = #lines + 1
+            for _, file in ipairs(files.unstaged_and_untracked) do
+                table.insert(lines, file)
+            end
         end
-        require("trunks._ui.utils.buffer_text").set(bufnr, lines, index)
-        index = index + #lines
-    end
 
-    local head_text_result = status_utils.get_head(ctx.head_text)
-    set({ head_text_result.head_text })
-    if head_text_result.branch then
-        require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(
+        if #files.staged > 0 then
+            table.insert(lines, "")
+            table.insert(lines, string.format("Staged (%d)", #files.staged))
+            staged_index = #lines + 1
+            for _, file in ipairs(files.staged) do
+                table.insert(lines, file)
+            end
+        end
+
+        vim.bo[bufnr].modifiable = true
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+        vim.bo[bufnr].modifiable = false
+
+        status_utils.set_status_files_variable(
             bufnr,
-            { branch = head_text_result.branch }
+            { files = files, staged_index = staged_index, unstaged_untracked_index = unstaged_untracked_index }
         )
+
+        if on_done then
+            on_done()
+        end
     end
 
-    local remote_branch_text = status_utils.get_remote_branch(ctx.remote_branch_text)
-    set({ remote_branch_text }, 1)
-
-    set({ "Help: g?" })
-
-    local diff_stat_text = status_utils.get_diff_stat(ctx.diff_stat_text)
-    set({ diff_stat_text })
-
-    local files = status_utils.get_status_files(ctx.get_files)
-    local unstaged_untracked_index
-    if #files.unstaged_and_untracked > 0 then
-        set({ "", string.format("Unstaged (%d)", #files.unstaged_and_untracked) })
-        unstaged_untracked_index = index
-        set(files.unstaged_and_untracked)
+    local function done()
+        pending = pending - 1
+        if pending == 0 then
+            on_all_ready()
+        end
     end
 
-    local staged_index
-    if #files.staged > 0 then
-        set({ "", string.format("Staged (%d)", #files.staged) })
-        staged_index = index
-        set(files.staged)
-    end
+    status_utils.get_head(ctx.head_text, bufnr, function(lines)
+        results.head = lines[1]
+        done()
+    end)
 
-    status_utils.set_status_files_variable(
-        bufnr,
-        { files = files, staged_index = staged_index, unstaged_untracked_index = unstaged_untracked_index }
-    )
+    status_utils.get_diff_stat(ctx.diff_stat_text, function(lines)
+        results.diff_stat = lines[1]
+        done()
+    end)
+
+    status_utils.get_remote_branch(ctx.remote_branch_text, function(lines)
+        results.remote_branch = lines[1]
+        done()
+    end)
 end
 
 ---@param line string
@@ -433,8 +455,9 @@ function M.render(bufnr, opts)
     end
 
     vim.bo[bufnr].filetype = "trunks"
-    require("trunks._ui.home_options.status")._set_lines(bufnr)
-    M._set_cursor(bufnr, win)
+    M._set_lines(bufnr, nil, function()
+        M._set_cursor(bufnr, win)
+    end)
 
     require("trunks._ui.home_options.status").set_keymaps(bufnr)
     if opts.set_keymaps then
@@ -468,11 +491,9 @@ function M.render(bufnr, opts)
             return
         end
         local cursor_state = M._get_cursor_state(bufnr, buf_win)
-        vim.bo[bufnr].modifiable = true
-        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-        M._set_lines(bufnr)
-        vim.bo[bufnr].modifiable = false
-        M._set_cursor(bufnr, buf_win, cursor_state)
+        M._set_lines(bufnr, nil, function()
+            M._set_cursor(bufnr, buf_win, cursor_state)
+        end)
     end
 end
 

@@ -77,77 +77,98 @@ function M.get_status_files(get_files_fn)
 end
 
 ---@param diff_stat_text? string
-function M.get_diff_stat(diff_stat_text)
+---@param callback function
+function M.get_diff_stat(diff_stat_text, callback)
     if diff_stat_text then
-        return diff_stat_text
+        callback({ diff_stat_text })
+        return
     end
     local diff_stat_cmd = Command.base_command("diff --staged --shortstat"):build({ no_pager = true })
-    local diff_result = require("trunks._core.run_cmd").system(diff_stat_cmd)
-    local output = diff_result.output[1]
-    if diff_result.code == 0 and output and output ~= "" then
-        return vim.trim(output)
-    else
-        return "No staged changes"
-    end
+    vim.system(
+        {
+            "sh",
+            "-c",
+            diff_stat_cmd,
+        },
+        vim.schedule_wrap(function(result)
+            local output = result.stdout:gsub("\n", "")
+            if result.code == 0 and output and output ~= "" then
+                callback({ vim.trim(output) })
+            else
+                callback({ "No staged changes" })
+            end
+        end)
+    )
 end
 
 ---@param head_text? string
----@return { head_text: string, branch: string | nil}
-function M.get_head(head_text)
+---@param bufnr integer
+---@param callback function
+function M.get_head(head_text, bufnr, callback)
     if head_text then
-        return { head_text = head_text }
+        callback({ head_text })
+        return
     end
 
-    local system = require("trunks._core.run_cmd").system
     local head_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
 
-    local head_cmd_result = system(head_cmd)
-
-    if head_cmd_result.code == 0 then
-        local branch = head_cmd_result.output[1]
-        return { head_text = "Head: " .. branch, branch = branch }
-    else
-        local hash_cmd = Command.base_command("rev-parse --short HEAD"):build()
-        local hash_cmd_result = system(hash_cmd)
-        if #hash_cmd_result.output > 0 and hash_cmd_result.code == 0 then
-            return { head_text = "Head: " .. hash_cmd_result.output[1] .. " (detached head)" }
-        else
-            return { head_text = "Head: unable to find current HEAD" }
-        end
-    end
+    vim.system(
+        { "sh", "-c", head_cmd },
+        vim.schedule_wrap(function(result)
+            if result.code == 0 then
+                local branch = result.stdout:gsub("\n", "")
+                callback({ "Head: " .. branch })
+                require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(
+                    bufnr,
+                    { branch = branch }
+                )
+            else
+                local hash_cmd = Command.base_command("rev-parse --short HEAD"):build()
+                local hash_cmd_result = require("trunks._core.run_cmd").system(hash_cmd)
+                if #hash_cmd_result.output > 0 and hash_cmd_result.code == 0 then
+                    callback({ "Head: " .. hash_cmd_result.output[1] .. " (detached head)" })
+                else
+                    callback({ "Head: unable to find current HEAD" })
+                end
+            end
+        end)
+    )
 end
 
 ---@param remote_branch_text? string
----@return string
-function M.get_remote_branch(remote_branch_text)
+---@param callback function
+function M.get_remote_branch(remote_branch_text, callback)
     if remote_branch_text then
-        return remote_branch_text
+        callback({ remote_branch_text })
+        return
     end
-    local system = require("trunks._core.run_cmd").system
-
     local upstream_cmd = Command.base_command("rev-parse --abbrev-ref --symbolic-full-name @{u}"):build()
-    local upstream_result = system(upstream_cmd)
+    local trunks_system = require("trunks._core.run_cmd").system
+    vim.system(
+        { "sh", "-c", upstream_cmd },
+        vim.schedule_wrap(function(result)
+            if result.code ~= 0 or result.stdout == "" then
+                local branch_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
+                local branch_result = trunks_system(branch_cmd)
+                local branch = (branch_result.code == 0 and branch_result.output[1]) or "HEAD"
+                callback({ "Push: " .. branch })
+                return
+            end
 
-    if upstream_result.code ~= 0 or not upstream_result.output[1] then
-        local branch_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
-        local branch_result = system(branch_cmd)
-        local branch = (branch_result.code == 0 and branch_result.output[1]) or "HEAD"
-        return "Push: " .. branch
-    end
+            local upstream = result.stdout:gsub("\n", "")
 
-    local upstream = upstream_result.output[1]
+            local rebase_cmd = Command.base_command("config pull.rebase"):build()
+            local rebase_result = trunks_system(rebase_cmd)
 
-    local rebase_cmd = Command.base_command("config pull.rebase"):build()
-    local rebase_result = system(rebase_cmd)
-
-    local prefix
-    if rebase_result.code == 0 and rebase_result.output[1] ~= "false" then
-        prefix = "Rebase: "
-    else
-        prefix = "Merge: "
-    end
-
-    return prefix .. upstream
+            local prefix
+            if rebase_result.code == 0 and rebase_result.output[1] ~= "false" then
+                prefix = "Rebase: "
+            else
+                prefix = "Merge: "
+            end
+            callback({ prefix .. upstream })
+        end)
+    )
 end
 
 ---@class trunks.SetStatusFilesVariableParams
