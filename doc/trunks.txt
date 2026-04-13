@@ -1,4 +1,5 @@
-*trunks.txt*          For Neovim >= 0.11.0          Last change: 2026 April 09
+*trunks.txt*
+                            For Neovim >= 0.11.0    Last change: 2026 April 13
 
 ==============================================================================
 Table of Contents                                   *trunks-table-of-contents*
@@ -242,10 +243,10 @@ terminal Command output keeps it’s coloring Existing tools such as `delta` or
 `diff-so-fancy` that improve git output can still be leveraged
 
 Note that using the `%` character will expand it to the current buffer’s
-filename, similar to vim-fugitive, e.g. `:G log --follow %` to see commits
-that changed the current file. The `%` character will not expand if it is
-between quotes, so a command like `:G commit -m 'improved performance by 2%'`
-won’t expand the `%` character, it will just be `%`.
+filename, similar to vim-fugitive, e.g. `:G log --follow %` to see commits that
+changed the current file. The `%` character will not expand if it is between
+quotes, so a command like `:G commit -m 'improved performance by 2%'` won’t
+expand the `%` character, it will just be `%`.
 
 
 ==============================================================================
@@ -253,7 +254,7 @@ won’t expand the `%` character, it will just be `%`.
 
 When a command outputs raw git output (for example, `:G log -p`), a keymap is
 created to show details for the item under the cursor. By default, this is
-`<enter>`. Some details: If the current line is a filepath, e.g. `---
+`<enter>`. Some details: If the current line is a filepath, e.g. `---
 a/lua/trunks/_ui/keymaps/git_filetype_keymaps.lua`, it opens the file at that
 revision. Lines that start with `---` are the revision before the commit
 associated with this change, lines that begin with `+++` are the revision at
@@ -296,7 +297,7 @@ STAGED AND UNSTAGED CHANGES ~
 
 Note: when a file has both staged and unstaged changes, the diff split will
 display the staged changes. To see the unstaged changes, press `<shift-tab>`
-(i.e. `<S-Tab>`). Press that again to switch back to staged changes.
+(i.e. `<S-Tab>`). Press that again to switch back to staged changes.
 
 Use `h` and `l` to then display the UI for `git branch`, `git log`, and `git
 stash`, all of which are further detailed below.
@@ -327,7 +328,7 @@ command.
 COMMIT                                        *trunks-special-commands-commit*
 
 `:G commit` will open an editor to create the commit message when that message
-is not passed to the command, e.g. `git commit` (no message, opens the editor)
+is not passed to the command, e.g. `git commit` (no message, opens the editor)
 vs `git commit -m "some message"` (does not open the commit message editor).
 When the commit message editor is opened, Trunks opens it in the current Neovim
 instance. You can write and quit the editor (`:wq`) to apply the message, or
@@ -375,7 +376,7 @@ LOG -L ~
 `:G log` has a `-L` flag, as shown in the docs
 <https://git-scm.com/docs/git-log#Documentation/git-log.txt--Lltstartgtltendgtltfilegt>.
 This can be used to see the commits that changed just the line numbers given,
-e.g. `git log -L20,40:example.lua`, to see just the commits that changed lines
+e.g. `git log -L20,40:example.lua`, to see just the commits that changed lines
 from 20 to 40 in `example.lua`.
 
 In many cases, this can be an extremely useful way to search for changes, as
@@ -395,8 +396,8 @@ search term appeared in the codebase. For instance, running `:G log -S myFunc`
 will show all commits where `myFunc` was either added or removed.
 
 This can very useful. With Trunks, running this command in visual mode will use
-your visually selected text as the search term., e.g. `:G log -S` while text
-is visually selected.
+your visually selected text as the search term., e.g. `:G log -S` while text is
+visually selected.
 
 
 MERGETOOL                                  *trunks-special-commands-mergetool*
@@ -459,7 +460,7 @@ If you pass any options to the command, like `:G switch origin/some-branch
 QUIET COMMANDS           *trunks-miscellaneous-command-changes-quiet-commands*
 
 You can pass `--quiet` to some commands to run the commands without opening a
-UI of any kind, e.g. `:G switch main --quiet`. Currently this only works for
+UI of any kind, e.g. `:G switch main --quiet`. Currently this only works for
 "write" commands, and not "read" commands, as I can’t think of a reason why
 one would want to run a "read" command with `--quiet`. For instance, `:G log
 --quiet` doesn’t make a lot of sense because the point of log is to show
@@ -495,7 +496,7 @@ given commit. This is useful for applying changes to a past commit in order to
 maintain a logic commit history (think atomic commits). This is a rebase under
 the hood, so use with caution.
 
-If no commit is given, a list of commits (e.g. `git log` output) is shown, so
+If no commit is given, a list of commits (e.g. `git log` output) is shown, so
 that a commit can be chosen to fixup.
 
 
@@ -505,7 +506,7 @@ LOG-QF ~
 entries to the quickfix list. By default, it shows the output of `git show` in
 each entry. Pass it a range (or call from visual mode), and each entry will
 pass line numbers to `git log` via the `-L` flag, and each entry will be the
-file as it existed at the given revision. Use 0 as the range, e.g. `0Trunks
+file as it existed at the given revision. Use 0 as the range, e.g. `0Trunks
 log-qf`, to see file revisions for every revision of a file.
 
 Once you have opened a file at a revision, there are keymaps to move to the
@@ -515,18 +516,18 @@ next/previous revision, as well as open diff splits.
 VDIFF ~
 
 `:Trunks vdiff` opens a vertical split and uses `vimdiff` to diff the current
-file against `HEAD`. You can pass a commit, e.g. `:Trunks vdiff abc123`, to
+file against `HEAD`. You can pass a commit, e.g. `:Trunks vdiff abc123`, to
 diff the current file against the same file in the given commit. You can also
-pass a branch, e.g. `:Trunks vdiff some-branch`. See |vimdiff|.
+pass a branch, e.g. `:Trunks vdiff some-branch`. See |vimdiff|.
 
 
 HDIFF ~
 
 Like `:Trunks vdiff`, except horizontal instead of vertical. `:Trunks hdiff`
 opens a horizontal split and uses `vimdiff` to diff the current file against
-`HEAD`. You can pass a commit, e.g. `:Trunks hdiff abc123`, to diff the
-current file against the same file in the given commit. You can also pass a
-branch, e.g. `:Trunks hdiff some-branch`. See |vimdiff|.
+`HEAD`. You can pass a commit, e.g. `:Trunks hdiff abc123`, to diff the current
+file against the same file in the given commit. You can also pass a branch,
+e.g. `:Trunks hdiff some-branch`. See |vimdiff|.
 
 
 DIFF-QF ~
@@ -534,7 +535,7 @@ DIFF-QF ~
 `:Trunks diff-qf` opens a tab that uses the quickfix list and native Vim
 diffing, to support viewing and navigating through diffs. When called without
 arguments, the working tree is diffed against HEAD. You can diff the working
-tree against any commit or branch by passing it as an argument, e.g. `:Trunks
+tree against any commit or branch by passing it as an argument, e.g. `:Trunks
 diff-qf abc123` or `:Trunks diff-qf my-other-branch`.
 
 When `:Trunks diff-qf` is used, a few things happen:
@@ -637,7 +638,7 @@ See doc/news.txt <doc/news.txt> for updates.
 Thank you to Samuel Williams and the maintainers of nvim-unception
 <https://github.com/samjwill/nvim-unception>. Some code from that plugin was
 vendored into Trunks to support preventing nested nvim sessions when opening an
-editor from within an nvim terminal, e.g. the commit editor when running `:G
+editor from within an nvim terminal, e.g. the commit editor when running `:G
 commit`.
 
 Thanks to Tim Pope and the maintainers of vim-fugitive
