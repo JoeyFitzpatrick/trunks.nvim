@@ -1,16 +1,5 @@
 local M = {}
 
---- Returns true for a git status that represents a modified file, and false otherwise.
----@param status string
----@return boolean
-M.is_modified = function(status)
-    if not status then
-        return false
-    end
-    -- A status that is partially staged, or modified, should always be two uppercase letters.
-    return status:match("^%u%u$") ~= nil
-end
-
 M.is_anything_staged = function()
     local _, exit_code = require("trunks._core.run_cmd").run_cmd("diff --cached --quiet", { no_pager = true })
     -- git diff --cached --quiet returns non-zero exit code if there are staged changes

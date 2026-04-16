@@ -265,10 +265,8 @@ function M.set_keymaps(bufnr)
     set(
         "n",
         "<S-Tab>",
-        with_line(bufnr, M.get_line, function(line_data)
-            if require("trunks._core.git").is_modified(line_data.status) then
-                require("trunks._ui.auto_display").refresh(bufnr)
-            end
+        with_line(bufnr, M.get_line, function()
+            require("trunks._ui.auto_display").refresh(bufnr)
         end),
         keymap_opts
     )
