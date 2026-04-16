@@ -60,11 +60,11 @@ local cmd_map = {
     end,
 
     vdiff = function(cmd)
-        require("trunks._ui.interceptors.split_diff").split_diff(cmd, "right")
+        require("trunks._ui.interceptors.split_diff").split_diff(cmd, { split_type = "right" })
     end,
 
     hdiff = function(cmd)
-        require("trunks._ui.interceptors.split_diff").split_diff(cmd, "below")
+        require("trunks._ui.interceptors.split_diff").split_diff(cmd, { split_type = "below" })
     end,
 }
 

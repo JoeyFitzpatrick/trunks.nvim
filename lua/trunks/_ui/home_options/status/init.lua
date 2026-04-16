@@ -190,13 +190,9 @@ function M.set_keymaps(bufnr)
 
     set(
         "n",
-        keymaps.diff_file,
+        keymaps.diff_popup,
         with_line(bufnr, M.get_line, function(line_data)
-            if line_data.status == "D" then
-                vim.cmd("G diff HEAD -- " .. line_data.filename)
-            else
-                vim.cmd("G diff " .. line_data.filename)
-            end
+            require("trunks._ui.popups.diff_popup").render(line_data.filename)
         end),
         keymap_opts
     )

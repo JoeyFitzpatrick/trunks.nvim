@@ -58,6 +58,12 @@ M.long_descriptions = {
         previous_hunk = "Move to previous hunk",
         stage = "Stage hunk under cursor or visually selected lines",
     },
+    ---@type trunks.DiffPopupKeymaps
+    diff_popup = {
+        vdiff = "Diff file with :Trunks vdiff",
+        hdiff = "Diff file with :Trunks hdiff",
+        term = "Diff file with :G diff",
+    },
     ---@type trunks.GitFiletypeKeymaps
     git_filetype = {
         show_details = "Show details for item under cursor",
@@ -128,7 +134,7 @@ M.long_descriptions = {
     ---@type trunks.StatusKeymaps
     status = {
         commit_popup = "Open git commit options",
-        diff_file = "Diff file",
+        diff_popup = "Open git diff options",
         edit_file = "Edit file",
         pull = PULL_DESCRIPTION,
         push = PUSH_DESCRIPTION,
@@ -203,6 +209,7 @@ add_description("stash", "pop", "Pop")
 add_description("stash", "show", "Details")
 
 add_description("status", "commit_popup", "Commit")
+add_description("status", "diff_popup", "Diff")
 add_description("status", "restore", "Discard")
 add_description("status", "stash_popup", "Stash")
 

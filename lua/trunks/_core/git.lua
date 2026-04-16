@@ -31,6 +31,7 @@ M.parse_commit_range = function(commit_range)
     local commit_range_dots_index = commit_range:find("%.%.")
     if commit_range_dots_index then
         local commits = vim.split(commit_range, "..", { trimempty = true, plain = true })
+
         if commit_range_dots_index == 1 then
             return { left = "HEAD", right = commits[1] }
         else

@@ -2,6 +2,7 @@
 ---@field filepath string
 ---@field left_commit string|nil
 ---@field right_commit string|nil
+---@field split_type "below" | "right"
 
 -- Vdiff and Hdiff are 5 characters, plus a space
 local SUBCOMMAND_LENGTH = 6
@@ -20,6 +21,7 @@ function M._parse_split_diff_args(cmd)
         filepath = filepath,
         left_commit = commits.left,
         right_commit = commits.right,
+        split_type = "right",
     }
 end
 
@@ -30,9 +32,9 @@ local function get_git_root(filename)
 end
 
 ---@param cmd string
----@param split_type "below" | "right"
-function M.split_diff(cmd, split_type)
-    local params = M._parse_split_diff_args(cmd)
+---@param split_params trunks.SplitDiffParams
+function M.split_diff(cmd, split_params)
+    local params = vim.tbl_extend("force", M._parse_split_diff_args(cmd), split_params)
 
     if params.left_commit ~= require("trunks._constants.constants").WORKING_TREE then
         -- Two commits specified: open both versions and diff them
@@ -64,7 +66,7 @@ function M.split_diff(cmd, split_type)
             params.filepath
         )
 
-        if split_type == "right" then
+        if params.split_type == "right" then
             vim.cmd("vertical diffsplit " .. file_at_commit_uri)
         else
             vim.cmd("diffsplit " .. file_at_commit_uri)
@@ -84,5 +86,7 @@ function M.split_diff(cmd, split_type)
         })
     end
 end
+
+function M.split_diff_file() end
 
 return M

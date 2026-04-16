@@ -17,6 +17,7 @@
 ---@field commit_details? trunks.CommitDetailsConfiguration
 ---@field commit_popup? trunks.CommitPopupConfiguration
 ---@field diff? trunks.DiffConfiguration
+---@field diff_popup? trunks.DiffPopupConfiguration
 ---@field git_filetype? trunks.GitFiletypeConfiguration
 ---@field log? trunks.LogConfiguration
 ---@field open_files? trunks.OpenFilesConfiguration
@@ -49,6 +50,9 @@
 
 ---@class trunks.DiffConfiguration
 ---@field keymaps? trunks.DiffKeymaps
+
+---@class trunks.DiffPopupConfiguration
+---@field keymaps? trunks.DiffPopupKeymaps
 
 ---@class trunks.GitFiletypeConfiguration
 ---@field keymaps? trunks.GitFiletypeKeymaps
@@ -123,6 +127,11 @@
 ---@field previous_hunk? string
 ---@field stage? string
 
+---@class trunks.DiffPopupKeymaps
+---@field vdiff? string
+---@field hdiff? string
+---@field term? string
+
 ---@class trunks.GitFiletypeKeymaps
 ---@field show_details? string
 
@@ -189,7 +198,7 @@
 
 ---@class trunks.StatusKeymaps
 ---@field commit_popup? string
----@field diff_file? string
+---@field diff_popup? string
 ---@field edit_file? string
 ---@field pull? string
 ---@field push? string

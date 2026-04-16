@@ -68,6 +68,13 @@ return {
             stage = "s", -- Stage hunk in normal mode, stage selected lines in visual mode
         },
     },
+    diff_popup = {
+        keymaps = { -- Run git diff with various options
+            vdiff = "d",
+            hdiff = "h",
+            term = "t",
+        },
+    },
     git_filetype = {
         keymaps = {
             show_details = "<enter>", -- Show details for item under cursor
@@ -149,11 +156,11 @@ return {
         auto_display_on = false,
         keymaps = {
             commit_popup = "c",
-            diff_file = "D",
+            diff_popup = "d",
             edit_file = "<enter>", -- Close status UI and navigate to file under cursor
             pull = "p",
             push = "<leader>p",
-            restore = "d", -- Display a popup with options for `git restore`
+            restore = "D", -- Display a popup with options for `git restore`
             stage = "s", -- (un)stage file under cursor
             stage_all = "a",
             stash_popup = "S",
