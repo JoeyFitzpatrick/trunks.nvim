@@ -18,20 +18,6 @@ M.is_modified = function(status)
     return status:match("^%u%u$") ~= nil
 end
 
---- Returns true for a git status that represents a deleted file, and false otherwise.
----@param status string
----@return boolean
-M.is_deleted = function(status)
-    return vim.tbl_contains(require("trunks._constants.git_status").DELETED_STATUSES, status)
-end
-
---- Returns true for a git status that represents a deleted file, and false otherwise.
----@param status string
----@return boolean
-M.is_renamed = function(status)
-    return vim.tbl_contains(require("trunks._constants.git_status").RENAMED_STATUSES, status)
-end
-
 --- Returns true for a git status that represents an untracked file, and false otherwise.
 ---@param status string
 ---@return boolean

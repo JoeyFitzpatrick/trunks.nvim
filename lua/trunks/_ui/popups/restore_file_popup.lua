@@ -27,8 +27,8 @@ function M.render(bufnr, line_num, get_line)
                     end
                     local filename = line_data.filename
                     local status = line_data.status
-                    local status_checks = require("trunks._core.git")
-                    if status_checks.is_untracked(status) then
+                    local is_untracked = status == "?"
+                    if is_untracked then
                         remove_untracked_file(filename)
                     else
                         run_write_cmd({ "git reset -- " .. filename, "git restore -- " .. filename })
