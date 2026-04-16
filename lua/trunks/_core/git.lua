@@ -1,12 +1,5 @@
 local M = {}
 
---- Returns true for a git status that represents a staged file, and false otherwise.
----@param status string
----@return boolean
-M.is_staged = function(status)
-    return vim.tbl_contains(require("trunks._constants.git_status").STAGED_STATUSES, status)
-end
-
 --- Returns true for a git status that represents a modified file, and false otherwise.
 ---@param status string
 ---@return boolean
@@ -16,13 +9,6 @@ M.is_modified = function(status)
     end
     -- A status that is partially staged, or modified, should always be two uppercase letters.
     return status:match("^%u%u$") ~= nil
-end
-
---- Returns true for a git status that represents an untracked file, and false otherwise.
----@param status string
----@return boolean
-M.is_untracked = function(status)
-    return status == "??"
 end
 
 M.is_anything_staged = function()

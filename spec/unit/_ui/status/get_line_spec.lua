@@ -52,6 +52,8 @@ describe("status get_line", function()
             local line = get_line(bufnr, i)
             assert.is_nil(line)
         end
+        local line = get_line(bufnr, 10)
+        assert.is_nil(line)
     end)
 
     it("gets a staged file", function()

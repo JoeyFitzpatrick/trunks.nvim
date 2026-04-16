@@ -4,10 +4,6 @@ local status_utils = require("trunks._ui.home_options.status.status_utils")
 local run_write_cmd = require("trunks._core.run_cmd").run_write_cmd
 local Command = require("trunks._core.command")
 
-local function get_status(line)
-    return line:sub(1, 2)
-end
-
 local STAGED = "Staged"
 local UNSTAGED = "Unstaged"
 
@@ -26,7 +22,7 @@ function M.get_line(bufnr, line_num)
     local staged = false
 
     local current_line = lines[line_num]
-    if not current_line then
+    if not current_line or vim.trim(current_line) == "" then
         return nil
     end
     if current_line:find("^[%+%-@ ]") then
@@ -67,6 +63,54 @@ function M.get_line(bufnr, line_num)
         status = status,
         staged = staged,
     }
+end
+
+---@param files trunks.StatusLineData[]
+---@return string[] -- list of git commands to pass to run_write_cmd
+function M._get_visual_restore_cmds(files)
+    local cmds = {}
+
+    local staged_files = vim.tbl_filter(function(file)
+        return file.staged
+    end, files)
+    if #staged_files > 0 then
+        local staged_as_str = table.concat(
+            vim.tbl_map(function(file)
+                return file.filename
+            end, staged_files),
+            " "
+        )
+        table.insert(cmds, "git reset -- " .. staged_as_str)
+        table.insert(cmds, "git clean -f -- " .. staged_as_str)
+    end
+
+    local unstaged_files = vim.tbl_filter(function(file)
+        return not file.staged and file.status ~= "?"
+    end, files)
+    if #unstaged_files > 0 then
+        local unstaged_as_str = table.concat(
+            vim.tbl_map(function(file)
+                return file.filename
+            end, unstaged_files),
+            " "
+        )
+        table.insert(cmds, "git restore -- " .. unstaged_as_str)
+    end
+
+    local untracked_files = vim.tbl_filter(function(file)
+        return not file.staged and file.status == "?"
+    end, files)
+    if #untracked_files > 0 then
+        local untracked_as_str = table.concat(
+            vim.tbl_map(function(file)
+                return file.filename
+            end, untracked_files),
+            " "
+        )
+        table.insert(cmds, "git clean -f -- " .. untracked_as_str)
+    end
+
+    return cmds
 end
 
 ---@param line_data trunks.StatusLineData
@@ -185,40 +229,23 @@ function M.set_keymaps(bufnr)
 
     set("v", keymaps.restore, function()
         local visual_start_line, end_line = require("trunks._ui.utils.ui_utils").get_visual_line_nums()
-        local files = vim.api.nvim_buf_get_lines(bufnr, visual_start_line, end_line, false)
-        local statuses = {
-            staged = "",
-            unstaged = "",
-            untracked = "",
-        }
-        for _, file in ipairs(files) do
-            local status_to_use
-            local status = get_status(file)
-            if require("trunks._core.git").is_staged(status) then
-                status_to_use = "staged"
-            elseif require("trunks._core.git").is_untracked(status) then
-                status_to_use = "untracked"
-            else
-                status_to_use = "unstaged"
+        ---@type trunks.StatusLineData[]
+        local files = {}
+        for i = visual_start_line + 1, end_line do
+            local file = M.get_line(bufnr, i)
+            if file then
+                table.insert(files, file)
             end
-            local current_files = statuses[status_to_use]
-            -- don't add space for first file, and don't include status
-            statuses[status_to_use] = current_files .. (current_files == "" and "" or " ") .. file:sub(4)
         end
-        vim.ui.select({ "Yes", "No" }, { prompt = "Restore (remove) all selected files?" }, function(choice)
-            if choice ~= "Yes" then
-                return
-            end
-            if statuses.staged ~= "" then
-                run_write_cmd({ "git reset -- " .. statuses.staged, "git clean -f -- " .. statuses.staged })
-            end
-            if statuses.unstaged ~= "" then
-                run_write_cmd("git restore -- " .. statuses.unstaged)
-            end
-            if statuses.untracked ~= "" then
-                run_write_cmd("git clean -f -- " .. statuses.untracked)
-            end
-        end)
+        local should_remove = require("trunks._ui.utils.confirm").confirm_choice("Restore (remove) all selected files?")
+        if not should_remove then
+            return
+        end
+
+        local cmds = M._get_visual_restore_cmds(files)
+        if #cmds > 0 then
+            run_write_cmd(cmds)
+        end
     end, keymap_opts)
 
     set("n", keymaps.stash_popup, function()
