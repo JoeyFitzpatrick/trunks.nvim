@@ -15,7 +15,7 @@ end
 function M.render(bufnr, line_num, get_line)
     require("trunks._ui.popups.popup").render_popup({
         buffer_name = "TrunksStatusDeletePopup",
-        title = "Git Restore Type",
+        title = "Git Restore",
         mappings = {
             {
                 keys = "f",
