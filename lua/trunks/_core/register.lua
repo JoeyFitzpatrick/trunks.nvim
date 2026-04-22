@@ -40,12 +40,24 @@ function M.close_buffer(bufnr, opts)
 end
 
 function M.rerender_buffers()
+    local non_visible_buffers = {}
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
         if vim.api.nvim_buf_is_valid(buf) and vim.b[buf].trunks_rerender_fn then
-            vim.schedule(function()
-                vim.b[buf].trunks_rerender_fn()
-            end)
+            local buffer_is_visible = vim.fn.bufwinid(buf) ~= -1
+            if buffer_is_visible then
+                vim.schedule(function()
+                    vim.b[buf].trunks_rerender_fn()
+                end)
+            else
+                table.insert(non_visible_buffers, buf)
+            end
         end
+    end
+
+    for _, buf in ipairs(non_visible_buffers) do
+        vim.schedule(function()
+            vim.b[buf].trunks_rerender_fn()
+        end)
     end
 end
 
