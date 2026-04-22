@@ -12,14 +12,14 @@ local function get_keymaps_with_descriptions(filename)
     local keymap_command_map = {
         basic = {
             [keymaps.vdiff] = function()
-                vim.api.nvim_exec2("e " .. filename, {})
+                vim.api.nvim_exec2("tabnew | e " .. filename, {})
                 require("trunks._ui.interceptors.split_diff").split_diff(
                     "vdiff",
                     { filepath = filename, split_type = "right" }
                 )
             end,
             [keymaps.hdiff] = function()
-                vim.api.nvim_exec2("e " .. filename, {})
+                vim.api.nvim_exec2("tabnew | e " .. filename, {})
                 require("trunks._ui.interceptors.split_diff").split_diff(
                     "hdiff",
                     { filepath = filename, split_type = "below" }

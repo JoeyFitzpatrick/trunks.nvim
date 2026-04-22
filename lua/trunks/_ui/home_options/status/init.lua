@@ -56,6 +56,7 @@ function M.get_line(bufnr, line_num)
     local line = lines[line_num]
     local on_header_line = line:find("^Staged") or line:find("^Unstaged")
     if on_header_line then
+        --
         return nil
     end
 

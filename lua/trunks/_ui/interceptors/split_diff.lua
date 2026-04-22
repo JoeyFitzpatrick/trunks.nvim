@@ -42,7 +42,12 @@ function M.split_diff(cmd, split_params)
         local left_bufnr = vim.api.nvim_get_current_buf()
         vim.cmd("diffthis")
 
-        require("trunks._core.open_file").open_file_in_split(params.filepath, params.right_commit, split_type, {})
+        require("trunks._core.open_file").open_file_in_split(
+            params.filepath,
+            params.right_commit,
+            params.split_type,
+            {}
+        )
         local right_bufnr = vim.api.nvim_get_current_buf()
         vim.cmd("diffthis")
 
