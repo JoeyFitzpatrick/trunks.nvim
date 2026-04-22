@@ -37,6 +37,7 @@ function M.get_line(bufnr, line_num)
     if line_num == 1 then
         return nil
     end
+
     -- Walk backwards to see which section we're in, if any
     for i = line_num - 1, 1, -1 do
         local line = lines[i]
@@ -52,7 +53,13 @@ function M.get_line(bufnr, line_num)
         end
     end
 
-    local split_line = vim.split(lines[line_num], " ")
+    local line = lines[line_num]
+    local on_header_line = line:find("^Staged") or line:find("^Unstaged")
+    if on_header_line then
+        return nil
+    end
+
+    local split_line = vim.split(line, " ")
     local status = split_line[1]
     local filename = split_line[2]
     local safe_filename = require("trunks._core.texter").surround_with_quotes(filename)
@@ -136,23 +143,18 @@ function M.set_keymaps(bufnr)
 
     set("v", keymaps.stage, function()
         local visual_start_line, end_line = require("trunks._ui.utils.ui_utils").get_visual_line_nums()
-        local files_to_stage = {}
-        local status_files = vim.b[bufnr].trunks_status_files
+        local filenames = {}
         local should_stage = false
-        for i = visual_start_line, end_line do
-            local file = status_files[i]
-            if file and file ~= vim.NIL then
-                table.insert(files_to_stage, file)
+        for i = visual_start_line + 1, end_line do
+            local file = M.get_line(bufnr, i)
+            if file then
+                table.insert(filenames, file.filename)
                 if not file.staged then
                     should_stage = true
                 end
             end
         end
-        local files_as_string = ""
-        for i, file in ipairs(files_to_stage) do
-            -- don't add space for first file, and don't include status
-            files_as_string = files_as_string .. (i == 0 and "" or " ") .. file.filename
-        end
+        local files_as_string = table.concat(filenames, " ")
         if should_stage then
             run_write_cmd("git add " .. files_as_string)
             return

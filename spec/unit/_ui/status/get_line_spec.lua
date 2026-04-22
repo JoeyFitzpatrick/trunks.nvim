@@ -48,12 +48,10 @@ describe("status get_line", function()
     it("returns nil if no file under cursor", function()
         local bufnr = vim.api.nvim_create_buf(false, true)
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, base_lines)
-        for i = 1, 6 do
+        for _, i in ipairs({ 1, 2, 3, 4, 5, 6, 10, 11 }) do
             local line = get_line(bufnr, i)
             assert.is_nil(line)
         end
-        local line = get_line(bufnr, 10)
-        assert.is_nil(line)
     end)
 
     it("gets a staged file", function()
