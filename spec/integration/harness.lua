@@ -88,15 +88,20 @@ end
 ---@param index? integer
 ---@return trunks.TestCommit
 function M.get_commit(index)
-    local most_recent_commit
+    local format = "--format=%H%x09%s"
+    local cmd = "git log -n 1 " .. format
     if index then
-        most_recent_commit = vim.fn.systemlist("git log -n 1 --skip " .. index)
-    else
-        most_recent_commit = vim.fn.systemlist("git log -n 1")
+        cmd = "git log -n 1 --skip " .. index .. " " .. format
     end
-    local most_recent_hash = most_recent_commit[1]:match("^commit%s+(%w+)")
-    local message = most_recent_commit[5]:match("%S.+")
-    return { long_hash = most_recent_hash, short_hash = most_recent_hash:sub(1, 7), message = message }
+    local output = vim.fn.systemlist(cmd)
+    if not output[1] then
+        error("get_commit: no commit found")
+    end
+    local long_hash, message = output[1]:match("^(%x+)\t(.+)$")
+    if not long_hash then
+        error("get_commit: failed to parse output: " .. tostring(output[1]))
+    end
+    return { long_hash = long_hash, short_hash = long_hash:sub(1, 7), message = message }
 end
 
 --- Creates a child instance of nvim so that we can run Trunks inside it for integration tests.

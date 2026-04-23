@@ -27,14 +27,10 @@ local function choose_instant_fixup_commit()
     local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = "TrunksCommitInstantFixupChoose" })
     require("trunks._ui.home_options.log").set_lines(bufnr, { ui_types = { "commit_instant_fixup" } })
     require("trunks._ui.keymaps.set").safe_set_keymap("n", "<enter>", function()
-        -- Log output starts at line 4; no-op if above that line
-        local start_line = 4
-        local current_cursor_line = vim.api.nvim_win_get_cursor(0)[1]
-        if current_cursor_line < start_line then
+        local hash = vim.api.nvim_get_current_line():match("^%x+")
+        if not hash or not utils.validate_hash(hash) then
             return
         end
-
-        local hash = vim.api.nvim_get_current_line():match("^%x+")
         require("trunks._core.register").close_buffer(bufnr, { delete_win_buffers = false })
         run_instant_fixup(hash)
     end, { buffer = bufnr, nowait = true })

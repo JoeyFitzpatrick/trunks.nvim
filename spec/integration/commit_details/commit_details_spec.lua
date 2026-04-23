@@ -27,8 +27,7 @@ describe("Commit details", function()
             end)
         end)
 
-        -- Move cursor down to commit hash and select it
-        vim.rpcrequest(nvim, "nvim_input", "j")
+        -- Select the first commit (most recent = "add file")
         vim.rpcrequest(nvim, "nvim_input", "<enter>")
 
         -- We should now be in commit details
@@ -57,9 +56,9 @@ describe("Commit details", function()
         local lines = vim.rpcrequest(nvim, "nvim_buf_get_lines", 0, 0, -1, false)
         assert.are.same(lines, { "line 1", "line 2" })
 
-        -- Assert buffer name is commit_hash--filename
+        -- Assert buffer name is a trunks URI containing the filename
         local buffer_name = vim.rpcrequest(nvim, "nvim_buf_get_name", 0)
-        assert.is_not_nil(buffer_name:match("%x+%-%-test.txt"))
+        assert.is_not_nil(buffer_name:match("trunks://.*test%.txt$"))
 
         -- Assert buffer is not editable
         local is_modifiable = vim.rpcrequest(nvim, "nvim_get_option_value", "modifiable", {})

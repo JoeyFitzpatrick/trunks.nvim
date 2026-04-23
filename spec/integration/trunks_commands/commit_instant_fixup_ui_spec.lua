@@ -30,21 +30,15 @@ describe("Commit instant fixup UI", function()
         -- Assert in log UI
         assert.are.same("TrunksCommitInstantFixupChoose", buffer_name)
 
-        -- Pressing enter on the first line should no-op since it isn't a commit
-        vim.rpcrequest(nvim, "nvim_input", "<enter>")
-
         -- Wait for log to stream in
         vim.wait(1000, function()
             local lines = vim.rpcrequest(nvim, "nvim_buf_get_lines", 0, 0, -1, false)
-            vim.tbl_contains(lines, function(val)
+            return vim.tbl_contains(lines, function(val)
                 return val:find("add file", 1, true)
             end)
         end)
 
-        assert.are.equal(raw_buffer_name, vim.rpcrequest(nvim, "nvim_buf_get_name", 0))
-
-        -- Move cursor down to commit hash and select it
-        vim.rpcrequest(nvim, "nvim_input", "j")
+        -- Select "add file" commit (most recent, first line) and run fixup
         vim.rpcrequest(nvim, "nvim_input", "<enter>")
 
         vim.wait(1000, function()

@@ -71,7 +71,10 @@ local function set_keymaps(bufnr, filename)
             local current_cursor_line = vim.api.nvim_win_get_cursor(0)[1]
             vim.api.nvim_buf_delete(bufnr, { force = true })
             local filepath = line_data.filename or get_filepath()
+            -- show = true so blame.render() sees the correct filename in buf_get_name(0),
+            -- which lets get_filepath() work correctly in subsequent reblames.
             require("trunks._ui.elements").new_buffer({
+                show = true,
                 filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 }),
                 lines = function()
                     local output = run_cmd.run_cmd(string.format("show %s:%s", line_data.hash, filepath))
