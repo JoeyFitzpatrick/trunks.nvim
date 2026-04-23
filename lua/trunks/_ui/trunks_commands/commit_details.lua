@@ -229,7 +229,7 @@ function M.render(commit, opts)
         get_current_diff = with_line(bufnr, M.get_line, function(line_data)
             return line_data.filename
         end),
-        strategy = { display_strategy = "below", win_size = 0.67, insert = false, enter = false },
+        strategy = { display_strategy = "below", insert = false, enter = false },
     })
 
     if opts.filename then

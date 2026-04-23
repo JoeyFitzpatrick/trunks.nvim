@@ -7,9 +7,9 @@
 ---@field insert? boolean | trunks.DisplayStrategyBoolParser
 ---@field trigger_redraw? boolean | trunks.DisplayStrategyBoolParser
 ---@field enter? boolean
----@field win_size? number
 ---@field pty? boolean | trunks.DisplayStrategyBoolParser
 ---@field tail? boolean
+---
 
 local M = {}
 

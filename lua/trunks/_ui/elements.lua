@@ -123,25 +123,7 @@ local function open_terminal_buffer(cmd, bufnr, strategy)
         end
         -- Cast this to appease type checker
         ---@cast display_strategy "above" | "below" | "right" | "left"
-        if strategy.win_size then
-            if vim.tbl_contains({ "above", "below" }, display_strategy) then
-                local height = math.floor(vim.o.lines * strategy.win_size)
-                win = vim.api.nvim_open_win(bufnr, enter, { split = display_strategy, height = height })
-            else
-                local width = math.floor(vim.o.columns * strategy.win_size)
-                win = vim.api.nvim_open_win(bufnr, enter, { split = display_strategy, width = width })
-            end
-        else
-            -- Use golden ratio for above/below splits to create smaller split
-            if vim.tbl_contains({ "above", "below" }, display_strategy) then
-                local current_win_height = vim.api.nvim_win_get_height(win)
-                local golden_ratio = (1 + math.sqrt(5)) / 2
-                local height = math.floor(current_win_height / (1 + golden_ratio))
-                win = vim.api.nvim_open_win(bufnr, enter, { split = display_strategy, height = height })
-            else
-                win = vim.api.nvim_open_win(bufnr, enter, { split = display_strategy })
-            end
-        end
+        win = vim.api.nvim_open_win(bufnr, enter, { split = display_strategy })
     elseif display_strategy == strategies.FULL then
         vim.api.nvim_win_set_buf(0, bufnr)
     else

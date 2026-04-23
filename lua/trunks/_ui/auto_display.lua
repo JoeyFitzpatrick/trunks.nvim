@@ -263,7 +263,6 @@ end
 ---@class trunks.SetupAutoDisplayResult
 ---@field auto_display_on boolean
 ---@field display_strategy trunks.DisplayStrategy
----@field win_size integer
 
 ---@param bufnr integer
 ---@param opts trunks.SetupAutoDisplayOpts
@@ -277,18 +276,9 @@ function M._setup_auto_display(bufnr, opts)
         result.open_auto_display = true
     end
 
-    local DEFAULT_WIN_SIZE = 0.5
     local DEFAULT_DISPLAY_STRATEGY = "below"
     result.display_strategy = opts.auto_display_opts.strategy.display_strategy or DEFAULT_DISPLAY_STRATEGY
-    if opts.auto_display_opts.strategy.win_size then
-        result.win_size = opts.auto_display_opts.strategy.win_size
-    elseif result.display_strategy == "below" then
-        result.win_size = require("trunks._constants.constants").GOLDEN_RATIO
-    else
-        result.win_size = DEFAULT_WIN_SIZE
-    end
     opts.auto_display_opts.strategy.display_strategy = result.display_strategy
-    opts.auto_display_opts.strategy.win_size = result.win_size
 
     vim.b[bufnr].trunks_auto_display_state = {
         show_auto_display = result.open_auto_display,

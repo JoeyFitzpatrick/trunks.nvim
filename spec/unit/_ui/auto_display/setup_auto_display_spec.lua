@@ -39,26 +39,22 @@ describe("setup_auto_display", function()
     end)
 
     it("should return a win size and direction depending on strategy passed in", function()
-        local golden_ratio = require("trunks._constants.constants").GOLDEN_RATIO
         local test_map = {
-            { strategy = { win_size = 0.12 }, expected = { display_strategy = "below", win_size = 0.12 } },
-            { strategy = {}, expected = { display_strategy = "below", win_size = golden_ratio } },
+            { strategy = {}, expected = { display_strategy = "below" } },
             {
                 strategy = { display_strategy = "below" },
-                expected = { display_strategy = "below", win_size = golden_ratio },
+                expected = { display_strategy = "below" },
             },
             {
-                strategy = { display_strategy = "below", win_size = 0.2 },
-                expected = { display_strategy = "below", win_size = 0.2 },
+                strategy = { display_strategy = "below" },
+                expected = { display_strategy = "below" },
             },
-            { strategy = { display_strategy = "right" }, expected = { display_strategy = "right", win_size = 0.5 } },
+            { strategy = { display_strategy = "right" }, expected = { display_strategy = "right" } },
         }
         for _, test in ipairs(test_map) do
             local opts = default_opts
             opts.auto_display_opts.strategy = test.strategy
-            local win_size = setup_auto_display(0, opts).win_size
             local display_strategy = setup_auto_display(0, opts).display_strategy
-            assert.are.equal(test.expected.win_size, win_size)
             assert.are.equal(test.expected.display_strategy, display_strategy)
         end
     end)
