@@ -66,7 +66,7 @@ end
 ---@param bufnr integer
 ---@param strategy trunks.Strategy
 ---@return { channel_id: integer, exit_code: integer }
-local function run_terminal_command(cmd, bufnr, strategy)
+function M._run_terminal_command(cmd, bufnr, strategy)
     local current_buffer_name = vim.api.nvim_buf_get_name(bufnr)
     local current_ui_opts = get_current_ui_opts()
     local channel_id = vim.api.nvim_open_term(bufnr, {})
@@ -109,21 +109,33 @@ end
 ---@param bufnr integer
 ---@param strategy trunks.Strategy
 ---@return { win: integer, channel_id: integer, exit_code: integer }
-local function open_terminal_buffer(cmd, bufnr, strategy)
+function M._open_terminal_buffer(cmd, bufnr, strategy)
     vim.bo[bufnr].scrollback = 1000000 -- Max scrollback as of this writing
-    local run_command_result = run_terminal_command(cmd, bufnr, strategy)
+    local run_command_result = M._run_terminal_command(cmd, bufnr, strategy)
 
     local strategies = require("trunks._constants.command_strategies").STRATEGIES
     local display_strategy = strategy.display_strategy
     local win = vim.api.nvim_get_current_win()
-    if vim.tbl_contains({ "above", "below", "right", "left" }, display_strategy) then
+
+    local mods = ""
+    if strategy.input_args then
+        mods = strategy.input_args.mods
+    end
+
+    local should_split = vim.tbl_contains({ "above", "below", "right", "left" }, display_strategy) or mods ~= ""
+    if should_split then
         local enter = true
         if strategy.enter == false then
             enter = false
         end
         -- Cast this to appease type checker
         ---@cast display_strategy "above" | "below" | "right" | "left"
-        win = vim.api.nvim_open_win(bufnr, enter, { split = display_strategy })
+        vim.cmd(mods .. " split")
+        win = vim.api.nvim_get_current_win()
+        vim.api.nvim_win_set_buf(win, bufnr)
+        if not enter then
+            vim.cmd("wincmd p")
+        end
     elseif display_strategy == strategies.FULL then
         vim.api.nvim_win_set_buf(0, bufnr)
     else
@@ -153,7 +165,7 @@ local function set_terminal_autocmds_and_state(cmd, bufnr, strategy)
             local cursor = vim.api.nvim_win_get_cursor(win)
             local line_num = cursor[1]
             require("trunks._ui.utils.buffer_text").set(bufnr, {})
-            run_terminal_command(cmd, bufnr, strategy)
+            M._run_terminal_command(cmd, bufnr, strategy)
             vim.wait(200, function()
                 return vim.api.nvim_buf_line_count(bufnr) >= line_num
             end, 200)
@@ -177,7 +189,7 @@ function M.terminal(bufnr, cmd, strategy)
 
     strategy = require("trunks._constants.command_strategies").get_strategy(cmd, strategy)
 
-    local open_term_result = open_terminal_buffer(cmd, bufnr, strategy)
+    local open_term_result = M._open_terminal_buffer(cmd, bufnr, strategy)
     local win = open_term_result.win
     local channel_id = open_term_result.channel_id
     if not channel_id then

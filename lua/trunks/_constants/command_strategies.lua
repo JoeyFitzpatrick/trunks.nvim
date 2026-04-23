@@ -9,7 +9,7 @@
 ---@field enter? boolean
 ---@field pty? boolean | trunks.DisplayStrategyBoolParser
 ---@field tail? boolean
----
+---@field input_args? vim.api.keyset.create_user_command.command_args
 
 local M = {}
 

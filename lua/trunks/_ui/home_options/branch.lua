@@ -76,39 +76,49 @@ local function set_keymaps(bufnr)
         end
     end
 
-    set("n", keymaps.merge_rebase_popup, with_line(bufnr, get_line, function(line_data)
-        require("trunks._ui.popups.merge_rebase_popup").render(line_data.branch_name)
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.merge_rebase_popup,
+        with_line(bufnr, get_line, function(line_data)
+            require("trunks._ui.popups.merge_rebase_popup").render(line_data.branch_name)
+        end),
+        keymap_opts
+    )
 
-    set("n", keymaps.delete, with_line(bufnr, get_line, function(line_data)
-        require("trunks._ui.popups.popup").render_popup({
-            buffer_name = "TrunksDeleteBranch",
-            title = "Delete Branch",
-            mappings = {
-                {
-                    keys = "l",
-                    description = "Local",
-                    action = function()
-                        delete_branch(line_data.branch_name, "local")
-                    end,
+    set(
+        "n",
+        keymaps.delete,
+        with_line(bufnr, get_line, function(line_data)
+            require("trunks._ui.popups.popup").render_popup({
+                buffer_name = "TrunksDeleteBranch",
+                title = "Delete Branch",
+                mappings = {
+                    {
+                        keys = "l",
+                        description = "Local",
+                        action = function()
+                            delete_branch(line_data.branch_name, "local")
+                        end,
+                    },
+                    {
+                        keys = "r",
+                        description = "Remote",
+                        action = function()
+                            delete_branch(line_data.branch_name, "remote")
+                        end,
+                    },
+                    {
+                        keys = "b",
+                        description = "Both",
+                        action = function()
+                            delete_branch(line_data.branch_name, "both")
+                        end,
+                    },
                 },
-                {
-                    keys = "r",
-                    description = "Remote",
-                    action = function()
-                        delete_branch(line_data.branch_name, "remote")
-                    end,
-                },
-                {
-                    keys = "b",
-                    description = "Both",
-                    action = function()
-                        delete_branch(line_data.branch_name, "both")
-                    end,
-                },
-            },
-        })
-    end), keymap_opts)
+            })
+        end),
+        keymap_opts
+    )
 
     local keymap_to_command_map = {
         { keymap = keymaps.pull, command = "pull" },
@@ -124,66 +134,96 @@ local function set_keymaps(bufnr)
         end, keymap_opts)
     end
 
-    set("n", keymaps.log, with_line(bufnr, get_line, function(line_data)
-        local log_bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = "TrunksLog-" .. os.tmpname() })
-        require("trunks._ui.home_options.log").render(
-            log_bufnr,
-            { start_line = 0, command_builder = Command.base_command("log " .. line_data.branch_name) }
-        )
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.log,
+        with_line(bufnr, get_line, function(line_data)
+            local log_bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = "TrunksLog-" .. os.tmpname() })
+            require("trunks._ui.home_options.log").render(
+                log_bufnr,
+                { start_line = 0, command_builder = Command.base_command("log " .. line_data.branch_name) }
+            )
+        end),
+        keymap_opts
+    )
 
-    set("n", keymaps.new_branch, with_line(bufnr, get_line, function(line_data)
-        vim.ui.input({ prompt = "Name for new branch off of " .. line_data.branch_name .. ": " }, function(input)
-            if not input then
-                return
-            end
-            local result = run_cmd.run_hidden_cmd("switch --create " .. input)
+    set(
+        "n",
+        keymaps.new_branch,
+        with_line(bufnr, get_line, function(line_data)
+            vim.ui.input({ prompt = "Name for new branch off of " .. line_data.branch_name .. ": " }, function(input)
+                if not input then
+                    return
+                end
+                local result = run_cmd.run_hidden_cmd("switch --create " .. input)
+                if result == "error" then
+                    return
+                end
+            end)
+        end),
+        keymap_opts
+    )
+
+    set(
+        "n",
+        keymaps.rename,
+        with_line(bufnr, get_line, function(line_data)
+            vim.ui.input({ prompt = "New name for branch " .. line_data.branch_name .. ": " }, function(input)
+                if not input then
+                    return
+                end
+                run_cmd.run_hidden_cmd(
+                    string.format("branch -m %s %s", line_data.branch_name, input),
+                    { rerender = true }
+                )
+            end)
+        end),
+        keymap_opts
+    )
+
+    set(
+        "n",
+        keymaps.spinoff,
+        with_line(bufnr, get_line, function(line_data)
+            vim.ui.input({ prompt = "Name for new branch off of " .. line_data.branch_name .. ": " }, function(input)
+                if not input then
+                    return
+                end
+                -- Create and switch to new branch
+                local new_branch_result = run_cmd.run_hidden_cmd(
+                    "switch --create " .. input .. " " .. line_data.branch_name,
+                    { rerender = true }
+                )
+                if new_branch_result == "error" then
+                    return
+                end
+                -- Reset previous branch to upstream
+                run_cmd.run_hidden_cmd("fetch")
+                local upstream_branch =
+                    run_cmd.run_cmd(string.format("rev-parse --abbrev-ref %s@{upstream}", line_data.branch_name))[1]
+                if not upstream_branch then
+                    return
+                end
+                run_cmd.run_hidden_cmd(
+                    string.format("update-ref refs/heads/%s refs/remotes/%s", line_data.branch_name, upstream_branch),
+                    { rerender = true }
+                )
+            end)
+        end),
+        keymap_opts
+    )
+
+    set(
+        "n",
+        keymaps.switch,
+        with_line(bufnr, get_line, function(line_data)
+            local result = run_cmd.run_hidden_cmd("switch " .. line_data.branch_name)
             if result == "error" then
                 return
             end
-        end)
-    end), keymap_opts)
-
-    set("n", keymaps.rename, with_line(bufnr, get_line, function(line_data)
-        vim.ui.input({ prompt = "New name for branch " .. line_data.branch_name .. ": " }, function(input)
-            if not input then
-                return
-            end
-            run_cmd.run_hidden_cmd(string.format("branch -m %s %s", line_data.branch_name, input), { rerender = true })
-        end)
-    end), keymap_opts)
-
-    set("n", keymaps.spinoff, with_line(bufnr, get_line, function(line_data)
-        vim.ui.input({ prompt = "Name for new branch off of " .. line_data.branch_name .. ": " }, function(input)
-            if not input then
-                return
-            end
-            -- Create and switch to new branch
-            local new_branch_result =
-                run_cmd.run_hidden_cmd("switch --create " .. input .. " " .. line_data.branch_name, { rerender = true })
-            if new_branch_result == "error" then
-                return
-            end
-            -- Reset previous branch to upstream
-            run_cmd.run_hidden_cmd("fetch")
-            local upstream_branch =
-                run_cmd.run_cmd(string.format("rev-parse --abbrev-ref %s@{upstream}", line_data.branch_name))[1]
-            if not upstream_branch then
-                return
-            end
-            run_cmd.run_hidden_cmd(
-                string.format("update-ref refs/heads/%s refs/remotes/%s", line_data.branch_name, upstream_branch),
-                { rerender = true }
-            )
-        end)
-    end), keymap_opts)
-
-    set("n", keymaps.switch, with_line(bufnr, get_line, function(line_data)
-        local result = run_cmd.run_hidden_cmd("switch " .. line_data.branch_name)
-        if result == "error" then
-            return
-        end
-    end), keymap_opts)
+        end),
+        keymap_opts
+    )
 end
 
 ---@param bufnr integer
@@ -194,7 +234,7 @@ function M.render(bufnr, opts)
     local term = require("trunks._ui.elements").terminal(
         bufnr,
         command_builder:build(),
-        { enter = true, display_strategy = opts.display_strategy }
+        { enter = true, display_strategy = opts.display_strategy, input_args = opts.input_args }
     )
     local win = term.win
 

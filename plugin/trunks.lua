@@ -20,7 +20,7 @@ local function run_git_command(input_args)
         require("trunks._ui.elements").terminal(
             bufnr,
             command_builder:build(),
-            { display_strategy = "full", insert = true }
+            { display_strategy = "full", insert = true, input_args = input_args }
         )
         return
     end
@@ -38,10 +38,10 @@ local function run_git_command(input_args)
     else
         local ui_function = require("trunks._ui.interceptors").get_ui(command_builder)
         if ui_function then
-            ui_function(command_builder)
+            ui_function(command_builder, input_args)
         else
             local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
-            require("trunks._ui.elements").terminal(bufnr, command_builder:build())
+            require("trunks._ui.elements").terminal(bufnr, command_builder:build(), { input_args = input_args })
         end
     end
     if strategy.trigger_redraw then

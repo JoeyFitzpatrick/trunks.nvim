@@ -10,6 +10,7 @@
 ---@field win? integer
 ---@field ui_types? string[]
 ---@field display_strategy? trunks.DisplayStrategy
+---@field input_args? vim.api.keyset.create_user_command.command_args
 
 local M = {}
 

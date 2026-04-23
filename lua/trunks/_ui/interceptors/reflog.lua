@@ -61,9 +61,10 @@ local function set_keymaps(bufnr)
 end
 
 ---@param command_builder trunks.Command
-function M.render(command_builder)
+---@param input_args vim.api.keyset.create_user_command.command_args
+function M.render(command_builder, input_args)
     local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = os.tmpname() .. "TrunksReflog" })
-    require("trunks._ui.elements").terminal(bufnr, command_builder:build())
+    require("trunks._ui.elements").terminal(bufnr, command_builder:build(), { input_args = input_args })
     set_keymaps(bufnr)
     require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, { "reflog" })
 end

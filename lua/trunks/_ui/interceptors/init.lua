@@ -1,20 +1,22 @@
 local M = {}
 
----@type table<string, fun(command_builder?: trunks.Command)>
+---@alias UiFunction fun(command_builder: trunks.Command, input_args: vim.api.keyset.create_user_command.command_args)
+
+---@type table<string, UiFunction>
 local cmd_ui_map = {
     blame = function(command_builder)
         require("trunks._ui.interceptors.blame").render(command_builder)
     end,
-    branch = function(command_builder)
+    branch = function(command_builder, input_args)
         local strategy = require("trunks._constants.command_strategies").get_strategy(command_builder:build())
         if strategy.pty then
             local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
             require("trunks._ui.home_options.branch").render(bufnr, {
                 command_builder = command_builder,
                 ui_types = { "branch" },
+                input_args = input_args,
             })
         end
-        return nil
     end,
     difftool = function(command_builder)
         require("trunks._ui.interceptors.difftool").render(command_builder)
@@ -38,23 +40,18 @@ local cmd_ui_map = {
         })
         require("trunks._ui.keymaps.set").set_q_keymap(bufnr)
     end,
-    log = function(command_builder)
-        local cmd = command_builder:build()
-        if require("trunks._core.texter").has_options(cmd, { "--graph" }) then
-            require("trunks._ui.elements").terminal(cmd, { display_strategy = "full", insert = true })
-            return
-        end
+    log = function(command_builder, input_args)
         local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = os.tmpname() .. "/TrunksLog" })
         require("trunks._ui.home_options.log").render(
             bufnr,
-            { start_line = 2, command_builder = command_builder, ui_types = { "log" } }
+            { start_line = 2, command_builder = command_builder, ui_types = { "log" }, input_args = input_args }
         )
     end,
     mergetool = function()
         require("trunks._ui.interceptors.mergetool").render()
     end,
-    reflog = function(command_builder)
-        require("trunks._ui.interceptors.reflog").render(command_builder)
+    reflog = function(command_builder, input_args)
+        require("trunks._ui.interceptors.reflog").render(command_builder, input_args)
     end,
 }
 
@@ -70,7 +67,7 @@ for _, command in ipairs(standard_output_commands) do
 end
 
 ---@param command_builder trunks.Command
----@return fun(command_builder: trunks.Command) | nil
+---@return fun(command_builder: trunks.Command, input_args: vim.api.keyset.create_user_command.command_args) | nil
 function M.get_ui(command_builder)
     local cmd = command_builder.base
     if not cmd then

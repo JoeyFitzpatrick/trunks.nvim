@@ -134,7 +134,11 @@ end
 ---@return string -- log command passed to git
 function M.set_lines(bufnr, opts)
     local cmd = opts.command_builder and opts.command_builder:build() or Command.base_command("log"):build()
-    require("trunks._ui.elements").terminal(bufnr, cmd, { enter = true, display_strategy = "full" })
+    require("trunks._ui.elements").terminal(
+        bufnr,
+        cmd,
+        { enter = true, display_strategy = "full", input_args = opts.input_args }
+    )
     return cmd
 end
 
