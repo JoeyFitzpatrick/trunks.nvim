@@ -1,5 +1,5 @@
 *trunks.txt*
-                            For Neovim >= 0.11.0    Last change: 2026 April 23
+                            For Neovim >= 0.11.0    Last change: 2026 April 27
 
 ==============================================================================
 Table of Contents                                   *trunks-table-of-contents*
@@ -94,7 +94,7 @@ able to lazy load it however you normally lazy load plugins.
                 },
                 branch = {
                     keymaps = {
-                        delete = "d", -- Display a popup with branch deletion options
+                        delete = "D", -- Display a popup with branch deletion options
                         log = "<enter>", -- Display commits for branch under cursor
                         merge_rebase_popup = "m", -- Open merge/rebase popup for branch under cursor
                         new_branch = "n", -- New branch from branch under cusor
