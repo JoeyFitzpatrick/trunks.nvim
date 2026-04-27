@@ -53,7 +53,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
             },
             branch = {
                 keymaps = {
-                    delete = "d", -- Display a popup with branch deletion options
+                    delete = "D", -- Display a popup with branch deletion options
                     log = "<enter>", -- Display commits for branch under cursor
                     merge_rebase_popup = "m", -- Open merge/rebase popup for branch under cursor
                     new_branch = "n", -- New branch from branch under cusor
