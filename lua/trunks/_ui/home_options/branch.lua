@@ -3,6 +3,7 @@ local Command = require("trunks._core.command")
 local M = {}
 
 local run_cmd = require("trunks._core.run_cmd")
+local with_line = require("trunks._ui.keymaps.set").with_line
 
 ---@param bufnr integer
 ---@param line_num? integer
@@ -18,10 +19,9 @@ end
 
 ---@param bufnr integer
 local function set_keymaps(bufnr)
-    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "branch", {})
+    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "branch", { auto_display_keymaps = true })
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
-    local with_line = require("trunks._ui.keymaps.set").with_line
 
     ---@param branch_name string
     ---@param delete_type "local" | "remote" | "both"
@@ -248,6 +248,20 @@ function M.render(bufnr, opts)
         table.insert(ui_types, 1, "home")
     end
     require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, ui_types)
+
+    require("trunks._ui.auto_display").create_auto_display(bufnr, "branch", {
+        generate_cmd = with_line(bufnr, get_line, function(line_data)
+            local last_branch = vim.b[bufnr].trunks_last_branch
+            if last_branch ~= line_data.branch_name then
+                vim.b[bufnr].trunks_last_branch = line_data.branch_name
+            end
+            return Command.base_command("log --graph --format=medium " .. line_data.branch_name):build()
+        end),
+        get_current_diff = with_line(bufnr, get_line, function(line_data)
+            return line_data.branch_name
+        end),
+        strategy = { enter = false, display_strategy = "below", pty = false },
+    })
 
     return bufnr, win
 end

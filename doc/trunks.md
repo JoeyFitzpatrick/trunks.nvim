@@ -52,6 +52,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                 },
             },
             branch = {
+                auto_display_on = false,
                 keymaps = {
                     delete = "D", -- Display a popup with branch deletion options
                     log = "<enter>", -- Display commits for branch under cursor
@@ -102,6 +103,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                 },
             },
             log = {
+                auto_display_on = false,
                 keymaps = {
                     checkout = "c", -- Checkout commmit under cursor
                     commit_details = "<enter>",

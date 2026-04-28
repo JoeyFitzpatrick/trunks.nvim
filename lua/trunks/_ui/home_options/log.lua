@@ -2,6 +2,7 @@ local M = {}
 
 local Command = require("trunks._core.command")
 local texter = require("trunks._core.texter")
+local with_line = require("trunks._ui.keymaps.set").with_line
 
 ---@param bufnr integer
 ---@param line_num? integer
@@ -21,10 +22,9 @@ end
 
 ---@param bufnr integer
 local function set_keymaps(bufnr)
-    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "log", {})
+    local keymaps = require("trunks._ui.keymaps.base").get_keymaps(bufnr, "log", { auto_display_keymaps = true })
     local keymap_opts = { noremap = true, silent = true, buffer = bufnr, nowait = true }
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
-    local with_line = require("trunks._ui.keymaps.set").with_line
 
     local keymap_to_command_map = {
         { keymap = keymaps.pull, command = "pull" },
@@ -164,6 +164,20 @@ function M.render(bufnr, opts)
     end
 
     require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, ui_types)
+
+    require("trunks._ui.auto_display").create_auto_display(bufnr, "log", {
+        generate_cmd = with_line(bufnr, get_line, function(line_data)
+            local last_commit = vim.b[bufnr].trunks_last_commit
+            if last_commit ~= line_data.hash then
+                vim.b[bufnr].trunks_last_commit = line_data.hash
+            end
+            return Command.base_command("show " .. line_data.hash):build()
+        end),
+        get_current_diff = with_line(bufnr, get_line, function(line_data)
+            return line_data.hash
+        end),
+        strategy = { enter = false, display_strategy = "below", pty = false },
+    })
 end
 
 return M
