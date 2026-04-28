@@ -1,5 +1,5 @@
 *trunks.txt*
-                            For Neovim >= 0.11.0    Last change: 2026 April 27
+                            For Neovim >= 0.11.0    Last change: 2026 April 28
 
 ==============================================================================
 Table of Contents                                   *trunks-table-of-contents*
@@ -93,6 +93,7 @@ able to lazy load it however you normally lazy load plugins.
                     },
                 },
                 branch = {
+                    auto_display_on = false,
                     keymaps = {
                         delete = "D", -- Display a popup with branch deletion options
                         log = "<enter>", -- Display commits for branch under cursor
@@ -143,6 +144,7 @@ able to lazy load it however you normally lazy load plugins.
                     },
                 },
                 log = {
+                    auto_display_on = false,
                     keymaps = {
                         checkout = "c", -- Checkout commmit under cursor
                         commit_details = "<enter>",
