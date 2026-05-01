@@ -29,14 +29,14 @@ function M.render(branch_name)
                     keys = keymaps.merge,
                     description = descriptions.merge,
                     action = function()
-                        run_cmd.run_hidden_cmd("merge " .. branch_name, { rerender = true })
+                        vim.cmd("G merge " .. branch_name)
                     end,
                 },
                 {
                     keys = keymaps.rebase,
                     description = descriptions.rebase,
                     action = function()
-                        run_cmd.run_hidden_cmd("rebase " .. branch_name, { rerender = true })
+                        vim.cmd("G rebase " .. branch_name)
                     end,
                 },
             },
@@ -48,14 +48,14 @@ function M.render(branch_name)
                     keys = keymaps.merge_remote,
                     description = descriptions.merge_remote,
                     action = function()
-                        run_cmd.run_hidden_cmd("merge " .. remote_ref, { rerender = true })
+                        vim.cmd("G merge " .. remote_ref)
                     end,
                 },
                 {
                     keys = keymaps.rebase_remote,
                     description = descriptions.rebase_remote,
                     action = function()
-                        run_cmd.run_hidden_cmd("rebase " .. remote_ref, { rerender = true })
+                        vim.cmd("G rebase " .. remote_ref)
                     end,
                 },
             },
