@@ -205,7 +205,7 @@ able to lazy load it however you normally lazy load plugins.
                     auto_display_on = true,
                     keymaps = {
                         apply = "a",
-                        drop = "d",
+                        drop = "D",
                         pop = "p",
                         show = "<enter>",
                     },
