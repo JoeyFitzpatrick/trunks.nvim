@@ -194,7 +194,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                 auto_display_on = true,
                 keymaps = {
                     apply = "a",
-                    drop = "d",
+                    drop = "D",
                     pop = "p",
                     show = "<enter>",
                 },

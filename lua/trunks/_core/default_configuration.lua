@@ -143,7 +143,7 @@ return {
         auto_display_on = true,
         keymaps = {
             apply = "a",
-            drop = "d",
+            drop = "D",
             pop = "p",
             show = "<enter>",
         },
