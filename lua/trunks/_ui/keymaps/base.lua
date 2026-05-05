@@ -173,7 +173,7 @@ function M.git_push_keymap()
             "Your branch has diverged from the remote branch. Force push?"
         )
         if should_force_push then
-            vim.cmd("G push --force")
+            vim.cmd("G push --force-with-lease")
         end
     else
         vim.cmd("G push")
