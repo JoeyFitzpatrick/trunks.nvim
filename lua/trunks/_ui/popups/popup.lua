@@ -16,6 +16,8 @@
 
 local M = {}
 
+local safe_set_keymap = require("trunks._ui.keymaps.set").safe_set_keymap
+
 ---@param bufnr integer
 ---@param mapping_config string | trunks.PopupMapping[]
 ---@param title string
@@ -34,7 +36,7 @@ local function get_popup_lines(bufnr, mapping_config, title)
         local lines = { " " .. title }
         for _, mapping in ipairs(mapping_config) do
             table.insert(lines, string.format(" %s %s\t", mapping.keys, mapping.description))
-            require("trunks._ui.keymaps.set").safe_set_keymap("n", mapping.keys, function()
+            safe_set_keymap("n", mapping.keys, function()
                 -- Close auto displays first to prevent them from being re-triggered
                 -- when the popup window closes
                 require("trunks._ui.auto_display").close_open_auto_displays()
@@ -104,6 +106,9 @@ function M.render_popup(opts)
 
     set_popup_settings()
     highlight(bufnr)
+    safe_set_keymap("n", "<esc>", function()
+        require("trunks._core.register").close_buffer(bufnr)
+    end, { buffer = bufnr })
     return bufnr
 end
 
