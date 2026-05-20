@@ -50,6 +50,16 @@ local function render_num_commits(bufnr, opts)
     end
 end
 
+---@param num_commits_text? string
+---@param callback function
+function M.get_existing_num_commits(num_commits_text, callback)
+    if num_commits_text then
+        callback({ num_commits_text })
+        return
+    end
+    callback({ get_num_commits_to_pull_and_push() })
+end
+
 --- This function is `vim.schedule_wrap`ped, so that it doesn't
 --- block the main thread. Otherwise it causes sluggishness.
 ---@param bufnr integer
@@ -59,14 +69,14 @@ M.set_num_commits_to_pull_and_push = vim.schedule_wrap(function(bufnr, opts)
         vim.b[bufnr].trunks_fetch_running = true
     end
     render_num_commits(bufnr, opts)
-    vim.fn.jobstart("git fetch", {
-        on_exit = function()
-            if vim.api.nvim_buf_is_valid(bufnr) then
-                vim.b[bufnr].trunks_fetch_running = false
-            end
-            render_num_commits(bufnr, opts)
-        end,
-    })
+    -- vim.fn.jobstart("git fetch", {
+    --     on_exit = function()
+    --         if vim.api.nvim_buf_is_valid(bufnr) then
+    --             vim.b[bufnr].trunks_fetch_running = false
+    --         end
+    --         render_num_commits(bufnr, opts)
+    --     end,
+    -- })
 end)
 
 return M

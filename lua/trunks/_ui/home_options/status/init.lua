@@ -293,8 +293,29 @@ function M._set_lines(bufnr, ctx, on_done)
         local unstaged_untracked_index
         local staged_index
 
-        table.insert(lines, results.head or "Head:")
-        table.insert(lines, results.remote_branch or "")
+        local head_line = "Head: "
+        if results.head == "(detached)" then
+            head_line = head_line .. results.hash .. " (detached head)"
+        else
+            head_line = head_line .. results.head
+        end
+        if results.num_commits_to_pull then
+            head_line = head_line .. " " .. results.num_commits_to_pull
+        end
+        if results.num_commits_to_push then
+            head_line = head_line .. " " .. results.num_commits_to_push
+        end
+
+        table.insert(lines, head_line)
+
+        local upstream_line
+        if results.remote_branch then
+            upstream_line = results.pull_config_prefix .. results.remote_branch
+        else
+            upstream_line = "Push: origin/" .. results.head
+        end
+        table.insert(lines, upstream_line)
+
         table.insert(lines, "Help: g?")
         table.insert(lines, results.diff_stat or "No staged changes")
 
@@ -337,8 +358,12 @@ function M._set_lines(bufnr, ctx, on_done)
         end
     end
 
-    status_utils.get_head(ctx.head_text, bufnr, function(lines)
-        results.head = lines[1]
+    status_utils.get_head_and_remote(function(output)
+        results.head = output.head
+        results.hash = output.hash
+        results.remote_branch = output.remote
+        results.num_commits_to_pull = output.num_commits_to_pull
+        results.num_commits_to_push = output.num_commits_to_push
         done()
     end)
 
@@ -347,8 +372,8 @@ function M._set_lines(bufnr, ctx, on_done)
         done()
     end)
 
-    status_utils.get_remote_branch(ctx.remote_branch_text, function(lines)
-        results.remote_branch = lines[1]
+    status_utils.get_pull_config_prefix(function(pull_config_prefix)
+        results.pull_config_prefix = pull_config_prefix
         done()
     end)
 end

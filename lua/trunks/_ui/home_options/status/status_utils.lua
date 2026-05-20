@@ -101,72 +101,59 @@ function M.get_diff_stat(diff_stat_text, callback)
     )
 end
 
----@param head_text? string
----@param bufnr integer
 ---@param callback function
-function M.get_head(head_text, bufnr, callback)
-    if head_text then
-        callback({ head_text })
-        return
-    end
-
-    local head_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
-
+function M.get_pull_config_prefix(callback)
+    local rebase_cmd = Command.base_command("config pull.rebase"):build()
     vim.system(
-        { "sh", "-c", head_cmd },
+        { "sh", "-c", rebase_cmd },
         vim.schedule_wrap(function(result)
-            if result.code == 0 then
-                local branch = result.stdout:gsub("\n", "")
-                callback({ "Head: " .. branch })
-                require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(
-                    bufnr,
-                    { branch = branch }
-                )
+            if result.code == 0 and not vim.startswith(result.stdout, "false") then
+                callback("Rebase: ")
             else
-                local hash_cmd = Command.base_command("rev-parse --short HEAD"):build()
-                local hash_cmd_result = require("trunks._core.run_cmd").system(hash_cmd)
-                if #hash_cmd_result.output > 0 and hash_cmd_result.code == 0 then
-                    callback({ "Head: " .. hash_cmd_result.output[1] .. " (detached head)" })
-                else
-                    callback({ "Head: unable to find current HEAD" })
-                end
+                callback("Merge: ")
             end
         end)
     )
 end
 
----@param remote_branch_text? string
----@param callback function
-function M.get_remote_branch(remote_branch_text, callback)
-    if remote_branch_text then
-        callback({ remote_branch_text })
-        return
-    end
-    local upstream_cmd = Command.base_command("rev-parse --abbrev-ref --symbolic-full-name @{u}"):build()
-    local trunks_system = require("trunks._core.run_cmd").system
+---@class trunks.StatusData
+---@field head string
+---@field hash string
+---@field remote? string
+---@field num_commits_to_pull? string
+---@field num_commits_to_push? string
+
+---@param callback fun(data: trunks.StatusData)
+function M.get_head_and_remote(callback)
+    local cmd = Command.base_command("status --porcelain=v2 --branch"):build()
     vim.system(
-        { "sh", "-c", upstream_cmd },
+        { "sh", "-c", cmd },
         vim.schedule_wrap(function(result)
-            if result.code ~= 0 or result.stdout == "" then
-                local branch_cmd = Command.base_command("symbolic-ref --short HEAD"):build()
-                local branch_result = trunks_system(branch_cmd)
-                local branch = (branch_result.code == 0 and branch_result.output[1]) or "HEAD"
-                callback({ "Push: " .. branch })
-                return
+            local lines = vim.split(result.stdout, "\n", { plain = true, trimempty = true })
+            local data = {}
+            for _, line in ipairs(lines) do
+                -- Line shape is # branch.head master, need 3rd item
+                if vim.startswith(line, "# branch.head") then
+                    data.head = vim.split(line, " ", { plain = true, trimempty = true })[3]
+                elseif vim.startswith(line, "# branch.upstream") then
+                    data.remote = vim.split(line, " ", { plain = true, trimempty = true })[3]
+                elseif vim.startswith(line, "# branch.oid") then
+                    data.hash = vim.split(line, " ", { plain = true, trimempty = true })[3]:sub(1, 7)
+                elseif vim.startswith(line, "# branch.ab") then
+                    local num_commits_split = vim.split(line, " ", { plain = true, trimempty = true })
+                    -- Each number looks like +2 or -2, need to remove symbol
+                    local num_commits_to_pull = num_commits_split[3]:sub(2)
+                    local num_commits_to_push = num_commits_split[4]:sub(2)
+
+                    if tonumber(num_commits_to_pull) > 0 then
+                        data.num_commits_to_pull = "↓" .. num_commits_to_pull
+                    end
+                    if tonumber(num_commits_to_push) > 0 then
+                        data.num_commits_to_push = "↑" .. num_commits_to_push
+                    end
+                end
             end
-
-            local upstream = result.stdout:gsub("\n", "")
-
-            local rebase_cmd = Command.base_command("config pull.rebase"):build()
-            local rebase_result = trunks_system(rebase_cmd)
-
-            local prefix
-            if rebase_result.code == 0 and rebase_result.output[1] ~= "false" then
-                prefix = "Rebase: "
-            else
-                prefix = "Merge: "
-            end
-            callback({ prefix .. upstream })
+            callback(data)
         end)
     )
 end
