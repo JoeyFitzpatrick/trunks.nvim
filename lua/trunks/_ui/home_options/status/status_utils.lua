@@ -142,8 +142,8 @@ function M.get_head_and_remote(callback)
                 elseif vim.startswith(line, "# branch.ab") then
                     local num_commits_split = vim.split(line, " ", { plain = true, trimempty = true })
                     -- Each number looks like +2 or -2, need to remove symbol
-                    local num_commits_to_pull = num_commits_split[3]:sub(2)
-                    local num_commits_to_push = num_commits_split[4]:sub(2)
+                    local num_commits_to_pull = num_commits_split[4]:sub(2)
+                    local num_commits_to_push = num_commits_split[3]:sub(2)
 
                     if tonumber(num_commits_to_pull) > 0 then
                         data.num_commits_to_pull = "↓" .. num_commits_to_pull
