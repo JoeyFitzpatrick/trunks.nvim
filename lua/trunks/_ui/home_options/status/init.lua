@@ -293,26 +293,34 @@ function M._set_lines(bufnr, ctx, on_done)
         local unstaged_untracked_index
         local staged_index
 
-        local head_line = "Head: "
-        if results.head == "(detached)" then
-            head_line = head_line .. results.hash .. " (detached head)"
+        local head_line
+        if ctx.head_text then
+            head_line = ctx.head_text
         else
-            head_line = head_line .. results.head
+            head_line = "Head: "
+            if results.head == "(detached)" then
+                head_line = head_line .. (results.hash or "") .. " (detached head)"
+            else
+                head_line = head_line .. (results.head or "")
+            end
+            if results.num_commits_to_pull then
+                head_line = head_line .. " " .. results.num_commits_to_pull
+            end
+            if results.num_commits_to_push then
+                head_line = head_line .. " " .. results.num_commits_to_push
+            end
         end
-        if results.num_commits_to_pull then
-            head_line = head_line .. " " .. results.num_commits_to_pull
-        end
-        if results.num_commits_to_push then
-            head_line = head_line .. " " .. results.num_commits_to_push
-        end
-
         table.insert(lines, head_line)
 
         local upstream_line
-        if results.remote_branch then
-            upstream_line = results.pull_config_prefix .. results.remote_branch
+        if ctx.remote_branch_text then
+            upstream_line = ctx.remote_branch_text
+        elseif results.remote_branch then
+            upstream_line = (results.pull_config_prefix or "") .. results.remote_branch
+        elseif results.head and results.head ~= "(detached)" then
+            upstream_line = "Push: " .. results.head
         else
-            upstream_line = "Push: origin/" .. results.head
+            upstream_line = ""
         end
         table.insert(lines, upstream_line)
 
@@ -358,24 +366,32 @@ function M._set_lines(bufnr, ctx, on_done)
         end
     end
 
-    status_utils.get_head_and_remote(function(output)
-        results.head = output.head
-        results.hash = output.hash
-        results.remote_branch = output.remote
-        results.num_commits_to_pull = output.num_commits_to_pull
-        results.num_commits_to_push = output.num_commits_to_push
+    if ctx.head_text then
         done()
-    end)
+    else
+        status_utils.get_head_and_remote(function(output)
+            results.head = output.head
+            results.hash = output.hash
+            results.remote_branch = output.remote
+            results.num_commits_to_pull = output.num_commits_to_pull
+            results.num_commits_to_push = output.num_commits_to_push
+            done()
+        end)
+    end
 
     status_utils.get_diff_stat(ctx.diff_stat_text, function(lines)
         results.diff_stat = lines[1]
         done()
     end)
 
-    status_utils.get_pull_config_prefix(function(pull_config_prefix)
-        results.pull_config_prefix = pull_config_prefix
+    if ctx.remote_branch_text then
         done()
-    end)
+    else
+        status_utils.get_pull_config_prefix(function(pull_config_prefix)
+            results.pull_config_prefix = pull_config_prefix
+            done()
+        end)
+    end
 end
 
 ---@param line string
