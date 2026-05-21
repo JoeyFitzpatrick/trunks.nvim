@@ -101,27 +101,44 @@ function M.get_diff_stat(diff_stat_text, callback)
     )
 end
 
----@param callback function
-function M.get_pull_config_prefix(callback)
-    local rebase_cmd = Command.base_command("config pull.rebase"):build()
-    vim.system(
-        { "sh", "-c", rebase_cmd },
-        vim.schedule_wrap(function(result)
-            if result.code == 0 and not vim.startswith(result.stdout, "false") then
-                callback("Rebase: ")
-            else
-                callback("Merge: ")
-            end
-        end)
-    )
+--- Reads the effective `pull.rebase` value for `head`, honoring
+--- `branch.<head>.rebase` first then falling back to `pull.rebase`.
+--- Returns either "Rebase: " or "Merge: ".
+---@param head? string
+---@return string
+local function resolve_pull_config_prefix(head)
+    local trunks_system = require("trunks._core.run_cmd").system
+
+    local function read(key)
+        local cmd = Command.base_command("config --type=bool-or-string " .. key):build()
+        local result = trunks_system(cmd)
+        if result.code == 0 and result.output[1] and result.output[1] ~= "" then
+            return result.output[1]
+        end
+        return nil
+    end
+
+    local value
+    if head and head ~= "(detached)" then
+        value = read(string.format("branch.%s.rebase", head))
+    end
+    if value == nil then
+        value = read("pull.rebase")
+    end
+
+    if value and value ~= "false" then
+        return "Rebase: "
+    end
+    return "Merge: "
 end
 
 ---@class trunks.StatusData
----@field head string
----@field hash string
+---@field head? string
+---@field hash? string
 ---@field remote? string
 ---@field num_commits_to_pull? string
 ---@field num_commits_to_push? string
+---@field pull_config_prefix string
 
 ---@param callback fun(data: trunks.StatusData)
 function M.get_head_and_remote(callback)
@@ -129,8 +146,14 @@ function M.get_head_and_remote(callback)
     vim.system(
         { "sh", "-c", cmd },
         vim.schedule_wrap(function(result)
-            local lines = vim.split(result.stdout, "\n", { plain = true, trimempty = true })
             local data = {}
+            if result.code ~= 0 then
+                data.pull_config_prefix = resolve_pull_config_prefix(nil)
+                callback(data)
+                return
+            end
+
+            local lines = vim.split(result.stdout, "\n", { plain = true, trimempty = true })
             for _, line in ipairs(lines) do
                 -- Line shape is # branch.head master, need 3rd item
                 if vim.startswith(line, "# branch.head") then
@@ -153,6 +176,8 @@ function M.get_head_and_remote(callback)
                     end
                 end
             end
+
+            data.pull_config_prefix = resolve_pull_config_prefix(data.head)
             callback(data)
         end)
     )

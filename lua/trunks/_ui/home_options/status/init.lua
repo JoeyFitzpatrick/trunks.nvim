@@ -284,7 +284,7 @@ function M._set_lines(bufnr, ctx, on_done)
     ctx = ctx or {}
 
     local results = {}
-    local pending = 3
+    local pending = 2
 
     local function on_all_ready()
         local files = status_utils.get_status_files(ctx.get_files)
@@ -366,7 +366,7 @@ function M._set_lines(bufnr, ctx, on_done)
         end
     end
 
-    if ctx.head_text then
+    if ctx.head_text and ctx.remote_branch_text then
         done()
     else
         status_utils.get_head_and_remote(function(output)
@@ -375,6 +375,7 @@ function M._set_lines(bufnr, ctx, on_done)
             results.remote_branch = output.remote
             results.num_commits_to_pull = output.num_commits_to_pull
             results.num_commits_to_push = output.num_commits_to_push
+            results.pull_config_prefix = output.pull_config_prefix
             done()
         end)
     end
@@ -383,15 +384,6 @@ function M._set_lines(bufnr, ctx, on_done)
         results.diff_stat = lines[1]
         done()
     end)
-
-    if ctx.remote_branch_text then
-        done()
-    else
-        status_utils.get_pull_config_prefix(function(pull_config_prefix)
-            results.pull_config_prefix = pull_config_prefix
-            done()
-        end)
-    end
 end
 
 ---@param line string
