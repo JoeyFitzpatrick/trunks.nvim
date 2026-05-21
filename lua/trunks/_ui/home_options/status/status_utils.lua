@@ -101,35 +101,62 @@ function M.get_diff_stat(diff_stat_text, callback)
     )
 end
 
+---@param key string
+---@param type_flag? string
+---@return string?
+local function read_config(key, type_flag)
+    local trunks_system = require("trunks._core.run_cmd").system
+    local arg = type_flag and ("--type=" .. type_flag .. " " .. key) or key
+    local cmd = Command.base_command("config " .. arg):build()
+    local result = trunks_system(cmd)
+    if result.code == 0 and result.output[1] and result.output[1] ~= "" then
+        return result.output[1]
+    end
+    return nil
+end
+
 --- Reads the effective `pull.rebase` value for `head`, honoring
 --- `branch.<head>.rebase` first then falling back to `pull.rebase`.
 --- Returns either "Rebase: " or "Merge: ".
 ---@param head? string
 ---@return string
 local function resolve_pull_config_prefix(head)
-    local trunks_system = require("trunks._core.run_cmd").system
-
-    local function read(key)
-        local cmd = Command.base_command("config --type=bool-or-string " .. key):build()
-        local result = trunks_system(cmd)
-        if result.code == 0 and result.output[1] and result.output[1] ~= "" then
-            return result.output[1]
-        end
-        return nil
-    end
-
     local value
     if head and head ~= "(detached)" then
-        value = read(string.format("branch.%s.rebase", head))
+        value = read_config(string.format("branch.%s.rebase", head), "bool-or-string")
     end
     if value == nil then
-        value = read("pull.rebase")
+        value = read_config("pull.rebase", "bool-or-string")
     end
 
     if value and value ~= "false" then
         return "Rebase: "
     end
     return "Merge: "
+end
+
+--- Resolves the push remote for `head`, following git's lookup order:
+--- branch.<head>.pushRemote -> remote.pushDefault -> branch.<head>.remote -> "origin".
+---@param head? string
+---@return string
+local function resolve_push_remote(head)
+    if head and head ~= "(detached)" then
+        local remote = read_config(string.format("branch.%s.pushRemote", head))
+        if remote then
+            return remote
+        end
+    end
+    local default = read_config("remote.pushDefault")
+    if default then
+        return default
+    end
+    if head and head ~= "(detached)" then
+        local fetch_remote = read_config(string.format("branch.%s.remote", head))
+        if fetch_remote then
+            return fetch_remote
+        end
+    end
+    return "origin"
 end
 
 ---@class trunks.StatusData
@@ -139,6 +166,7 @@ end
 ---@field num_commits_to_pull? string
 ---@field num_commits_to_push? string
 ---@field pull_config_prefix string
+---@field push_remote string
 
 ---@param callback fun(data: trunks.StatusData)
 function M.get_head_and_remote(callback)
@@ -149,6 +177,7 @@ function M.get_head_and_remote(callback)
             local data = {}
             if result.code ~= 0 then
                 data.pull_config_prefix = resolve_pull_config_prefix(nil)
+                data.push_remote = resolve_push_remote(nil)
                 callback(data)
                 return
             end
@@ -178,6 +207,7 @@ function M.get_head_and_remote(callback)
             end
 
             data.pull_config_prefix = resolve_pull_config_prefix(data.head)
+            data.push_remote = resolve_push_remote(data.head)
             callback(data)
         end)
     )

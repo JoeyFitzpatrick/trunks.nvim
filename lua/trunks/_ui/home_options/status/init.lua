@@ -318,7 +318,7 @@ function M._set_lines(bufnr, ctx, on_done)
         elseif results.remote_branch then
             upstream_line = (results.pull_config_prefix or "") .. results.remote_branch
         elseif results.head and results.head ~= "(detached)" then
-            upstream_line = "Push: " .. results.head
+            upstream_line = "Push: " .. (results.push_remote or "origin") .. "/" .. results.head
         else
             upstream_line = ""
         end
@@ -376,6 +376,7 @@ function M._set_lines(bufnr, ctx, on_done)
             results.num_commits_to_pull = output.num_commits_to_pull
             results.num_commits_to_push = output.num_commits_to_push
             results.pull_config_prefix = output.pull_config_prefix
+            results.push_remote = output.push_remote
             done()
         end)
     end
@@ -514,6 +515,7 @@ function M.render(bufnr, opts)
     vim.bo[bufnr].filetype = "trunks"
     M._set_lines(bufnr, nil, function()
         M._set_cursor(bufnr, win)
+        require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(bufnr)
     end)
 
     require("trunks._ui.home_options.status").set_keymaps(bufnr)

@@ -1,70 +1,65 @@
----@class trunks.SetNumCommitsParams
----@field branch string
-
 local M = {}
 
----@param branch string
 ---@return string
-local function get_num_commits_to_pull_and_push(branch)
-    if branch:match("%s-remotes/") then
-        return ""
-    end
+local function get_num_commits_to_pull_and_push()
     local system = require("trunks._core.run_cmd").system
-    local pull_lines_result = system(string.format("git rev-list --count %s..origin/%s", branch, branch))
-    local push_lines_result = system(string.format("git rev-list --count origin/%s..%s", branch, branch))
-    if pull_lines_result.code ~= 0 or push_lines_result.code ~= 0 then
+    local result = system("git rev-list --left-right --count @{u}...HEAD")
+    if result.code ~= 0 or not result.output[1] then
         return ""
     end
-    local pull, push = pull_lines_result.output[1], push_lines_result.output[1]
-    local pull_and_push = ""
+    -- `--left-right ... @{u}...HEAD`: left count = behind (pull), right count = ahead (push)
+    local pull, push = result.output[1]:match("(%d+)%s+(%d+)")
+    if not pull then
+        return ""
+    end
+
+    local out = ""
     if pull ~= "0" then
-        pull_and_push = pull_and_push .. "↓" .. pull
+        out = out .. "↓" .. pull
     end
     if push ~= "0" then
-        if pull_and_push ~= "" then
-            pull_and_push = pull_and_push .. " "
+        if out ~= "" then
+            out = out .. " "
         end
-        pull_and_push = pull_and_push .. "↑" .. push
+        out = out .. "↑" .. push
     end
-    return pull_and_push
+    return out
 end
 
 ---@param bufnr integer
----@param opts trunks.SetNumCommitsParams
-local function render_num_commits(bufnr, opts)
+local function render_num_commits(bufnr)
     if not vim.api.nvim_buf_is_valid(bufnr) then
         return
     end
 
-    local branch = opts.branch
-
-    local commits_str = get_num_commits_to_pull_and_push(branch)
-    if #commits_str > 0 then
-        local existing_line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
-        if not existing_line then
-            return
-        end
-        local existing_line_without_commits_str = existing_line:gsub(" ↓%d+", ""):gsub(" ↑%d+", "")
-        local new_line = { existing_line_without_commits_str .. " " .. commits_str }
-        require("trunks._ui.utils.buffer_text").set(bufnr, new_line, 0, 1)
+    local existing_line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
+    if not existing_line then
+        return
     end
+
+    local stripped = existing_line:gsub(" ↓%d+", ""):gsub(" ↑%d+", "")
+    local commits_str = get_num_commits_to_pull_and_push()
+    local new_line = stripped
+    if #commits_str > 0 then
+        new_line = stripped .. " " .. commits_str
+    end
+    require("trunks._ui.utils.buffer_text").set(bufnr, { new_line }, 0, 1)
 end
 
---- This function is `vim.schedule_wrap`ped, so that it doesn't
---- block the main thread. Otherwise it causes sluggishness.
+--- Runs `git fetch` in the background and then rewrites the ahead/behind
+--- suffix on the Head line. Network-bound, so call this *after* the initial
+--- status render.
 ---@param bufnr integer
----@param opts trunks.SetNumCommitsParams
-M.set_num_commits_to_pull_and_push = vim.schedule_wrap(function(bufnr, opts)
+M.set_num_commits_to_pull_and_push = vim.schedule_wrap(function(bufnr)
     if vim.api.nvim_buf_is_valid(bufnr) then
         vim.b[bufnr].trunks_fetch_running = true
     end
-    render_num_commits(bufnr, opts)
     vim.fn.jobstart("git fetch", {
         on_exit = function()
             if vim.api.nvim_buf_is_valid(bufnr) then
                 vim.b[bufnr].trunks_fetch_running = false
             end
-            render_num_commits(bufnr, opts)
+            render_num_commits(bufnr)
         end,
     })
 end)
