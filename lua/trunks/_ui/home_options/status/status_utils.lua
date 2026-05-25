@@ -101,32 +101,19 @@ function M.get_diff_stat(diff_stat_text, callback)
     )
 end
 
----@param key string
----@param type_flag? string
----@return string?
-local function read_config(key, type_flag)
-    local trunks_system = require("trunks._core.run_cmd").system
-    local arg = type_flag and ("--type=" .. type_flag .. " " .. key) or key
-    local cmd = Command.base_command("config " .. arg):build()
-    local result = trunks_system(cmd)
-    if result.code == 0 and result.output[1] and result.output[1] ~= "" then
-        return result.output[1]
-    end
-    return nil
-end
-
---- Reads the effective `pull.rebase` value for `head`, honoring
---- `branch.<head>.rebase` first then falling back to `pull.rebase`.
+--- Reads the effective `pull.rebase` value for `head` from the supplied config
+--- map, honoring `branch.<head>.rebase` first then falling back to `pull.rebase`.
 --- Returns either "Rebase: " or "Merge: ".
+---@param config table<string, string>
 ---@param head? string
 ---@return string
-local function resolve_pull_config_prefix(head)
+function M.resolve_pull_config_prefix(config, head)
     local value
     if head and head ~= "(detached)" then
-        value = read_config(string.format("branch.%s.rebase", head), "bool-or-string")
+        value = config[string.format("branch.%s.rebase", head)]
     end
     if value == nil then
-        value = read_config("pull.rebase", "bool-or-string")
+        value = config["pull.rebase"]
     end
 
     if value and value ~= "false" then
@@ -135,28 +122,58 @@ local function resolve_pull_config_prefix(head)
     return "Merge: "
 end
 
---- Resolves the push remote for `head`, following git's lookup order:
---- branch.<head>.pushRemote -> remote.pushDefault -> branch.<head>.remote -> "origin".
+--- Resolves the push remote for `head` from the supplied config map, following
+--- git's lookup order: branch.<head>.pushRemote -> remote.pushDefault ->
+--- branch.<head>.remote -> "origin".
+---@param config table<string, string>
 ---@param head? string
 ---@return string
-local function resolve_push_remote(head)
+function M.resolve_push_remote(config, head)
     if head and head ~= "(detached)" then
-        local remote = read_config(string.format("branch.%s.pushRemote", head))
+        local remote = config[string.format("branch.%s.pushRemote", head)]
         if remote then
             return remote
         end
     end
-    local default = read_config("remote.pushDefault")
+    local default = config["remote.pushDefault"]
     if default then
         return default
     end
     if head and head ~= "(detached)" then
-        local fetch_remote = read_config(string.format("branch.%s.remote", head))
+        local fetch_remote = config[string.format("branch.%s.remote", head)]
         if fetch_remote then
             return fetch_remote
         end
     end
     return "origin"
+end
+
+--- Fetches the full git config in a single async invocation. Output is parsed
+--- into a flat `key -> value` map. Multi-valued keys collapse to the last
+--- occurrence, which matches git's effective-value semantics for the keys this
+--- module looks up.
+---@param callback fun(config: table<string, string>)
+function M.get_git_config(callback)
+    local cmd = Command.base_command("config -l -z"):build()
+    vim.system(
+        { "sh", "-c", cmd },
+        vim.schedule_wrap(function(result)
+            local config = {}
+            if result.code == 0 and result.stdout then
+                for entry in vim.gsplit(result.stdout, "\0", { plain = true }) do
+                    if entry ~= "" then
+                        local sep = entry:find("\n", 1, true)
+                        if sep then
+                            config[entry:sub(1, sep - 1)] = entry:sub(sep + 1)
+                        else
+                            config[entry] = ""
+                        end
+                    end
+                end
+            end
+            callback(config)
+        end)
+    )
 end
 
 ---@class trunks.StatusData
@@ -165,8 +182,6 @@ end
 ---@field remote? string
 ---@field num_commits_to_pull? string
 ---@field num_commits_to_push? string
----@field pull_config_prefix string
----@field push_remote string
 
 ---@param callback fun(data: trunks.StatusData)
 function M.get_head_and_remote(callback)
@@ -176,8 +191,6 @@ function M.get_head_and_remote(callback)
         vim.schedule_wrap(function(result)
             local data = {}
             if result.code ~= 0 then
-                data.pull_config_prefix = resolve_pull_config_prefix(nil)
-                data.push_remote = resolve_push_remote(nil)
                 callback(data)
                 return
             end
@@ -206,8 +219,6 @@ function M.get_head_and_remote(callback)
                 end
             end
 
-            data.pull_config_prefix = resolve_pull_config_prefix(data.head)
-            data.push_remote = resolve_push_remote(data.head)
             callback(data)
         end)
     )

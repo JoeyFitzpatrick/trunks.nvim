@@ -284,7 +284,7 @@ function M._set_lines(bufnr, ctx, on_done)
     ctx = ctx or {}
 
     local results = {}
-    local pending = 2
+    local pending = 3
 
     local function on_all_ready()
         local files = status_utils.get_status_files(ctx.get_files)
@@ -316,9 +316,11 @@ function M._set_lines(bufnr, ctx, on_done)
         if ctx.remote_branch_text then
             upstream_line = ctx.remote_branch_text
         elseif results.remote_branch then
-            upstream_line = (results.pull_config_prefix or "") .. results.remote_branch
+            local prefix = status_utils.resolve_pull_config_prefix(results.config or {}, results.head)
+            upstream_line = prefix .. results.remote_branch
         elseif results.head and results.head ~= "(detached)" then
-            upstream_line = "Push: " .. (results.push_remote or "origin") .. "/" .. results.head
+            local push_remote = status_utils.resolve_push_remote(results.config or {}, results.head)
+            upstream_line = "Push: " .. push_remote .. "/" .. results.head
         else
             upstream_line = ""
         end
@@ -375,8 +377,15 @@ function M._set_lines(bufnr, ctx, on_done)
             results.remote_branch = output.remote
             results.num_commits_to_pull = output.num_commits_to_pull
             results.num_commits_to_push = output.num_commits_to_push
-            results.pull_config_prefix = output.pull_config_prefix
-            results.push_remote = output.push_remote
+            done()
+        end)
+    end
+
+    if ctx.head_text and ctx.remote_branch_text then
+        done()
+    else
+        status_utils.get_git_config(function(config)
+            results.config = config
             done()
         end)
     end
