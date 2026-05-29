@@ -185,30 +185,37 @@ local function set_keymaps(bufnr)
         "n",
         keymaps.spinoff,
         with_line(bufnr, get_line, function(line_data)
-            vim.ui.input({ prompt = "Name for new branch off of " .. line_data.branch_name .. ": " }, function(input)
-                if not input then
-                    return
+            vim.ui.input(
+                { prompt = "Name for spinoff branch off of " .. line_data.branch_name .. ": " },
+                function(input)
+                    if not input then
+                        return
+                    end
+                    -- Create and switch to new branch
+                    local new_branch_result = run_cmd.run_hidden_cmd(
+                        "switch --create " .. input .. " " .. line_data.branch_name,
+                        { rerender = true }
+                    )
+                    if new_branch_result == "error" then
+                        return
+                    end
+                    -- Reset previous branch to upstream
+                    run_cmd.run_hidden_cmd("fetch")
+                    local upstream_branch =
+                        run_cmd.run_cmd(string.format("rev-parse --abbrev-ref %s@{upstream}", line_data.branch_name))[1]
+                    if not upstream_branch then
+                        return
+                    end
+                    run_cmd.run_hidden_cmd(
+                        string.format(
+                            "update-ref refs/heads/%s refs/remotes/%s",
+                            line_data.branch_name,
+                            upstream_branch
+                        ),
+                        { rerender = true }
+                    )
                 end
-                -- Create and switch to new branch
-                local new_branch_result = run_cmd.run_hidden_cmd(
-                    "switch --create " .. input .. " " .. line_data.branch_name,
-                    { rerender = true }
-                )
-                if new_branch_result == "error" then
-                    return
-                end
-                -- Reset previous branch to upstream
-                run_cmd.run_hidden_cmd("fetch")
-                local upstream_branch =
-                    run_cmd.run_cmd(string.format("rev-parse --abbrev-ref %s@{upstream}", line_data.branch_name))[1]
-                if not upstream_branch then
-                    return
-                end
-                run_cmd.run_hidden_cmd(
-                    string.format("update-ref refs/heads/%s refs/remotes/%s", line_data.branch_name, upstream_branch),
-                    { rerender = true }
-                )
-            end)
+            )
         end),
         keymap_opts
     )
