@@ -279,7 +279,7 @@ end
 
 ---@param bufnr integer
 ---@param ctx? trunks.StatusSetLinesContext
----@param on_done? fun()
+---@param on_done? fun(error_msg?: string)
 function M._set_lines(bufnr, ctx, on_done)
     ctx = ctx or {}
 
@@ -357,7 +357,7 @@ function M._set_lines(bufnr, ctx, on_done)
         )
 
         if on_done then
-            on_done()
+            on_done(results.error_msg)
         end
     end
 
@@ -377,6 +377,7 @@ function M._set_lines(bufnr, ctx, on_done)
             results.remote_branch = output.remote
             results.num_commits_to_pull = output.num_commits_to_pull
             results.num_commits_to_push = output.num_commits_to_push
+            results.error_msg = output.error_msg
             done()
         end)
     end
@@ -522,7 +523,12 @@ function M.render(bufnr, opts)
     end
 
     vim.bo[bufnr].filetype = "trunks"
-    M._set_lines(bufnr, nil, function()
+    M._set_lines(bufnr, nil, function(error_msg)
+        if error_msg then
+            vim.api.nvim_buf_delete(bufnr, { force = true })
+            vim.notify(error_msg, vim.log.levels.ERROR)
+            return
+        end
         M._set_cursor(bufnr, win)
         require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(bufnr)
     end)

@@ -182,6 +182,7 @@ end
 ---@field remote? string
 ---@field num_commits_to_pull? string
 ---@field num_commits_to_push? string
+---@field error_msg? string
 
 ---@param callback fun(data: trunks.StatusData)
 function M.get_head_and_remote(callback)
@@ -191,7 +192,7 @@ function M.get_head_and_remote(callback)
         vim.schedule_wrap(function(result)
             local data = {}
             if result.code ~= 0 then
-                callback(data)
+                callback({ error_msg = result.stderr })
                 return
             end
 
