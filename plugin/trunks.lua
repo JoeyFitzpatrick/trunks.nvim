@@ -74,20 +74,22 @@ end, {
     end,
 })
 
-vim.api.nvim_create_user_command("Trunks", function(input_args)
-    require("trunks")
-    run_trunks_command(input_args)
-end, {
-    nargs = "*",
-    desc = "Trunks command API. For commands that aren't native git commands.",
-    bang = true,
-    range = true,
-    complete = function(arglead, cmdline)
-        local completion = require("trunks._completion").complete_command(arglead, cmdline, "Trunks")
-        return vim.tbl_filter(function(val)
-            return vim.startswith(val, arglead)
-        end, completion)
-    end,
-})
+for _, name in ipairs({ "Trunks", "T" }) do
+    vim.api.nvim_create_user_command(name, function(input_args)
+        require("trunks")
+        run_trunks_command(input_args)
+    end, {
+        nargs = "*",
+        desc = "Trunks command API. For commands that aren't native git commands.",
+        bang = true,
+        range = true,
+        complete = function(arglead, cmdline)
+            local completion = require("trunks._completion").complete_command(arglead, cmdline, "Trunks")
+            return vim.tbl_filter(function(val)
+                return vim.startswith(val, arglead)
+            end, completion)
+        end,
+    })
+end
 
 require("trunks._core.nested-buffers").prevent_nested_buffers()
