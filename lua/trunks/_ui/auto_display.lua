@@ -131,6 +131,11 @@ local function set_diff_buffer_keymaps(diff_bufnr, original_bufnr)
     require("trunks._ui.keymaps.set").safe_set_keymap("n", "<enter>", function()
         require("trunks._core.register").close_buffer(diff_bufnr)
     end, { buffer = diff_bufnr })
+
+    require("trunks._ui.keymaps.set").safe_set_keymap("n", "<tab>", function()
+        set_state(original_bufnr, { show_auto_display = false })
+        M.close_auto_display(original_bufnr)
+    end, { buffer = diff_bufnr })
 end
 
 ---@param bufnr integer
