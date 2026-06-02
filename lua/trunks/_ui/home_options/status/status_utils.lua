@@ -13,8 +13,8 @@ local Command = require("trunks._core.command")
 function M.get_status_files(get_files_fn)
     get_files_fn = get_files_fn
         or function()
-            local cmd = Command.base_command("status -s"):build()
-            local files = require("trunks._core.run_cmd").system(cmd)
+            local cmd = Command.base_command("status -sz"):build()
+            local files = require("trunks._core.run_cmd").system(cmd, { sep = "\0" })
             return vim.tbl_filter(function(output_line)
                 return output_line ~= ""
             end, files.output)

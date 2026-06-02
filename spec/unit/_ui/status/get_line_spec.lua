@@ -73,4 +73,22 @@ describe("status get_line", function()
             assert.are.equal(true, line.staged)
         end
     end)
+
+    it("gets a file with spaces in the name", function()
+        local bufnr = vim.api.nvim_create_buf(false, true)
+        local lines = {
+            "Head: main",
+            "Rebase: origin/main",
+            "Help: g?",
+            "2 files changed, 2 insertions(+)",
+            "",
+            "Unstaged (1)",
+            "M lua/trunks/_constants/keymap descriptions.lua",
+        }
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+        local line = get_line(bufnr, 7)
+        assert.are.equal("lua/trunks/_constants/keymap descriptions.lua", line.filename)
+        assert.are.equal("M", line.status)
+        assert.are.equal(false, line.staged)
+    end)
 end)

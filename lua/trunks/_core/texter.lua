@@ -96,4 +96,9 @@ function M.get_base_cmd(cmd)
     return base_cmd
 end
 
+---@param str string
+function M.split_on_first_space(str)
+    return str:match("^(%S+)%s+(.+)")
+end
+
 return M

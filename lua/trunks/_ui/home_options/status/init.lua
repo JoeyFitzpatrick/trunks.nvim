@@ -56,13 +56,10 @@ function M.get_line(bufnr, line_num)
     local line = lines[line_num]
     local on_header_line = line:find("^Staged") or line:find("^Unstaged")
     if on_header_line then
-        --
         return nil
     end
 
-    local split_line = vim.split(line, " ")
-    local status = split_line[1]
-    local filename = split_line[2]
+    local status, filename = require("trunks._core.texter").split_on_first_space(line)
     local safe_filename = require("trunks._core.texter").surround_with_quotes(filename)
 
     return {
