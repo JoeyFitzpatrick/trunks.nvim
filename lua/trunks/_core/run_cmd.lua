@@ -13,16 +13,11 @@ local M = {}
 ---@field stdout string
 ---@field stderr string
 
----@class trunks.SystemOpts
----@field sep? string -- separator for command output
-
 --- Uses `vim.system` to separate stdout and stderr.
 --- Should only be used for read/query commands (status, log, etc).
 ---@param cmd string | string[]
----@param opts?
 ---@return trunks.SystemResult
-function M.system(cmd, opts)
-    opts = opts or {}
+function M.system(cmd)
     if type(cmd) == "string" then
         cmd = { "sh", "-c", cmd }
     end
@@ -30,9 +25,9 @@ function M.system(cmd, opts)
     local result = vim.system(cmd, { text = true }):wait()
 
     if result.code == 0 then
-        result.output = vim.split(result.stdout, opts.sep or "\n")
+        result.output = vim.split(result.stdout, "\n")
     else
-        result.output = vim.split(result.stderr, opts.sep or "\n")
+        result.output = vim.split(result.stderr, "\n")
     end
 
     return result

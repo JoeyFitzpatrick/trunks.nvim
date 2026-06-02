@@ -14,10 +14,32 @@ function M.get_status_files(get_files_fn)
     get_files_fn = get_files_fn
         or function()
             local cmd = Command.base_command("status -sz"):build()
-            local files = require("trunks._core.run_cmd").system(cmd, { sep = "\0" })
-            return vim.tbl_filter(function(output_line)
-                return output_line ~= ""
-            end, files.output)
+            local result = require("trunks._core.run_cmd").system(cmd)
+            local records = vim.split(result.stdout, "\0")
+
+            local files = {}
+            local i = 1
+            while i <= #records do
+                local record = records[i]
+                if record == "" then
+                    i = i + 1
+                else
+                    local status = record:sub(1, 2)
+                    -- Renames/copies emit a second record (the source path).
+                    -- In -z order it's `new\0old`; rebuild the `old -> new`
+                    -- form that the rest of the parser already expects.
+                    if status:find("[RC]") then
+                        local new_path = record:sub(4)
+                        local old_path = records[i + 1]
+                        table.insert(files, status .. " " .. old_path .. " -> " .. new_path)
+                        i = i + 2
+                    else
+                        table.insert(files, record)
+                        i = i + 1
+                    end
+                end
+            end
+            return files
         end
 
     local files = get_files_fn()
