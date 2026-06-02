@@ -307,6 +307,10 @@ function M.toggle_inline_diff(bufnr, line_num, line_data, run_cmd_fn)
         if exit_code == 0 or (exit_code == 1 and line_data.status == "?") then
             local start = 1
             for i, line in ipairs(diff_output) do
+                local is_binary_file = line:match("^Binary")
+                if is_binary_file then
+                    return
+                end
                 if line:match("^@@") then
                     start = i
                     break
