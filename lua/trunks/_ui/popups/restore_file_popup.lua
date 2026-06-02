@@ -25,7 +25,7 @@ function M.render(bufnr, line_num, get_line)
                     if not ok or not line_data then
                         return
                     end
-                    local filename = line_data.filename
+                    local filename = line_data.safe_filename
                     local status = line_data.status
                     local is_untracked = status == "?"
                     if is_untracked then

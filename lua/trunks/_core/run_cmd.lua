@@ -138,7 +138,7 @@ function M.run_write_cmd(cmd)
             return
         end
         vim.system(
-            vim.split(cmds[index], " "),
+            { "sh", "-c", cmds[index] },
             { text = true },
             vim.schedule_wrap(function(result)
                 if result.code ~= 0 then

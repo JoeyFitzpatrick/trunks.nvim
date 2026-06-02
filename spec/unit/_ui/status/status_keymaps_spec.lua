@@ -6,11 +6,11 @@ describe("status stage single file", function()
         it("stages an unstaged file with status " .. status, function()
             local ran_cmd = stage_single_file({
                 filename = "file.txt",
-                safe_filename = " 'file.txt'",
+                safe_filename = '"file.txt"',
                 status = status,
                 staged = false,
             })
-            assert.are.same("git add -- file.txt", ran_cmd)
+            assert.are.same('git add -- "file.txt"', ran_cmd)
         end)
     end
 
@@ -19,11 +19,11 @@ describe("status stage single file", function()
         it("unstages an staged file with status " .. status, function()
             local ran_cmd = stage_single_file({
                 filename = "file.txt",
-                safe_filename = " 'file.txt'",
+                safe_filename = '"file.txt"',
                 status = status,
                 staged = true,
             })
-            assert.are.same("git reset HEAD -- file.txt", ran_cmd)
+            assert.are.same('git reset HEAD -- "file.txt"', ran_cmd)
         end)
     end
 end)

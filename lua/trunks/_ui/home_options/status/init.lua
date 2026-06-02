@@ -122,9 +122,9 @@ end
 function M._stage_single_file(line_data)
     local base_cmd
     if not line_data.staged then
-        base_cmd = "git add -- " .. line_data.filename
+        base_cmd = "git add -- " .. line_data.safe_filename
     else
-        base_cmd = "git reset HEAD -- " .. line_data.filename
+        base_cmd = "git reset HEAD -- " .. line_data.safe_filename
     end
     run_write_cmd(base_cmd)
     return base_cmd
@@ -146,7 +146,7 @@ function M.set_keymaps(bufnr)
         for i = visual_start_line + 1, end_line do
             local file = M.get_line(bufnr, i)
             if file then
-                table.insert(filenames, file.filename)
+                table.insert(filenames, file.safe_filename)
                 if not file.staged then
                     should_stage = true
                 end

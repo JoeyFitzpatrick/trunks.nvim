@@ -6,7 +6,7 @@ local M = {}
 ---@return string # The text surrounded with quotes
 function M.surround_with_quotes(text, surrounding)
     if not surrounding then
-        return "'" .. text .. "'"
+        return '"' .. text .. '"'
     end
     return surrounding .. text .. surrounding
 end

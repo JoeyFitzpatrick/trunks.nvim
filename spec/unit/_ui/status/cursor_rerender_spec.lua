@@ -30,7 +30,7 @@ describe("status buffer cursor behavior on rerender", function()
             section_header_line = 6,
             line_data = {
                 filename = "lua/trunks/_ui/home_options/status/init.lua",
-                safe_filename = "'lua/trunks/_ui/home_options/status/init.lua'",
+                safe_filename = '"lua/trunks/_ui/home_options/status/init.lua"',
                 status = "M",
                 staged = false,
             },
