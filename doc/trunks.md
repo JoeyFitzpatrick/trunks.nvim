@@ -37,7 +37,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                 keymaps = {
                     scroll_diff_down = "J",
                     scroll_diff_up = "K",
-                    toggle_auto_display = "<tab>",
+                    toggle_auto_display = "-",
                 },
             },
             blame = {
@@ -382,7 +382,7 @@ Some UIs, such as the status UI, will automatically display another window in a 
 * The commit details UI displays a diff for the file under the cursor for the given commit
 * The stash UI displays a diff for the entire stash under the cursor
 
-To toggle the auto-display, enter the toggle keymap, which by default is `<tab>`.
+To toggle the auto-display, enter the toggle keymap, which by default is `-`.
 
 
 # Optional Dependencies

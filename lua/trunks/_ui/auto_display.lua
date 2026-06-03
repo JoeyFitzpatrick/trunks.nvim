@@ -123,6 +123,8 @@ end
 ---@param diff_bufnr integer
 ---@param original_bufnr integer
 local function set_diff_buffer_keymaps(diff_bufnr, original_bufnr)
+    local keymaps = require("trunks._core.configuration").DATA.auto_display.keymaps
+    assert(keymaps, "Trunks: unable to get auto display keymaps")
     require("trunks._ui.keymaps.set").safe_set_keymap("n", "q", function()
         require("trunks._core.register").close_buffer(diff_bufnr)
         require("trunks._core.register").close_buffer(original_bufnr)
@@ -132,7 +134,7 @@ local function set_diff_buffer_keymaps(diff_bufnr, original_bufnr)
         require("trunks._core.register").close_buffer(diff_bufnr)
     end, { buffer = diff_bufnr })
 
-    require("trunks._ui.keymaps.set").safe_set_keymap("n", "<tab>", function()
+    require("trunks._ui.keymaps.set").safe_set_keymap("n", keymaps.toggle_auto_display, function()
         set_state(original_bufnr, { show_auto_display = false })
         M.close_auto_display(original_bufnr)
     end, { buffer = diff_bufnr })
