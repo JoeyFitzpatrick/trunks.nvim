@@ -1,11 +1,3 @@
---- All function(s) that can be called externally by other Lua modules.
----
---- If a function's signature here changes in some incompatible way, this
---- package must get a new **major** version.
----
----@module 'trunks'
----
-
 if vim.g.loaded_trunks then
     return
 end

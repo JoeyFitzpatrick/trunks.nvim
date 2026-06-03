@@ -6,10 +6,11 @@ local M = {}
 ---@type table<integer, integer>
 M.last_non_trunks_buffer_for_win = {}
 
+---@param bufnr integer
 ---@param win integer
-function M._delete_trunks_buffers_for_win(win)
+function M._delete_trunks_buffers_for_win(bufnr, win)
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-        if vim.b[buf].trunks_buffer_window_id == win then
+        if buf ~= bufnr and vim.b[buf].trunks_buffer_window_id == win then
             vim.api.nvim_buf_delete(buf, { force = true })
         end
     end
@@ -28,7 +29,7 @@ function M.close_buffer(bufnr, opts)
     end
 
     if opts.delete_win_buffers ~= false then
-        M._delete_trunks_buffers_for_win(vim.api.nvim_get_current_win())
+        M._delete_trunks_buffers_for_win(bufnr, vim.api.nvim_get_current_win())
     end
 
     local buf_name = vim.api.nvim_buf_get_name(bufnr)

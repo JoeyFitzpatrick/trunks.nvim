@@ -10,6 +10,27 @@
 
 local M = {}
 
+---@class trunks.BufferVariableParams
+---@field bufnr integer
+---@field win integer
+---@field current_bufnr? integer
+
+--- This sets up buffer local variables, so that when an Trunks buffer is closed,
+--- we can navigate back to the last non-Trunks buffer, and close all Trunks
+--- buffers associated with the current window.
+---@param params trunks.BufferVariableParams
+local function set_trunks_buffer_variables(params)
+    local bufnr = params.bufnr
+    local win = params.win
+    local current_bufnr = params.current_bufnr
+    vim.b[bufnr].is_trunks_buffer = true
+    vim.b[bufnr].trunks_buffer_window_id = win
+
+    if current_bufnr and not vim.b[current_bufnr].is_trunks_buffer then
+        require("trunks._core.register").last_non_trunks_buffer_for_win[win] = current_bufnr
+    end
+end
+
 local esc = string.char(27)
 M.term_controls = {
     go_home = function(chan_id)
@@ -205,6 +226,7 @@ function M.terminal(bufnr, cmd, strategy)
         vim.cmd("stopinsert")
     end
 
+    set_trunks_buffer_variables({ bufnr = bufnr, win = win })
     require("trunks._ui.keymaps.base").set_keymaps(bufnr)
     set_terminal_autocmds_and_state(cmd, bufnr, strategy)
     return { bufnr = bufnr, win = win, chan = channel_id, exit_code = open_term_result.exit_code }
@@ -234,20 +256,6 @@ function M.float(bufnr, float_opts)
     return win
 end
 
---- This sets up buffer local variables, so that when an Trunks buffer is closed,
---- we can navigate back to the last non-Trunks buffer, and close all Trunks
---- buffers associated with the current window.
----@param current_buf integer
----@param new_buf integer
----@param win integer
-local function setup_last_non_trunks_buffer(current_buf, new_buf, win)
-    vim.b[new_buf].is_trunks_buffer = true
-
-    if not vim.b[current_buf].is_trunks_buffer then
-        require("trunks._core.register").last_non_trunks_buffer_for_win[win] = current_buf
-    end
-end
-
 ---@param opts trunks.ElementNewBufferOpts -- opts for new buffer
 ---@return integer, integer -- buffer id, window id
 function M.new_buffer(opts)
@@ -267,7 +275,7 @@ function M.new_buffer(opts)
         if opts.show then
             vim.api.nvim_win_set_buf(win, bufnr)
         end
-        setup_last_non_trunks_buffer(current_buf, bufnr, win)
+        set_trunks_buffer_variables({ bufnr = bufnr, win = win, current_bufnr = current_buf })
     end
 
     if opts.filetype then

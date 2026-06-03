@@ -7,7 +7,7 @@ describe("delete_trunks_buffers_for_win", function()
         local buffer_2 = vim.api.nvim_create_buf(false, true)
         vim.b[buffer_2].trunks_buffer_window_id = 1
 
-        delete_trunks_buffers_for_win(1)
+        delete_trunks_buffers_for_win(-1, 1)
         assert.are.equal(false, vim.api.nvim_buf_is_loaded(buffer_1))
         assert.are.equal(false, vim.api.nvim_buf_is_valid(buffer_1))
         assert.are.equal(false, vim.api.nvim_buf_is_loaded(buffer_2))
@@ -20,7 +20,7 @@ describe("delete_trunks_buffers_for_win", function()
         local buffer_2 = vim.api.nvim_create_buf(false, true)
         vim.b[buffer_2].trunks_buffer_window_id = 2
 
-        delete_trunks_buffers_for_win(1)
+        delete_trunks_buffers_for_win(-1, 1)
         assert.are.equal(false, vim.api.nvim_buf_is_valid(buffer_1))
         assert.are.equal(true, vim.api.nvim_buf_is_valid(buffer_2))
     end)
@@ -31,7 +31,7 @@ describe("delete_trunks_buffers_for_win", function()
         local buffer_2 = vim.api.nvim_create_buf(false, true)
         vim.b[buffer_2].trunks_buffer_window_id = 2
 
-        delete_trunks_buffers_for_win(-1)
+        delete_trunks_buffers_for_win(-1, -1)
         assert.are.equal(true, vim.api.nvim_buf_is_valid(buffer_1))
         assert.are.equal(true, vim.api.nvim_buf_is_valid(buffer_2))
     end)
