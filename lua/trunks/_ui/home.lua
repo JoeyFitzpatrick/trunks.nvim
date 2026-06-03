@@ -126,7 +126,9 @@ function M.create_and_render_buffer(tab, existing_bufnr)
     local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = ui_opts.buffer_name })
     ui_opts.render_fn(bufnr, { set_keymaps = set_keymaps, display_strategy = "full" })
 
-    remove_leftover_new_tab_buffer(existing_bufnr)
+    vim.defer_fn(function()
+        remove_leftover_new_tab_buffer(existing_bufnr)
+    end, 1000)
 end
 
 function M.open()

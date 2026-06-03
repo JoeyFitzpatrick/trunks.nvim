@@ -533,11 +533,6 @@ end
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
-    -- local win = vim.fn.bufwinid(bufnr)
-    -- if not vim.api.nvim_win_is_valid(win) then
-    --     return
-    -- end
-
     vim.bo[bufnr].filetype = "trunks"
     M._set_lines(bufnr, nil, function(error_msg)
         if error_msg then
