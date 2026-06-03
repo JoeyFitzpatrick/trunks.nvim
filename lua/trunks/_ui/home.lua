@@ -95,14 +95,18 @@ local function set_keymaps(bufnr)
         local old_bufnr = bufnr
         tabs:cycle_tab("forward")
         M.create_and_render_buffer(tabs.current_option)
-        require("trunks._core.register").close_buffer(old_bufnr, { delete_win_buffers = false })
+        vim.defer_fn(function()
+            require("trunks._core.register").close_buffer(old_bufnr, { delete_win_buffers = false })
+        end, 100)
     end, { buffer = bufnr })
 
     set("n", keymaps.previous, function()
         local old_bufnr = bufnr
         tabs:cycle_tab("back")
         M.create_and_render_buffer(tabs.current_option)
-        require("trunks._core.register").close_buffer(old_bufnr, { delete_win_buffers = false })
+        vim.defer_fn(function()
+            require("trunks._core.register").close_buffer(old_bufnr, { delete_win_buffers = false })
+        end, 100)
     end, { buffer = bufnr })
 end
 
@@ -119,8 +123,7 @@ end
 ---@param existing_bufnr? integer
 function M.create_and_render_buffer(tab, existing_bufnr)
     local ui_opts = tab_render_map[tab]
-    local bufnr =
-        require("trunks._ui.elements").new_buffer({ buffer_name = ui_opts.buffer_name, show = tab == "Status" })
+    local bufnr = require("trunks._ui.elements").new_buffer({ buffer_name = ui_opts.buffer_name })
     ui_opts.render_fn(bufnr, { set_keymaps = set_keymaps, display_strategy = "full" })
 
     remove_leftover_new_tab_buffer(existing_bufnr)

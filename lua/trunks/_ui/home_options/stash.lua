@@ -22,27 +22,47 @@ local function set_keymaps(bufnr)
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
     local with_line = require("trunks._ui.keymaps.set").with_line
 
-    set("n", keymaps.apply, with_line(bufnr, get_line, function(line_data)
-        vim.cmd("G stash apply " .. line_data.stash_index)
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.apply,
+        with_line(bufnr, get_line, function(line_data)
+            vim.cmd("G stash apply " .. line_data.stash_index)
+        end),
+        keymap_opts
+    )
 
-    set("n", keymaps.drop, with_line(bufnr, get_line, function(line_data)
-        if
-            require("trunks._ui.utils.confirm").confirm_choice(
-                "Are you sure you want to drop " .. line_data.stash_index .. "?"
-            )
-        then
-            vim.cmd("G stash drop " .. line_data.stash_index)
-        end
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.drop,
+        with_line(bufnr, get_line, function(line_data)
+            if
+                require("trunks._ui.utils.confirm").confirm_choice(
+                    "Are you sure you want to drop " .. line_data.stash_index .. "?"
+                )
+            then
+                vim.cmd("G stash drop " .. line_data.stash_index)
+            end
+        end),
+        keymap_opts
+    )
 
-    set("n", keymaps.pop, with_line(bufnr, get_line, function(line_data)
-        vim.cmd("G stash pop " .. line_data.stash_index)
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.pop,
+        with_line(bufnr, get_line, function(line_data)
+            vim.cmd("G stash pop " .. line_data.stash_index)
+        end),
+        keymap_opts
+    )
 
-    set("n", keymaps.show, with_line(bufnr, get_line, function(line_data)
-        require("trunks._ui.trunks_commands.commit_details").render(line_data.stash_index, { is_stash = true })
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.show,
+        with_line(bufnr, get_line, function(line_data)
+            require("trunks._ui.trunks_commands.commit_details").render(line_data.stash_index, { is_stash = true })
+        end),
+        keymap_opts
+    )
 end
 
 ---@param bufnr integer

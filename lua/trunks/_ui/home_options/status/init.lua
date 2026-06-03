@@ -525,10 +525,10 @@ end
 ---@param bufnr integer
 ---@param opts trunks.UiRenderOpts
 function M.render(bufnr, opts)
-    local win = vim.fn.bufwinid(bufnr)
-    if not vim.api.nvim_win_is_valid(win) then
-        return
-    end
+    -- local win = vim.fn.bufwinid(bufnr)
+    -- if not vim.api.nvim_win_is_valid(win) then
+    --     return
+    -- end
 
     vim.bo[bufnr].filetype = "trunks"
     M._set_lines(bufnr, nil, function(error_msg)
@@ -537,6 +537,8 @@ function M.render(bufnr, opts)
             vim.notify(error_msg, vim.log.levels.ERROR)
             return
         end
+        local win = vim.api.nvim_get_current_win()
+        vim.api.nvim_win_set_buf(win, bufnr)
         M._set_cursor(bufnr, win)
         require("trunks._ui.utils.num_commits_pull_push").set_num_commits_to_pull_and_push(bufnr)
     end)
