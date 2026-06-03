@@ -83,11 +83,15 @@ local function get_current_ui_opts()
     }
 end
 
+---@class trunks.TerminalOpts
+---@field on_exit? fun(exit_code: integer)
+
 ---@param cmd string
 ---@param bufnr integer
 ---@param strategy trunks.Strategy
+---@param opts trunks.TerminalOpts
 ---@return { channel_id: integer, exit_code: integer }
-function M._run_terminal_command(cmd, bufnr, strategy)
+function M._run_terminal_command(cmd, bufnr, strategy, opts)
     local current_buffer_name = vim.api.nvim_buf_get_name(bufnr)
     local current_ui_opts = get_current_ui_opts()
     local channel_id = vim.api.nvim_open_term(bufnr, {})
@@ -110,6 +114,9 @@ function M._run_terminal_command(cmd, bufnr, strategy)
             on_stdout = on_stdout,
             on_exit = function(_, exit_code, _)
                 term_exit_code = exit_code
+                if opts.on_exit then
+                    opts.on_exit(exit_code)
+                end
 
                 if strategy.trigger_redraw then
                     require("trunks._core.register").rerender_buffers()
@@ -129,10 +136,11 @@ end
 ---@param cmd string
 ---@param bufnr integer
 ---@param strategy trunks.Strategy
+---@param opts trunks.TerminalOpts
 ---@return { win: integer, channel_id: integer, exit_code: integer }
-function M._open_terminal_buffer(cmd, bufnr, strategy)
+function M._open_terminal_buffer(cmd, bufnr, strategy, opts)
     vim.bo[bufnr].scrollback = 1000000 -- Max scrollback as of this writing
-    local run_command_result = M._run_terminal_command(cmd, bufnr, strategy)
+    local run_command_result = M._run_terminal_command(cmd, bufnr, strategy, opts)
 
     local strategies = require("trunks._constants.command_strategies").STRATEGIES
     local display_strategy = strategy.display_strategy
@@ -186,7 +194,7 @@ local function set_terminal_autocmds_and_state(cmd, bufnr, strategy)
             local cursor = vim.api.nvim_win_get_cursor(win)
             local line_num = cursor[1]
             require("trunks._ui.utils.buffer_text").set(bufnr, {})
-            M._run_terminal_command(cmd, bufnr, strategy)
+            M._run_terminal_command(cmd, bufnr, strategy, {})
             vim.wait(200, function()
                 return vim.api.nvim_buf_line_count(bufnr) >= line_num
             end, 200)
@@ -200,9 +208,11 @@ end
 
 ---@param bufnr integer
 ---@param cmd string
----@param strategy? trunks.Strategy
+---@param strategy trunks.Strategy
+---@param opts? trunks.TerminalOpts
 ---@return { bufnr: integer, win: integer, chan: integer, exit_code: integer } | nil
-function M.terminal(bufnr, cmd, strategy)
+function M.terminal(bufnr, cmd, strategy, opts)
+    opts = opts or {}
     require("trunks._ui.auto_display").close_open_auto_displays()
     -- Buffer local variable that makes any editors opened from this terminal,
     -- such as the commit editor, use the current nvim instance instead of a nested one.
@@ -210,7 +220,7 @@ function M.terminal(bufnr, cmd, strategy)
 
     strategy = require("trunks._constants.command_strategies").get_strategy(cmd, strategy)
 
-    local open_term_result = M._open_terminal_buffer(cmd, bufnr, strategy)
+    local open_term_result = M._open_terminal_buffer(cmd, bufnr, strategy, opts)
     local win = open_term_result.win
     local channel_id = open_term_result.channel_id
     if not channel_id then

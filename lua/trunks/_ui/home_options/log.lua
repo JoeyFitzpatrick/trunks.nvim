@@ -113,6 +113,36 @@ local function set_keymaps(bufnr)
 
     set(
         "n",
+        keymaps.reword,
+        with_line(bufnr, get_line, function(line_data)
+            local hash = line_data.hash
+            local elements = require("trunks._ui.elements")
+
+            local commit_bufnr = elements.new_buffer({ hidden = true })
+            local commit_command = Command.base_command("commit --fixup=reword:" .. hash):build()
+            elements.terminal(commit_bufnr, commit_command, {}, {
+                on_exit = function(exit_code)
+                    if exit_code ~= 0 then
+                        return
+                    end
+
+                    local rebase_command = Command.base_command("rebase -i --autostash --autosquash " .. hash .. "^")
+                        :add_env_var("GIT_SEQUENCE_EDITOR=true")
+                    local _, rebase_exit_code =
+                        require("trunks._core.run_cmd").run_hidden_cmd(rebase_command, { rerender = true })
+                    require("trunks._ui.trunks_commands.utils").handle_output(
+                        "Reworded commit " .. hash,
+                        "Unable to rebase after rewording commit " .. hash,
+                        rebase_exit_code
+                    )
+                end,
+            })
+        end),
+        keymap_opts
+    )
+
+    set(
+        "n",
         keymaps.commit_instant_fixup,
         with_line(bufnr, get_line, function(line_data)
             require("trunks._ui.trunks_commands.commit_instant_fixup").commit_instant_fixup(line_data.hash)
