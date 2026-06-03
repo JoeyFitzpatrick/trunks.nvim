@@ -30,6 +30,9 @@ function M.render(bufnr, line_num, get_line)
                     local is_untracked = status == "?"
                     if is_untracked then
                         remove_untracked_file(filename)
+                        -- If safe_old_filename exists, file was renamed
+                    elseif line_data.safe_old_filename then
+                        run_write_cmd("git mv " .. line_data.safe_filename .. " " .. line_data.safe_old_filename)
                     else
                         run_write_cmd({ "git reset -- " .. filename, "git restore -- " .. filename })
                     end

@@ -91,4 +91,23 @@ describe("status get_line", function()
         assert.are.equal("M", line.status)
         assert.are.equal(false, line.staged)
     end)
+
+    it("gets a renamed file", function()
+        local bufnr = vim.api.nvim_create_buf(false, true)
+        local lines = {
+            "Head: main",
+            "Rebase: origin/main",
+            "Help: g?",
+            "2 files changed, 2 insertions(+)",
+            "",
+            "Staged (1)",
+            "R spec/unit/_ui/status/old_name.lua -> spec/unit/_ui/status/new_name.lua",
+        }
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+        local line = get_line(bufnr, 7)
+        assert.are.equal("spec/unit/_ui/status/new_name.lua", line.filename)
+        assert.are.equal("spec/unit/_ui/status/old_name.lua", line.old_filename)
+        assert.are.equal("R", line.status)
+        assert.are.equal(true, line.staged)
+    end)
 end)

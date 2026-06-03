@@ -10,6 +10,8 @@ local UNSTAGED = "Unstaged"
 ---@class trunks.StatusLineData
 ---@field filename string
 ---@field safe_filename string
+---@field old_filename? string
+---@field safe_old_filename? string
 ---@field status string
 ---@field staged boolean
 
@@ -60,11 +62,20 @@ function M.get_line(bufnr, line_num)
     end
 
     local status, filename = require("trunks._core.texter").split_on_first_space(line)
+    local old_filename
+    local is_renamed = status == "R"
+    if is_renamed then
+        -- Look for " -> " in filename, e.g. "somename.txt -> newname.txt"
+        old_filename, filename = filename:match("(.+) %-%> (.+)")
+    end
     local safe_filename = require("trunks._core.texter").surround_with_quotes(filename)
+    local safe_old_filename = old_filename and require("trunks._core.texter").surround_with_quotes(old_filename)
 
     return {
         filename = filename,
         safe_filename = safe_filename,
+        old_filename = old_filename,
+        safe_old_filename = safe_old_filename,
         status = status,
         staged = staged,
     }
