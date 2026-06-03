@@ -244,7 +244,7 @@ Note that for any command that brings up a UI:
 * The jumplist still works like normal `<C-i>` and `<C-o>`
 * You can view keymaps by pressing `g?`
 
-Using the `:G` command renders a home ui, that will display some status info. This includes the git status of all changed files, a diff split to display these changes, and some keymaps to manipulate these files.
+Using the `:G` command renders a home ui, that will display some status info. This includes the git status of all changed files, a diff split to display these changes, and some keymaps to manipulate these files. You can move to the unstaged changes section with the `gu` map, and to the staged changes section with the `gs` map.
 
 ### Staged and unstaged changes
 Note: when a file has both staged and unstaged changes, the diff split will display the staged changes. To see the unstaged changes, press `<shift-tab>` (i.e. `<S-Tab>`). Press that again to switch back to staged changes.

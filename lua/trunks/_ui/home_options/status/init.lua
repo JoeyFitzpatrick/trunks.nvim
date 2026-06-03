@@ -277,6 +277,14 @@ function M.set_keymaps(bufnr)
         end),
         keymap_opts
     )
+
+    set("n", "gu", function()
+        status_utils.jump_to_section(bufnr, "^Unstaged")
+    end, keymap_opts)
+
+    set("n", "gs", function()
+        status_utils.jump_to_section(bufnr, "^Staged")
+    end, keymap_opts)
 end
 
 ---@class trunks.StatusSetLinesContext

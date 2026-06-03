@@ -380,4 +380,15 @@ function M.toggle_inline_diff(bufnr, line_num, line_data, run_cmd_fn)
     end
 end
 
+function M.jump_to_section(bufnr, pattern)
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    for i, line in ipairs(lines) do
+        if line:match(pattern) then
+            vim.api.nvim_win_set_cursor(0, { i, cursor[2] })
+            return
+        end
+    end
+end
+
 return M
