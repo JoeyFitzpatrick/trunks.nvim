@@ -68,8 +68,8 @@ end
 local function run_git(git_root, subcmd)
     local cmd_obj = require("trunks._core.command").base_command(subcmd, git_root)
     cmd_obj._pager = nil
-    local output = vim.fn.systemlist(cmd_obj:build())
-    return output, vim.v.shell_error
+    local result = require("trunks._core.run_cmd").system(cmd_obj:build())
+    return result.output, vim.v.shell_error
 end
 
 ---@param bufnr integer
