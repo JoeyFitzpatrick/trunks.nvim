@@ -400,6 +400,10 @@ function M._set_lines(bufnr, ctx, on_done)
             { files = files, staged_index = staged_index, unstaged_untracked_index = unstaged_untracked_index }
         )
 
+        -- Re-expand any inline diffs that were open before this rerender so they
+        -- stay visible (e.g. after staging a hunk).
+        status_utils.render_expanded_diffs(bufnr)
+
         if on_done then
             on_done(results.error_msg)
         end

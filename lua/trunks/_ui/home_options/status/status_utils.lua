@@ -265,19 +265,25 @@ end
 ---@param opts trunks.SetStatusFilesVariableParams
 ---@return trunks.StatusFilesBufferVariable
 function M.set_status_files_variable(bufnr, opts)
+    -- Preserve which files have their inline diff expanded so the diff survives
+    -- a rerender (e.g. after staging a hunk) instead of collapsing.
+    local previous = vim.b[bufnr].trunks_status_files or { staged = {}, unstaged = {} }
     local trunks_status_files = { staged = {}, unstaged = {} }
 
     if opts.unstaged_untracked_index then
         for _, file in ipairs(opts.files.unstaged_and_untracked) do
             local filename = file:sub(3)
-            trunks_status_files.unstaged[filename] = { status = file:sub(1, 1), staged = false, expanded = false }
+            local was_expanded = previous.unstaged[filename] ~= nil and previous.unstaged[filename].expanded or false
+            trunks_status_files.unstaged[filename] =
+                { status = file:sub(1, 1), staged = false, expanded = was_expanded }
         end
     end
 
     if opts.staged_index then
         for _, file in ipairs(opts.files.staged) do
             local filename = file:sub(3)
-            trunks_status_files.staged[filename] = { status = file:sub(1, 1), staged = true, expanded = false }
+            local was_expanded = previous.staged[filename] ~= nil and previous.staged[filename].expanded or false
+            trunks_status_files.staged[filename] = { status = file:sub(1, 1), staged = true, expanded = was_expanded }
         end
     end
     vim.b[bufnr].trunks_status_files = trunks_status_files
@@ -308,6 +314,32 @@ function M.get_diff_cmd(line_data)
     return "diff -- " .. safe_filename
 end
 
+--- Runs the diff command for a file and returns just the hunk lines (the diff
+--- header is stripped, so the result starts at the first `@@`). Returns nil if
+--- the diff failed or the file is binary.
+---@param line_data trunks.StatusLineData
+---@param run_cmd_fn fun(cmd: string[]): string[], integer
+---@return string[] | nil
+local function get_inline_diff_lines(line_data, run_cmd_fn)
+    local cmd = Command.base_command(M.get_diff_cmd(line_data):gsub("^diff", "diff --no-color"))
+        :build({ no_pager = true })
+    local diff_output, exit_code = run_cmd_fn(cmd)
+    if not (exit_code == 0 or (exit_code == 1 and line_data.status == "?")) then
+        return nil
+    end
+    local start = 1
+    for i, line in ipairs(diff_output) do
+        if line:match("^Binary") then
+            return nil
+        end
+        if line:match("^@@") then
+            start = i
+            break
+        end
+    end
+    return vim.list_slice(diff_output, start)
+end
+
 ---@param bufnr integer
 ---@param line_num integer
 ---@param line_data trunks.StatusLineData
@@ -323,22 +355,8 @@ function M.toggle_inline_diff(bufnr, line_num, line_data, run_cmd_fn)
     end
 
     if not file.expanded then
-        local cmd = Command.base_command(M.get_diff_cmd(line_data):gsub("^diff", "diff --no-color"))
-            :build({ no_pager = true })
-        local diff_output, exit_code = run_cmd_fn(cmd)
-        if exit_code == 0 or (exit_code == 1 and line_data.status == "?") then
-            local start = 1
-            for i, line in ipairs(diff_output) do
-                local is_binary_file = line:match("^Binary")
-                if is_binary_file then
-                    return
-                end
-                if line:match("^@@") then
-                    start = i
-                    break
-                end
-            end
-            local diff = vim.list_slice(diff_output, start)
+        local diff = get_inline_diff_lines(line_data, run_cmd_fn)
+        if diff and #diff > 0 then
             require("trunks._ui.utils.buffer_text").set(bufnr, diff, line_num, line_num)
             file.expanded = true
             vim.b[bufnr].trunks_status_files = status_files
@@ -377,6 +395,44 @@ function M.toggle_inline_diff(bufnr, line_num, line_data, run_cmd_fn)
         require("trunks._ui.utils.buffer_text").set(bufnr, {}, diff_start, diff_end - 1)
         file.expanded = false
         vim.b[bufnr].trunks_status_files = status_files
+    end
+end
+
+--- Re-inserts the inline diff for every file marked as expanded in the buffer
+--- variable. Intended to run right after the status lines are rebuilt (when the
+--- buffer holds only file lines and no diffs yet), so an expanded diff survives
+--- a rerender. Diffs are inserted bottom-up so earlier line numbers stay valid.
+---@param bufnr integer
+---@param run_cmd_fn? fun(cmd: string[]): string[], integer
+function M.render_expanded_diffs(bufnr, run_cmd_fn)
+    run_cmd_fn = run_cmd_fn or require("trunks._core.run_cmd").run_cmd
+    local status_files = vim.b[bufnr].trunks_status_files
+    if not status_files then
+        return
+    end
+
+    local get_line = require("trunks._ui.home_options.status").get_line
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+    ---@type { line_num: integer, line_data: trunks.StatusLineData }[]
+    local expansions = {}
+    for i = 1, #lines do
+        local line_data = get_line(bufnr, i)
+        if line_data then
+            local section = line_data.staged and status_files.staged or status_files.unstaged
+            local file = section[line_data.filename]
+            if file and file.expanded then
+                table.insert(expansions, { line_num = i, line_data = line_data })
+            end
+        end
+    end
+
+    for idx = #expansions, 1, -1 do
+        local expansion = expansions[idx]
+        local diff = get_inline_diff_lines(expansion.line_data, run_cmd_fn)
+        if diff and #diff > 0 then
+            require("trunks._ui.utils.buffer_text").set(bufnr, diff, expansion.line_num, expansion.line_num)
+        end
     end
 end
 
