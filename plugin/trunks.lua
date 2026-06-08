@@ -35,6 +35,9 @@ local function run_git_command(input_args)
 
     if display_strategy == "print" then
         vim.print(vim.fn.system(final_cmd))
+        if strategy.trigger_redraw then
+            require("trunks._core.register").rerender_buffers()
+        end
     else
         local ui_function = require("trunks._ui.interceptors").get_ui(command_builder)
         if ui_function then
