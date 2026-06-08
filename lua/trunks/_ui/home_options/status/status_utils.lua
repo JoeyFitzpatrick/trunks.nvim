@@ -380,6 +380,38 @@ function M.toggle_inline_diff(bufnr, line_num, line_data, run_cmd_fn)
     end
 end
 
+--- True when `line` is part of an expanded inline diff (a hunk header, an
+--- addition, a removal, or a context line) rather than a status/file line.
+---@param line? string
+---@return boolean
+function M.is_inline_diff_line(line)
+    return line ~= nil and line:find("^[%+%-@ ]") ~= nil
+end
+
+---@param line_data trunks.StatusLineData
+---@param mode "n" | "v"
+function M.stage_hunk(line_data, mode)
+    local hunk = require("trunks._ui.interceptors.diff.hunk").extract({
+        is_staged = line_data.staged,
+        filename = line_data.filename,
+    })
+    if not hunk then
+        return
+    end
+
+    local cmd
+    if line_data.staged then
+        cmd = "apply --reverse --cached --whitespace=fix -"
+    else
+        cmd = "apply --cached --whitespace=fix -"
+    end
+
+    require("trunks._core.run_cmd").run_cmd(
+        cmd,
+        { stdin = mode == "v" and hunk.patch_selected_lines or hunk.patch_lines, rerender = true }
+    )
+end
+
 function M.jump_to_section(bufnr, pattern)
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
     local cursor = vim.api.nvim_win_get_cursor(0)

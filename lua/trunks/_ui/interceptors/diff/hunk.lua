@@ -13,6 +13,12 @@ local function is_patch_line(line)
     return line:sub(1, 2) == "@@"
 end
 
+---@param line string
+---@return boolean
+local function is_diff_content_line(line)
+    return line:find("^[%+%-@ ]") ~= nil
+end
+
 ---@param char string
 ---@return "add" | "remove" | "unchanged"
 local function get_line_type(char)
@@ -25,8 +31,6 @@ local function get_line_type(char)
     end
 end
 
---- Update the patch line for a range of lines
---- For adding lines, remove any lines that start with +, and remove the starting - from any lines
 ---@param patch_line string
 ---@param line_nums integer[]
 ---@param is_staged boolean
@@ -119,10 +123,19 @@ local function get_patch_filenames(line_1, line_2, line_3)
     return file_before, file_after
 end
 
---- Returns info on a diff hunk
----@param is_staged? boolean
+---@class trunks.HunkExtractOpts
+---@field is_staged? boolean
+---@field filename? string
+
+---@param opts? trunks.HunkExtractOpts
 ---@return trunks.Hunk | nil
-M.extract = function(is_staged)
+M.extract = function(opts)
+    opts = opts or {}
+    local is_staged = opts.is_staged or false
+    -- An inline diff (e.g. expanded in the status buffer) has no diff header
+    -- lines and is surrounded by non-diff content, so the hunk must be bounded
+    -- by content lines instead of running to the end of the buffer.
+    local is_inline = opts.filename ~= nil
     local line_num = vim.api.nvim_win_get_cursor(0)[1]
     local hunk_start, hunk_end, hunk_first_changed_line = nil, nil, nil
     local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
@@ -137,7 +150,7 @@ M.extract = function(is_staged)
     end
 
     for i = line_num + 1, #lines, 1 do
-        if is_patch_line(lines[i]) then
+        if is_patch_line(lines[i]) or (is_inline and not is_diff_content_line(lines[i])) then
             hunk_end = i - 1
             break
         end
@@ -164,7 +177,13 @@ M.extract = function(is_staged)
     -- +++ b/lua/trunks/keymaps/diff-keymaps.lua
     -- @@ -9,7 +9,7 @@ M.set_unstaged_diff_keymaps = function(bufnr)
 
-    local file_before, file_after = get_patch_filenames(lines[3], lines[4], lines[5])
+    local file_before, file_after
+    if is_inline then
+        file_before = "--- a/" .. opts.filename
+        file_after = "+++ b/" .. opts.filename
+    else
+        file_before, file_after = get_patch_filenames(lines[3], lines[4], lines[5])
+    end
     local patch_lines = { file_before, file_after }
 
     for i = hunk_start - 1, hunk_end do
@@ -174,9 +193,6 @@ M.extract = function(is_staged)
     add_empty_line_for_patch(patch_lines)
 
     local first, last = require("trunks._ui.utils.ui_utils").get_visual_line_nums()
-    if is_staged == nil then
-        is_staged = false
-    end
     local patch_selected_lines =
         { file_before, file_after, M._get_patch_line(lines[hunk_start - 1], { first, last }, is_staged) }
     local patch_context_lines = {}

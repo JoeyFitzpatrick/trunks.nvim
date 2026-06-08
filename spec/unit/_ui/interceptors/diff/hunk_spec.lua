@@ -101,6 +101,59 @@ describe("diff extractor", function()
     end)
 end)
 
+-- An inline diff (as expanded in the status buffer) has no `diff --git`/
+-- `index`/`---`/`+++` header lines and is surrounded by non-diff content.
+local inline_mock_lines = {
+    "Unstaged (1)",
+    "M lua/trunks/config.lua",
+    "@@ -23,7 +23,7 @@ M.default_config = {",
+    '             toggle_auto_diff = "t",',
+    '-            detailed_diff = "D",',
+    '+            staging_area = "D",',
+    '             stash = "<leader>s",',
+    "",
+    "Staged (1)",
+    "M other.lua",
+}
+
+describe("diff extractor (inline diff)", function()
+    local original_get_lines = vim.api.nvim_buf_get_lines
+    local original_get_cursor = vim.api.nvim_win_get_cursor
+    before_each(function()
+        vim.api.nvim_buf_get_lines = function()
+            return inline_mock_lines
+        end
+    end)
+    after_each(function()
+        vim.api.nvim_buf_get_lines = original_get_lines
+        vim.api.nvim_win_get_cursor = original_get_cursor
+    end)
+    it("bounds the hunk at the first non-diff line", function()
+        place_cursor_on_line(4)
+        local hunk = extract({ filename = "lua/trunks/config.lua" })
+        assert.are.equal(4, hunk.hunk_start)
+        -- line 8 is "", so the hunk ends at line 7
+        assert.are.equal(7, hunk.hunk_end)
+    end)
+    it("builds the patch header from the supplied filename", function()
+        place_cursor_on_line(4)
+        local hunk = extract({ filename = "lua/trunks/config.lua" })
+        assert.are.equal("--- a/lua/trunks/config.lua", hunk.patch_lines[1])
+        assert.are.equal("+++ b/lua/trunks/config.lua", hunk.patch_lines[2])
+        assert.are.equal('"lua/trunks/config.lua"', hunk.filename)
+        -- header, then @@ line through the last diff line, then trailing ""
+        local expected = {
+            "--- a/lua/trunks/config.lua",
+            "+++ b/lua/trunks/config.lua",
+        }
+        for i = 3, 7 do
+            table.insert(expected, inline_mock_lines[i])
+        end
+        table.insert(expected, "")
+        assert.are.same(expected, hunk.patch_lines)
+    end)
+end)
+
 describe("filter patch lines", function()
     local filter_patch_lines = require("trunks._ui.interceptors.diff.hunk")._filter_patch_lines
     it("return filtered lines", function()

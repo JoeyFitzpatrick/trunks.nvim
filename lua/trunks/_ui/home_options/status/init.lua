@@ -148,10 +148,38 @@ function M.set_keymaps(bufnr)
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
     local with_line = require("trunks._ui.keymaps.set").with_line
 
-    set("n", keymaps.stage, with_line(bufnr, M.get_line, M._stage_single_file), keymap_opts)
+    set(
+        "n",
+        keymaps.stage,
+        with_line(bufnr, M.get_line, function(line_data)
+            local current_line = vim.api.nvim_get_current_line()
+            -- On an expanded inline diff line, (un)stage just the hunk under the
+            -- cursor. Otherwise (un)stage the whole file.
+            if status_utils.is_inline_diff_line(current_line) then
+                status_utils.stage_hunk(line_data, "n")
+            else
+                M._stage_single_file(line_data)
+            end
+        end),
+        keymap_opts
+    )
 
     set("v", keymaps.stage, function()
         local visual_start_line, end_line = require("trunks._ui.utils.ui_utils").get_visual_line_nums()
+
+        -- When the selection starts inside an expanded inline diff, (un)stage
+        -- the selected lines of that hunk rather than treating the selection as
+        -- a list of files.
+        local first_selected_line =
+            vim.api.nvim_buf_get_lines(bufnr, visual_start_line, visual_start_line + 1, false)[1]
+        if status_utils.is_inline_diff_line(first_selected_line) then
+            local line_data = M.get_line(bufnr, visual_start_line + 1)
+            if line_data then
+                status_utils.stage_hunk(line_data, "v")
+            end
+            return
+        end
+
         local filenames = {}
         local should_stage = false
         for i = visual_start_line + 1, end_line do
