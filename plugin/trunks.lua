@@ -96,3 +96,4 @@ for _, name in ipairs({ "Trunks", "T" }) do
 end
 
 require("trunks._core.nested-buffers").prevent_nested_buffers()
+require("trunks._core.virtual_buffers").setup()
