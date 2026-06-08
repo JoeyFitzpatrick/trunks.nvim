@@ -5,7 +5,7 @@
 ---@field _prefix_args string[]
 ---@field _postfix_args string[]
 ---@field _env_vars string[]
----@field _pager trunks.Pager?
+---@field _pager? trunks.Pager
 ---@field add_args fun(self: trunks.Command, args: string): trunks.Command
 ---@field add_prefix_args fun(self: trunks.Command, args: string): trunks.Command
 ---@field add_postfix_args fun(self: trunks.Command, args: string): trunks.Command
@@ -34,7 +34,7 @@ local PAGER_COMMANDS = {
 local PAGERS = require("trunks._constants.pagers").PAGERS
 
 ---@param cmd? string
----@return string?
+---@return trunks.Pager?
 local function get_pager(cmd)
     if not cmd then
         return nil
@@ -146,8 +146,8 @@ function Command:build(opts)
     end
     if not opts.skip_prefix then
         table_insert_if_exists(cmd_parts, self._prefix_args)
-        if pager and pager.type == "prefix" and not opts.no_pager then
-            table_insert_if_exists(cmd_parts, { pager.command })
+        if pager and pager.prefix and not opts.no_pager then
+            table_insert_if_exists(cmd_parts, { pager.prefix })
         end
     end
     if self.base then
@@ -155,8 +155,8 @@ function Command:build(opts)
     end
     table_insert_if_exists(cmd_parts, self._args)
     table_insert_if_exists(cmd_parts, self._postfix_args)
-    if pager and pager.type == "postfix" and not opts.no_pager then
-        table_insert_if_exists(cmd_parts, { "| " .. pager.command })
+    if pager and pager.postfix and not opts.no_pager then
+        table_insert_if_exists(cmd_parts, { "| " .. pager.postfix })
     end
     local built_cmd = table.concat(cmd_parts, " ")
 
