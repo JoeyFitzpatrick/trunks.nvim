@@ -70,7 +70,8 @@ end
 function M.render(bufnr, opts)
     local Command = require("trunks._core.command")
     local command_builder =
-        Command.base_command("stash list --format='%C(yellow)%gd%C(reset) - %C(cyan)(%cr)%C(reset) %s%C(reset)'")
+        Command.base_command("stash list --color=always --format='%C(yellow)%gd%C(reset) - %C(cyan)(%cr)%C(reset) %s%C(reset)'")
+    command_builder:add_postfix_args("| { grep . || echo 'No git stashes'; }")
 
     local term = require("trunks._ui.elements").terminal(
         bufnr,
