@@ -1,5 +1,5 @@
 *trunks.txt*
-                             For Neovim >= 0.11.0    Last change: 2026 June 08
+                             For Neovim >= 0.11.0    Last change: 2026 June 09
 
 ==============================================================================
 Table of Contents                                   *trunks-table-of-contents*
@@ -141,6 +141,7 @@ able to lazy load it however you normally lazy load plugins.
                 git_filetype = {
                     keymaps = {
                         show_details = "<enter>", -- Show details for item under cursor
+                        toggle_native_output = "gd", -- If using a pager like delta, switch to/from native output
                     },
                 },
                 log = {
