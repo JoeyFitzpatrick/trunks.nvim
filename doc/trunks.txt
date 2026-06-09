@@ -204,7 +204,7 @@ able to lazy load it however you normally lazy load plugins.
                     },
                 },
                 stash = {
-                    auto_display_on = true,
+                    auto_display_on = false,
                     keymaps = {
                         apply = "a",
                         drop = "D",
