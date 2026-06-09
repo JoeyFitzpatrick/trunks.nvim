@@ -341,6 +341,41 @@ local function get_inline_diff_lines(line_data, run_cmd_fn)
 end
 
 ---@param bufnr integer
+---@param section "staged" | "unstaged"
+---@param run_cmd_fn? fun(cmd: string[]): string[], integer
+function M.toggle_all_inline_diffs(bufnr, section, run_cmd_fn)
+    local status_files = vim.b[bufnr].trunks_status_files
+    local section_files = status_files and status_files[section]
+    if not section_files then
+        return
+    end
+
+    local should_expand = false
+    for _, file in pairs(section_files) do
+        if not file.expanded then
+            should_expand = true
+            break
+        end
+    end
+
+    for _, file in pairs(section_files) do
+        file.expanded = should_expand
+    end
+    vim.b[bufnr].trunks_status_files = status_files
+
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local kept = {}
+    for _, line in ipairs(lines) do
+        if not M.is_inline_diff_line(line) then
+            table.insert(kept, line)
+        end
+    end
+    require("trunks._ui.utils.buffer_text").set(bufnr, kept)
+
+    M.render_expanded_diffs(bufnr, run_cmd_fn)
+end
+
+---@param bufnr integer
 ---@param line_num integer
 ---@param line_data trunks.StatusLineData
 ---@param run_cmd_fn? fun(cmd: string[]): string[], integer

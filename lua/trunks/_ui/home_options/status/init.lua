@@ -305,15 +305,23 @@ function M.set_keymaps(bufnr)
         require("trunks._ui.popups.stash_popup").render()
     end, keymap_opts)
 
-    set(
-        "n",
-        keymaps.toggle_inline_diff,
-        with_line(bufnr, M.get_line, function(line_data)
-            local line_num = vim.api.nvim_win_get_cursor(0)[1]
+    set("n", keymaps.toggle_inline_diff, function()
+        local line_num = vim.api.nvim_win_get_cursor(0)[1]
+        local current_line = vim.api.nvim_buf_get_lines(bufnr, line_num - 1, line_num, false)[1] or ""
+        -- On a section header, toggle every file in that section at once.
+        if current_line:find("^" .. STAGED) then
+            status_utils.toggle_all_inline_diffs(bufnr, "staged")
+            return
+        elseif current_line:find("^" .. UNSTAGED) then
+            status_utils.toggle_all_inline_diffs(bufnr, "unstaged")
+            return
+        end
+
+        local line_data = M.get_line(bufnr, line_num)
+        if line_data then
             status_utils.toggle_inline_diff(bufnr, line_num, line_data)
-        end),
-        keymap_opts
-    )
+        end
+    end, keymap_opts)
 
     set(
         "n",
