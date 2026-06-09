@@ -104,7 +104,13 @@ local function load_virtual_buffer_content(bufnr, uri)
     -- Handle trunks://<root>//show/<ref> URIs
     local git_root, show_ref = M.parse_show_uri(uri)
     if show_ref then
-        local output, exit_code = run_git(git_root, string.format("show --pretty=medium %s", show_ref))
+        local format = "commit %H%n"
+            .. "tree   %T%n"
+            .. "parent %P%n"
+            .. "Author: %an <%ae>%n"
+            .. "Date:   %ad%n%n"
+            .. "%w(0,4,4)%B"
+        local output, exit_code = run_git(git_root, string.format("show --format='%s' %s", format, show_ref))
         if exit_code ~= 0 or not output or #output == 0 then
             vim.notify("Trunks: failed to run git show for '" .. show_ref .. "'", vim.log.levels.ERROR)
             return false
