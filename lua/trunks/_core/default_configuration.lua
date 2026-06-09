@@ -142,7 +142,7 @@ return {
         },
     },
     stash = {
-        auto_display_on = true,
+        auto_display_on = false,
         keymaps = {
             apply = "a",
             drop = "D",

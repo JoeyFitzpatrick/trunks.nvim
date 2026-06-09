@@ -193,7 +193,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                 },
             },
             stash = {
-                auto_display_on = true,
+                auto_display_on = false,
                 keymaps = {
                     apply = "a",
                     drop = "D",
