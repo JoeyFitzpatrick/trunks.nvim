@@ -155,29 +155,67 @@ function M.set_keymaps(bufnr)
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
     local with_line = require("trunks._ui.keymaps.set").with_line
 
-    set("n", keymaps.show_details, with_line(bufnr, get_line, function(line_data)
-        local item_type = line_data.item_type
-        if item_type == "commit" then
-            require("trunks._ui.trunks_commands.commit_details").render(line_data.commit, {})
-        elseif item_type == "filepath" then
-            open_file_module.open_file_in_split(line_data.filepath, line_data.commit, "right", {})
-        elseif item_type == "previous_filepath" then
-            open_file_module.open_file_in_split(line_data.previous_filepath, line_data.previous_commit, "right", {})
-        elseif item_type == "vimdiff" then
-            open_file_module.open_file_in_split(line_data.previous_filepath, line_data.previous_commit, "below", {})
-            vim.cmd("diffthis")
-            open_file_module.open_file_in_split(line_data.filepath, line_data.commit, "right", {})
-            vim.cmd("diffthis")
-        end
-    end), keymap_opts)
+    set(
+        "n",
+        keymaps.show_details,
+        with_line(bufnr, get_line, function(line_data)
+            local item_type = line_data.item_type
+            if item_type == "commit" then
+                require("trunks._ui.trunks_commands.commit_details").render(line_data.commit, {})
+            elseif item_type == "filepath" then
+                open_file_module.open_file_in_split(line_data.filepath, line_data.commit, "right", {})
+            elseif item_type == "previous_filepath" then
+                open_file_module.open_file_in_split(line_data.previous_filepath, line_data.previous_commit, "right", {})
+            elseif item_type == "vimdiff" then
+                open_file_module.open_file_in_split(line_data.previous_filepath, line_data.previous_commit, "below", {})
+                vim.cmd("diffthis")
+                open_file_module.open_file_in_split(line_data.filepath, line_data.commit, "right", {})
+                vim.cmd("diffthis")
+            end
+        end),
+        keymap_opts
+    )
 
-    set("n", keymaps.open_file_popup, with_line(bufnr, get_line, function(line_data)
-        local info = get_open_file_info(line_data)
-        if not info then
-            return
+    set(
+        "n",
+        keymaps.open_file_popup,
+        with_line(bufnr, get_line, function(line_data)
+            local info = get_open_file_info(line_data)
+            if not info then
+                return
+            end
+            require("trunks._ui.popups.open_file_popup").render(info.file_to_open, info.commit_to_use, {})
+        end),
+        keymap_opts
+    )
+
+    set("n", keymaps.toggle_native_output, function()
+        local diff_cmd_no_pager = vim.w.trunks_diff_cmd_no_pager
+        local diff_cmd_with_pager = vim.w.trunks_diff_cmd_with_pager
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local set_cursor = function()
+            local num_lines = vim.api.nvim_buf_line_count(0)
+            pcall(vim.api.nvim_win_set_cursor, 0, { math.min(num_lines, cursor[1]), cursor[2] })
         end
-        require("trunks._ui.popups.open_file_popup").render(info.file_to_open, info.commit_to_use, {})
-    end), keymap_opts)
+        if vim.w.trunks_diff_pager_on and diff_cmd_no_pager then
+            local new_bufnr = require("trunks._ui.elements").terminal(
+                bufnr,
+                diff_cmd_no_pager,
+                { display_strategy = "full" },
+                { on_exit = set_cursor }
+            ).bufnr
+            vim.bo[new_bufnr].filetype = "git"
+            vim.w.trunks_diff_pager_on = false
+        elseif diff_cmd_with_pager then
+            require("trunks._ui.elements").terminal(
+                bufnr,
+                diff_cmd_with_pager,
+                { display_strategy = "full" },
+                { on_exit = set_cursor }
+            )
+            vim.w.trunks_diff_pager_on = true
+        end
+    end, keymap_opts)
 end
 
 return M

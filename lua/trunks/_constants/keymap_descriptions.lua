@@ -67,6 +67,7 @@ M.long_descriptions = {
     ---@type trunks.GitFiletypeKeymaps
     git_filetype = {
         show_details = "Show details for item under cursor",
+        toggle_native_output = "Switch to/from a git pager like delta and regular git output",
     },
     ---@type trunks.LogKeymaps
     log = {

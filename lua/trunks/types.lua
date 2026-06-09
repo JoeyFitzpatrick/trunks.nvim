@@ -134,6 +134,7 @@
 
 ---@class trunks.GitFiletypeKeymaps
 ---@field show_details? string
+---@field toggle_native_output? string
 
 ---@class trunks.LogKeymaps
 ---@field checkout? string

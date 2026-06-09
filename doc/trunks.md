@@ -100,6 +100,7 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
             git_filetype = {
                 keymaps = {
                     show_details = "<enter>", -- Show details for item under cursor
+                    toggle_native_output = "gd", -- If using a pager like delta, switch to/from native output
                 },
             },
             log = {

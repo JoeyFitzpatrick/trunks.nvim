@@ -7,6 +7,16 @@ function M.render(command_builder, command_type)
     local bufnr = require("trunks._ui.elements").new_buffer({})
     require("trunks._ui.elements").terminal(bufnr, cmd, { display_strategy = "full" })
 
+    if command_builder._pager then
+        vim.w.trunks_diff_cmd_with_pager = cmd
+        vim.w.trunks_diff_pager_on = true
+        command_builder._pager = nil
+        vim.w.trunks_diff_cmd_no_pager = command_builder:build()
+    else
+        vim.bo[bufnr].filetype = "git"
+        vim.w.trunks_diff_pager_on = false
+    end
+
     -- For diff commands, parse and store the refs being compared
     if command_type == "diff" then
         local refs = require("trunks._ui.interceptors.diff_ref_parser").parse_diff_refs(cmd)
