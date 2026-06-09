@@ -48,10 +48,22 @@ describe("status get_line", function()
     it("returns nil if no file under cursor", function()
         local bufnr = vim.api.nvim_create_buf(false, true)
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, base_lines)
-        for _, i in ipairs({ 1, 2, 3, 4, 5, 6, 10, 11 }) do
+        for _, i in ipairs({ 3, 4, 5, 6, 10, 11 }) do
             local line = get_line(bufnr, i)
             assert.is_nil(line)
         end
+    end)
+
+    it("returns header line data if on header line", function()
+        local bufnr = vim.api.nvim_create_buf(false, true)
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, base_lines)
+        local line = get_line(bufnr, 1)
+        assert.are.equal(line.branch, "main")
+        assert.is_true(line.is_status_header)
+
+        local line = get_line(bufnr, 2)
+        assert.are.equal(line.branch, "origin/main")
+        assert.is_true(line.is_status_header)
     end)
 
     it("gets a staged file", function()

@@ -15,11 +15,16 @@ local UNSTAGED = "Unstaged"
 ---@field status string
 ---@field staged boolean
 
+---@class trunks.StatusLineHeaderData
+---@field branch string
+---@field is_status_header true
+
 ---@param bufnr integer
 ---@param line_num? integer
----@return trunks.StatusLineData | nil
+---@return trunks.StatusLineData | trunks.StatusLineHeaderData | nil
 function M.get_line(bufnr, line_num)
     line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
+
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
     local staged = false
 
@@ -27,6 +32,14 @@ function M.get_line(bufnr, line_num)
     if not current_line or vim.trim(current_line) == "" then
         return nil
     end
+
+    if line_num <= 2 then
+        local branch = current_line:match("%a+: (%S+)")
+        if branch then
+            return { branch = branch, is_status_header = true }
+        end
+    end
+
     if current_line:find("^[%+%-@ ]") then
         for i = line_num, 1, -1 do
             if not lines[i]:find("^[%+%-@ ]") then
@@ -238,8 +251,13 @@ function M.set_keymaps(bufnr)
 
     set(
         "n",
-        keymaps.edit_file,
+        keymaps.show_details,
         with_line(bufnr, M.get_line, function(line_data)
+            if line_data.is_status_header then
+                vim.cmd("Trunks edit " .. line_data.branch)
+                return
+            end
+
             local current_buffer = vim.api.nvim_get_current_buf()
             -- Deregister current buffer so it doesn't hang around
             require("trunks._core.register").close_buffer(current_buffer)

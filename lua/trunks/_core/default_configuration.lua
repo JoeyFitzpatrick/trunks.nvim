@@ -161,10 +161,10 @@ return {
         keymaps = {
             commit_popup = "c",
             diff_popup = "d",
-            edit_file = "<enter>", -- Close status UI and navigate to file under cursor
             pull = "p",
             push = "<leader>p",
             restore = "D", -- Display a popup with options for `git restore`
+            show_details = "<enter>", -- Edit file under cursor, or show details for object under cursor
             stage = "s", -- (un)stage file under cursor
             stage_all = "a",
             stash_popup = "S",

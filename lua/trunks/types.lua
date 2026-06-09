@@ -200,10 +200,10 @@
 ---@class trunks.StatusKeymaps
 ---@field commit_popup? string
 ---@field diff_popup? string
----@field edit_file? string
 ---@field pull? string
 ---@field push? string
 ---@field restore? string
+---@field show_details? string
 ---@field stage? string
 ---@field stage_all? string
 ---@field stash_popup? string
