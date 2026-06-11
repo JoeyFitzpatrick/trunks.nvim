@@ -14,7 +14,8 @@ local M = {}
 ---@return string uri The trunks:// URI
 function M.create_uri(git_root, commit, filepath)
     local normalized_path = filepath:gsub("^/+", "")
-    return string.format("trunks://%s/.git//commit/%s/%s", git_root, commit, normalized_path)
+    local normalized_git_root = git_root:gsub("/$", "")
+    return string.format("trunks://%s/.git//commit/%s/%s", normalized_git_root, commit, normalized_path)
 end
 
 ---@param git_root string Absolute path to git repository root
@@ -28,7 +29,7 @@ end
 ---@field git_root? string
 ---@field commit string
 ---@field filepath string
----@field stage? "base" | "ours" | "theirs"
+---@field stage? string
 
 ---@param uri string
 ---@return trunks.Uri
@@ -39,13 +40,25 @@ function M.parse_file_uri(uri)
 
     local git_root = rest:sub(1, sep - 1):gsub("%.git$", "")
     local spec = rest:sub(sep + 2)
+
+    -- Stage URI: trunks://<root>/.git//{1,2,3}/<filepath>
+    -- The number represents a merge stage: 1 = base, 2 = ours, 3 = theirs
+    local stage, stage_filepath = spec:match("^(%d+)/(.+)$")
+    if stage then
+        return {
+            git_root = git_root ~= "" and git_root or nil,
+            stage = stage,
+            filepath = stage_filepath,
+        }
+    end
+
+    -- Commit URI: trunks://<root>/.git//commit/<hash>/<filepath>
     local commit, filepath = spec:match("^commit/([^/]+)/(.+)$")
     assert(commit and filepath, "Trunks: unable to parse commit and filepath from URI " .. uri)
     return {
         git_root = git_root ~= "" and git_root or nil,
         commit = commit,
         filepath = filepath,
-        stage = nil,
     }
 end
 
