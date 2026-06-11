@@ -1,26 +1,33 @@
 ---@class trunks.VirtualBufferUri
----@field git_root string The absolute path to the git repository root
----@field commit string The commit hash
----@field filepath string The file path within the repository
+---@field git_root string
+---@field commit string
+---@field filepath string
 
 local M = {}
 
--- URI format: trunks://<git_root>/.git//commit/<hash>/<filepath>
---             trunks://<git_root>/.git//show/<ref>
-
----@param git_root string Absolute path to git repository root
+---@param git_root string
 ---@param commit string
----@param filepath string The file path (should not start with /)
----@return string uri The trunks:// URI
+---@param filepath string
+---@return string uri
 function M.create_uri(git_root, commit, filepath)
     local normalized_path = filepath:gsub("^/+", "")
     local normalized_git_root = git_root:gsub("/$", "")
     return string.format("trunks://%s/.git//commit/%s/%s", normalized_git_root, commit, normalized_path)
 end
 
----@param git_root string Absolute path to git repository root
+---@param git_root string
+---@param filepath string
+---@param stage string
+---@return string uri
+function M.create_diff_uri(git_root, filepath, stage)
+    local normalized_path = filepath:gsub("^/+", "")
+    local normalized_git_root = git_root:gsub("/$", "")
+    return string.format("trunks://%s/.git//%s/%s", normalized_git_root, stage, normalized_path)
+end
+
+---@param git_root string
 ---@param ref string A git ref (commit hash, branch, tag, etc.)
----@return string uri The trunks:// URI for a git show view
+---@return string uri
 function M.create_show_uri(git_root, ref)
     return string.format("trunks://%s/.git//show/%s", git_root, ref)
 end

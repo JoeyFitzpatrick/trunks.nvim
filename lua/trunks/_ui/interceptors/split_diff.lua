@@ -32,6 +32,14 @@ local function get_git_root(filename)
     return require("trunks._core.parse_command")._find_git_root(filename) or vim.loop.cwd()
 end
 
+local function set_diffoff_autocmd(bufnr, buffer_desc)
+    vim.api.nvim_create_autocmd({ "BufHidden" }, {
+        buffer = bufnr,
+        command = "diffoff",
+        desc = "Trunks: turn off diff mode for " .. buffer_desc,
+    })
+end
+
 ---@param filepath string
 ---@return boolean
 local function has_merge_conflicts(filepath)
@@ -39,42 +47,67 @@ local function has_merge_conflicts(filepath)
     return exit_code == 0 and #output > 0
 end
 
+---@param params trunks.SplitDiffParams
+local function open_merge_conflict_buffers(params)
+    local bufnr = vim.api.nvim_get_current_buf()
+    local ours_stage = "2"
+    local theirs_stage = "3"
+    local filepath = params.filepath
+    local ours_file_uri =
+        require("trunks._core.virtual_buffers").create_diff_uri(get_git_root(filepath), filepath, ours_stage)
+    local theirs_file_uri =
+        require("trunks._core.virtual_buffers").create_diff_uri(get_git_root(filepath), filepath, theirs_stage)
+
+    local win = vim.api.nvim_get_current_win()
+    if params.split_type == "right" then
+        vim.cmd("vertical leftabove diffsplit " .. ours_file_uri)
+    else
+        vim.cmd("aboveleft diffsplit " .. ours_file_uri)
+    end
+    local ours_bufnr = vim.api.nvim_get_current_buf()
+    vim.api.nvim_set_current_win(win)
+
+    if params.split_type == "right" then
+        vim.cmd("vertical rightbelow diffsplit " .. theirs_file_uri)
+    else
+        vim.cmd("belowright diffsplit " .. theirs_file_uri)
+    end
+    local theirs_bufnr = vim.api.nvim_get_current_buf()
+    vim.api.nvim_set_current_win(win)
+
+    set_diffoff_autocmd(bufnr, "file with merge conflicts")
+    set_diffoff_autocmd(ours_bufnr, "our changes")
+    set_diffoff_autocmd(theirs_bufnr, "their changes")
+end
+
 ---@param cmd string
 ---@param split_params trunks.SplitDiffParams
 function M.split_diff(cmd, split_params)
     local params = vim.tbl_extend("force", M._parse_split_diff_args(cmd), split_params)
+    local filepath = params.filepath
+
+    if params.bang and has_merge_conflicts(filepath) then
+        open_merge_conflict_buffers(params)
+        return
+    end
 
     if params.left_commit ~= require("trunks._constants.constants").WORKING_TREE then
         -- Two commits specified: open both versions and diff them
-        require("trunks._core.open_file").open_file_in_current_window(params.filepath, params.left_commit, {})
+        require("trunks._core.open_file").open_file_in_current_window(filepath, params.left_commit, {})
         local left_bufnr = vim.api.nvim_get_current_buf()
         vim.cmd("diffthis")
 
-        require("trunks._core.open_file").open_file_in_split(
-            params.filepath,
-            params.right_commit,
-            params.split_type,
-            {}
-        )
+        require("trunks._core.open_file").open_file_in_split(filepath, params.right_commit, params.split_type, {})
         local right_bufnr = vim.api.nvim_get_current_buf()
         vim.cmd("diffthis")
 
-        vim.api.nvim_create_autocmd({ "BufHidden" }, {
-            buffer = left_bufnr,
-            command = "diffoff",
-            desc = "Trunks: turn off diff mode for left side",
-        })
-
-        vim.api.nvim_create_autocmd({ "BufHidden" }, {
-            buffer = right_bufnr,
-            command = "diffoff",
-            desc = "Trunks: turn off diff mode for right side",
-        })
+        set_diffoff_autocmd(left_bufnr, "left side")
+        set_diffoff_autocmd(right_bufnr, "right side")
     else
         -- Single commit: diff current buffer against commit version
         local bufnr = vim.api.nvim_get_current_buf()
         local file_at_commit_uri = require("trunks._core.virtual_buffers").create_uri(
-            get_git_root(params.filepath),
+            get_git_root(filepath),
             params.right_commit,
             params.filepath
         )
@@ -86,17 +119,8 @@ function M.split_diff(cmd, split_params)
         end
         local split_bufnr = vim.api.nvim_get_current_buf()
 
-        vim.api.nvim_create_autocmd({ "BufHidden" }, {
-            buffer = bufnr,
-            command = "diffoff",
-            desc = "Trunks: turn off diff mode for file that split diff was based on",
-        })
-
-        vim.api.nvim_create_autocmd({ "BufHidden" }, {
-            buffer = split_bufnr,
-            command = "diffoff",
-            desc = "Trunks: turn off diff mode for split diff",
-        })
+        set_diffoff_autocmd(bufnr, "file split diff was based on")
+        set_diffoff_autocmd(split_bufnr, "split diff")
     end
 end
 
