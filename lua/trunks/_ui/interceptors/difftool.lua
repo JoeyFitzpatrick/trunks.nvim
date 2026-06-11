@@ -214,8 +214,8 @@ function M.render(command_builder)
             -- Extract the real filepath for vdiff command
             local filepath
             if virtual_buffers.is_virtual_uri(bufname) then
-                local _, _, extracted_path = virtual_buffers.parse_uri(bufname)
-                filepath = extracted_path
+                local parsed_uri = virtual_buffers.parse_file_uri(bufname)
+                filepath = parsed_uri.filepath
             else
                 filepath = bufname
             end

@@ -24,20 +24,29 @@ function M.create_show_uri(git_root, ref)
     return string.format("trunks://%s.git//show/%s", git_root, ref)
 end
 
+---@class trunks.Uri
+---@field git_root? string
+---@field commit string
+---@field filepath string
+---@field stage? "base" | "ours" | "theirs"
+
 ---@param uri string
----@return string|nil git_root
----@return string|nil commit
----@return string|nil filepath
-function M.parse_uri(uri)
+---@return trunks.Uri
+function M.parse_file_uri(uri)
     local rest = uri:sub(#"trunks://" + 1)
     local sep = rest:find("//", 1, true)
-    if not sep then
-        return nil, nil, nil
-    end
+    assert(sep, "Trunks: didn't find separator in trunks:// URI")
+
     local git_root = rest:sub(1, sep - 1):gsub("%.git$", "")
     local spec = rest:sub(sep + 2)
     local commit, filepath = spec:match("^commit/([^/]+)/(.+)$")
-    return git_root ~= "" and git_root or nil, commit, filepath
+    assert(commit and filepath, "Trunks: unable to parse commit and filepath from URI " .. uri)
+    return {
+        git_root = git_root ~= "" and git_root or nil,
+        commit = commit,
+        filepath = filepath,
+        stage = nil,
+    }
 end
 
 ---@param uri string
@@ -97,6 +106,36 @@ local function set_buffer_content(bufnr, output, hash, filetype)
     end
 end
 
+--- A diff URI is one that contains a number, e.g.
+--- trunks://trunks.nvim/git-merge-test/.git//{1, 2, 3}/file.txt
+--- The number represents a "stage": 1 = base, 2 = ours, 3 = theirs
+---@param uri trunks.Uri
+---@return string[] | "error"
+local function handle_diff_uri(uri)
+    local cmd = string.format("cat-file --filters :%d:%s", uri.stage, uri.filepath)
+    local output, exit_code = run_git(uri.git_root, string.format("cat-file --filters :%d:%s", uri.stage, uri.filepath))
+    if exit_code ~= 0 or not output or #output == 0 then
+        vim.notify("Trunks: failed to run " .. cmd, vim.log.levels.ERROR)
+        return "error"
+    end
+    return output
+end
+
+---@param uri trunks.Uri
+---@return string[] | "error"
+local function handle_file_uri(uri)
+    local output, exit_code = run_git(uri.git_root, string.format("show %s:%s", uri.commit, uri.filepath))
+
+    if exit_code ~= 0 or not output or #output == 0 then
+        vim.notify(
+            string.format("Failed to read file %s at commit %s", uri.filepath, uri.commit:sub(1, 7)),
+            vim.log.levels.ERROR
+        )
+        return "error"
+    end
+    return output
+end
+
 ---@param bufnr integer
 ---@param uri string
 ---@return boolean success
@@ -121,21 +160,18 @@ local function load_virtual_buffer_content(bufnr, uri)
     end
 
     -- Handle trunks://<root>//commit/<hash>/<filepath> URIs
-    local commit, filepath
-    git_root, commit, filepath = M.parse_uri(uri)
+    local parsed_uri = M.parse_file_uri(uri)
+    local commit = parsed_uri.commit
+    local filepath = parsed_uri.filepath
 
-    if not commit or not filepath then
-        vim.notify("Invalid trunks:// URI: " .. uri, vim.log.levels.ERROR)
-        return false
+    local output
+    if parsed_uri.stage then
+        output = handle_diff_uri(parsed_uri)
+    else
+        output = handle_file_uri(parsed_uri)
     end
 
-    local output, exit_code = run_git(git_root, string.format("show %s:%s", commit, filepath))
-
-    if exit_code ~= 0 or not output or #output == 0 then
-        vim.notify(
-            string.format("Failed to read file %s at commit %s", filepath, commit:sub(1, 7)),
-            vim.log.levels.ERROR
-        )
+    if output == "error" then
         return false
     end
 

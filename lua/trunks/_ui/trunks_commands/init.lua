@@ -59,12 +59,12 @@ local cmd_map = {
         require("trunks._ui.trunks_commands.reset_to_remote").reset_to_remote()
     end,
 
-    vdiff = function(cmd)
-        require("trunks._ui.interceptors.split_diff").split_diff(cmd, { split_type = "right" })
+    vdiff = function(cmd, input_args)
+        require("trunks._ui.interceptors.split_diff").split_diff(cmd, { split_type = "right", bang = input_args.bang })
     end,
 
-    hdiff = function(cmd)
-        require("trunks._ui.interceptors.split_diff").split_diff(cmd, { split_type = "below" })
+    hdiff = function(cmd, input_args)
+        require("trunks._ui.interceptors.split_diff").split_diff(cmd, { split_type = "below", bang = input_args.bang })
     end,
 }
 

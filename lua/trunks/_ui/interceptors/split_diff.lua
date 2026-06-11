@@ -3,6 +3,7 @@
 ---@field left_commit string|nil
 ---@field right_commit string|nil
 ---@field split_type "below" | "right"
+---@field bang? boolean
 
 -- Vdiff and Hdiff are 5 characters, plus a space
 local SUBCOMMAND_LENGTH = 6
@@ -29,6 +30,13 @@ end
 ---@return string git_root
 local function get_git_root(filename)
     return require("trunks._core.parse_command")._find_git_root(filename) or vim.loop.cwd()
+end
+
+---@param filepath string
+---@return boolean
+local function has_merge_conflicts(filepath)
+    local output, exit_code = require("trunks._core.run_cmd").run_cmd("ls-files --unmerged -- " .. filepath)
+    return exit_code == 0 and #output > 0
 end
 
 ---@param cmd string
