@@ -14,14 +14,14 @@ local M = {}
 ---@return string uri The trunks:// URI
 function M.create_uri(git_root, commit, filepath)
     local normalized_path = filepath:gsub("^/+", "")
-    return string.format("trunks://%s.git//commit/%s/%s", git_root, commit, normalized_path)
+    return string.format("trunks://%s/.git//commit/%s/%s", git_root, commit, normalized_path)
 end
 
 ---@param git_root string Absolute path to git repository root
 ---@param ref string A git ref (commit hash, branch, tag, etc.)
 ---@return string uri The trunks:// URI for a git show view
 function M.create_show_uri(git_root, ref)
-    return string.format("trunks://%s.git//show/%s", git_root, ref)
+    return string.format("trunks://%s/.git//show/%s", git_root, ref)
 end
 
 ---@class trunks.Uri
