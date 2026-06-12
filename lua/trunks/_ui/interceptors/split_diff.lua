@@ -53,6 +53,7 @@ end
 
 ---@param params trunks.SplitDiffParams
 local function open_merge_conflict_buffers(params)
+    vim.cmd("tab split")
     local bufnr = vim.api.nvim_get_current_buf()
     local ours_stage = "2"
     local theirs_stage = "3"
