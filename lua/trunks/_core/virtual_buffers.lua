@@ -144,7 +144,7 @@ end
 ---@param uri trunks.Uri
 ---@return string[] | "error"
 local function handle_file_uri(uri)
-    local output, exit_code = run_git(uri.git_root, string.format("show %s:%s", uri.commit, uri.filepath))
+    local output, exit_code = run_git(uri.git_root, string.format("cat-file -p %s:%s", uri.commit, uri.filepath))
 
     if exit_code ~= 0 or not output or #output == 0 then
         vim.notify(

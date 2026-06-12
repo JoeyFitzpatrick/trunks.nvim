@@ -29,6 +29,10 @@ function M.system(cmd)
     else
         result.output = vim.split(result.stderr, "\n")
     end
+    -- Strip additional empty line that some commands output when splitting by \n
+    if result.output[#result.output] == "" then
+        result.output[#result.output] = nil
+    end
 
     return result
 end
