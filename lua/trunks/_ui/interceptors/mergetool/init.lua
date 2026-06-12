@@ -64,7 +64,7 @@ local function get_local_conflict_lines()
 end
 
 ---@param strategy "base" | "ours" | "theirs" | "all"
-local function replace_conflict(strategy)
+function M.replace_conflict(strategy)
     local conflict_lines = get_local_conflict_lines()
 
     if not conflict_lines then
@@ -86,19 +86,19 @@ local function set_keymaps()
     local set = require("trunks._ui.keymaps.set").safe_set_keymap
 
     set("n", "<Plug>(Trunks-resolve-base)", function()
-        replace_conflict("base")
+        M.replace_conflict("base")
     end, { noremap = true, silent = true })
 
     set("n", "<Plug>(Trunks-resolve-ours)", function()
-        replace_conflict("ours")
+        M.replace_conflict("ours")
     end, { noremap = true, silent = true })
 
     set("n", "<Plug>(Trunks-resolve-theirs)", function()
-        replace_conflict("theirs")
+        M.replace_conflict("theirs")
     end, { noremap = true, silent = true })
 
     set("n", "<Plug>(Trunks-resolve-all)", function()
-        replace_conflict("all")
+        M.replace_conflict("all")
     end, { noremap = true, silent = true })
 end
 

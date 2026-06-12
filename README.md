@@ -222,6 +222,16 @@ Note: lazy loading is handled internally, so it is not required to lazy load Tru
                     toggle_inline_diff = "=", -- Toggle inline diff for file under cursor
                 },
             },
+            trunks_diff = {
+                keymaps = {
+                    diffput = "dp",
+                    get_ours_hunk = "d2o",
+                    get_theirs_hunk = "d3o",
+                    merge_get_all = "dma",
+                    merge_get_ours = "dmo",
+                    merge_get_theirs = "dmt",
+                },
+            },
             -- End of default configuration
         }
     end

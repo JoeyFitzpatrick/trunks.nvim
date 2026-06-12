@@ -47,6 +47,10 @@ local function has_merge_conflicts(filepath)
     return exit_code == 0 and #output > 0
 end
 
+---@class trunks.DiffBufnrs
+---@field ours_bufnr integer
+---@field theirs_bufnr integer
+
 ---@param params trunks.SplitDiffParams
 local function open_merge_conflict_buffers(params)
     local bufnr = vim.api.nvim_get_current_buf()
@@ -78,7 +82,10 @@ local function open_merge_conflict_buffers(params)
     set_diffoff_autocmd(bufnr, "file with merge conflicts")
     set_diffoff_autocmd(ours_bufnr, "our changes")
     set_diffoff_autocmd(theirs_bufnr, "their changes")
-    require("trunks._ui.keymaps.diff_keymaps").set_diff_keymaps(bufnr)
+    require("trunks._ui.keymaps.diff_keymaps").set_diff_keymaps(
+        bufnr,
+        { ours_bufnr = ours_bufnr, theirs_bufnr = theirs_bufnr }
+    )
     require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, { "trunks_diff" })
 end
 
