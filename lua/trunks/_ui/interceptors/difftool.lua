@@ -175,9 +175,8 @@ function M.render(command_builder)
 
     for _, location in ipairs(qf_locations) do
         for _, line in ipairs(location.lines) do
-            -- Use virtual URI if right_commit is set (comparing two commits, not working tree)
             local qf_filename
-            if left_commit then
+            if left_commit and right_commit then
                 qf_filename = virtual_buffers.create_uri(git_root, right_commit, location.filename)
             else
                 qf_filename = location.filename
