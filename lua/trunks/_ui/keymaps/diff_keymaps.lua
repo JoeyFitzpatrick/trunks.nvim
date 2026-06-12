@@ -31,6 +31,11 @@ function M.set_diff_keymaps(bufnr, diff_bufnrs)
     set("n", keymaps.merge_get_all, function()
         require("trunks._ui.interceptors.mergetool").replace_conflict("all")
     end, keymap_opts)
+
+    set("n", keymaps.merge_get_base, function()
+        require("trunks._ui.interceptors.mergetool").replace_conflict("base")
+    end, keymap_opts)
+
     set("n", keymaps.merge_get_ours, function()
         require("trunks._ui.interceptors.mergetool").replace_conflict("ours")
     end, keymap_opts)

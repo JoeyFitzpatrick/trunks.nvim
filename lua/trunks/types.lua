@@ -218,5 +218,6 @@
 ---@field get_ours_hunk? string
 ---@field get_theirs_hunk? string
 ---@field merge_get_all? string
+---@field merge_get_base? string
 ---@field merge_get_ours? string
 ---@field merge_get_theirs? string

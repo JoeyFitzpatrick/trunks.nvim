@@ -151,6 +151,7 @@ M.long_descriptions = {
         get_ours_hunk = "Get hunk from left diff",
         get_theirs_hunk = "Get hunk from right diff",
         merge_get_all = "Get 'ours' and 'theirs' merge conflict hunks",
+        merge_get_base = "Get 'base' merge conflict hunks",
         merge_get_ours = "Get 'ours' merge conflict hunks",
         merge_get_theirs = "Get 'theirs' merge conflict hunks",
     },
