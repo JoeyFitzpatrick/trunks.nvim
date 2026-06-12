@@ -78,6 +78,8 @@ local function open_merge_conflict_buffers(params)
     set_diffoff_autocmd(bufnr, "file with merge conflicts")
     set_diffoff_autocmd(ours_bufnr, "our changes")
     set_diffoff_autocmd(theirs_bufnr, "their changes")
+    require("trunks._ui.keymaps.diff_keymaps").set_diff_keymaps(bufnr)
+    require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, { "trunks_diff" })
 end
 
 ---@param cmd string

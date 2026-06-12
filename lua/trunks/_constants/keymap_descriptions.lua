@@ -145,6 +145,15 @@ M.long_descriptions = {
         stash_popup = "Open git stash options",
         toggle_inline_diff = "Toggle inline diff for file under cursor",
     },
+    ---@type trunks.TrunksDiffKeymaps
+    trunks_diff = {
+        diffput = "Put hunk from diff to parent buffer",
+        get_left_diff = "Get hunk from left diff",
+        get_right_diff = "Get hunk from right diff",
+        merge_get_all = "Get 'ours' and 'theirs' merge conflict hunks",
+        merge_get_ours = "Get 'ours' merge conflict hunks",
+        merge_get_theirs = "Get 'theirs' merge conflict hunks",
+    },
 }
 
 local config = require("trunks._core.configuration").DATA
@@ -215,6 +224,9 @@ add_description("status", "restore", "Discard")
 add_description("status", "stash_popup", "Stash")
 
 add_description("open_files", "open_file_popup", "Open file")
+
+add_description("trunks_diff", "merge_get_ours", "Get 'ours' merge conflict")
+add_description("trunks_diff", "merge_get_theirs", "Get 'theirs' merge conflict")
 
 ---@param ui_types string[]
 ---@return string

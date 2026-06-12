@@ -176,6 +176,7 @@ local function load_virtual_buffer_content(bufnr, uri)
         end
         set_buffer_content(bufnr, output, show_ref, "git")
         require("trunks._ui.keymaps.git_filetype_keymaps").set_keymaps(bufnr)
+        require("trunks._ui.keymaps.keymaps_text").show_in_cmdline(bufnr, { "trunks_diff" })
         return true
     end
 

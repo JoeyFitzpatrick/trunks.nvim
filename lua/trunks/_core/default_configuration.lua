@@ -171,4 +171,14 @@ return {
             toggle_inline_diff = "=", -- Toggle inline diff for file under cursor
         },
     },
+    trunks_diff = {
+        keymaps = {
+            diffput = "dp",
+            get_left_diff = "d2o",
+            get_right_diff = "d3o",
+            merge_get_all = "dma",
+            merge_get_ours = "dmo",
+            merge_get_theirs = "dmt",
+        },
+    },
 }

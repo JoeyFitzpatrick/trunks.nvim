@@ -20,14 +20,15 @@
 ---@field diff_popup? trunks.DiffPopupConfiguration
 ---@field git_filetype? trunks.GitFiletypeConfiguration
 ---@field log? trunks.LogConfiguration
+---@field merge_rebase_popup? trunks.MergeRebasePopupConfiguration
 ---@field open_files? trunks.OpenFilesConfiguration
 ---@field open_file_popup? trunks.OpenFilePopupConfiguration
 ---@field reflog? trunks.ReflogConfiguration
----@field merge_rebase_popup? trunks.MergeRebasePopupConfiguration
 ---@field restore_popup? trunks.RestorePopupConfiguration
 ---@field stash? trunks.StashConfiguration
 ---@field stash_popup? trunks.StashPopupConfiguration
 ---@field status? trunks.StatusConfiguration
+---@field trunks_diff? trunks.TrunksDiffConfiguration
 
 ---@class trunks.BlameConfiguration
 ---@field keymaps? trunks.BlameKeymaps
@@ -79,6 +80,9 @@
 ---@class trunks.StatusConfiguration
 ---@field keymaps? trunks.StatusKeymaps
 ---@field auto_display_on? boolean
+
+---@class trunks.TrunksDiffConfiguration
+---@field keymaps? trunks.TrunksDiffKeymaps
 
 ---@class trunks.HomeKeymaps
 ---@field next? string
@@ -209,6 +213,10 @@
 ---@field stash_popup? string
 ---@field toggle_inline_diff? string
 
----@class trunks.TimeMachineFileKeymaps
----@field next? string
----@field previous? string
+---@class trunks.TrunksDiffKeymaps
+---@field diffput? string
+---@field get_left_diff? string
+---@field get_right_diff? string
+---@field merge_get_all? string
+---@field merge_get_ours? string
+---@field merge_get_theirs? string
