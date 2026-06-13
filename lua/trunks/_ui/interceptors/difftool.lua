@@ -246,6 +246,7 @@ function M.render(command_builder)
                     vim.api.nvim_win_close(win, false)
                 elseif is_diff_win then
                     -- When vdiff buffers are hidden, they turn off diff mode, so we need to re enable it
+                    vim.api.nvim_exec_autocmds("BufReadCmd", { buffer = vim.fn.winbufnr(win) })
                     vim.fn.win_execute(win, "diffthis", true)
                 end
             end
