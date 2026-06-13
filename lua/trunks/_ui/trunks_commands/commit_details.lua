@@ -49,9 +49,10 @@ end
 ---@param opts trunks.CommitDetailsRenderOpts
 function M.set_lines(bufnr, commit, opts)
     local commit_data = {}
+    local format = require("trunks._constants.constants").FORMATS.SHOW
     if opts.is_stash then
         local commit_info_command_builder =
-            require("trunks._core.command").base_command("log -n 1 --format=medium " .. commit)
+            require("trunks._core.command").base_command(string.format("log -n 1 --format='%s' %s", format, commit))
         local commit_info = require("trunks._core.run_cmd").run_cmd(commit_info_command_builder)
         for _, line in ipairs(commit_info) do
             table.insert(commit_data, line)
@@ -66,7 +67,7 @@ function M.set_lines(bufnr, commit, opts)
         end
     else
         local command_builder = require("trunks._core.command").base_command(
-            "show --format=medium --stat=10000 --stat-graph-width=40 " .. commit
+            string.format("show --format='%s' --stat=10000 --stat-graph-width=40 ", format, commit)
         )
 
         commit_data = require("trunks._core.run_cmd").run_cmd(command_builder)
