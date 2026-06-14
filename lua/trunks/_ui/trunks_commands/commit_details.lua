@@ -3,8 +3,10 @@
 ---@field safe_filename string
 
 ---@class trunks.CommitDetailsRenderOpts
+---@field bufnr? integer
 ---@field is_stash? boolean
 ---@field filename? string
+---@field git_root? string
 
 local M = {}
 
@@ -51,23 +53,28 @@ function M.set_lines(bufnr, commit, opts)
     local commit_data = {}
     local format = require("trunks._constants.constants").FORMATS.SHOW
     if opts.is_stash then
-        local commit_info_command_builder =
-            require("trunks._core.command").base_command(string.format("log -n 1 --format='%s' %s", format, commit))
+        local commit_info_command_builder = require("trunks._core.command").base_command(
+            string.format("log -n 1 --format='%s' %s", format, commit),
+            opts.git_root
+        )
         local commit_info = require("trunks._core.run_cmd").run_cmd(commit_info_command_builder)
         for _, line in ipairs(commit_info) do
             table.insert(commit_data, line)
         end
         table.insert(commit_data, "")
 
-        local commit_stats_command_builder =
-            require("trunks._core.command").base_command("stash show -u --stat=10000 --stat-graph-width=40 " .. commit)
+        local commit_stats_command_builder = require("trunks._core.command").base_command(
+            "stash show -u --stat=10000 --stat-graph-width=40 " .. commit,
+            opts.git_root
+        )
         local commit_stats = require("trunks._core.run_cmd").run_cmd(commit_stats_command_builder)
         for _, line in ipairs(commit_stats) do
             table.insert(commit_data, line)
         end
     else
         local command_builder = require("trunks._core.command").base_command(
-            string.format("show --format='%s' --stat=10000 --stat-graph-width=40 ", format, commit)
+            string.format("show --format='%s' --stat=10000 --stat-graph-width=40 %s", format, commit),
+            opts.git_root
         )
 
         commit_data = require("trunks._core.run_cmd").run_cmd(command_builder)
@@ -196,7 +203,14 @@ end
 ---@param opts? trunks.CommitDetailsRenderOpts
 function M.render(commit, opts)
     opts = opts or {}
-    local bufnr, win = require("trunks._ui.elements").new_buffer({ filetype = "git", show = true })
+    local bufnr, win
+    if opts.bufnr then
+        bufnr = opts.bufnr
+        win = vim.fn.bufwinid(bufnr)
+        vim.bo[bufnr].filetype = "git"
+    else
+        bufnr, win = require("trunks._ui.elements").new_buffer({ filetype = "git", show = true })
+    end
     M.set_lines(bufnr, commit, opts)
 
     local with_line = require("trunks._ui.keymaps.set").with_line
