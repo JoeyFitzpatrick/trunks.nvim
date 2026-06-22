@@ -212,6 +212,11 @@ function M.render(commit, opts)
         bufnr, win = require("trunks._ui.elements").new_buffer({ filetype = "git", show = true })
     end
     M.set_lines(bufnr, commit, opts)
+    pcall(
+        vim.api.nvim_buf_set_name,
+        bufnr,
+        require("trunks._core.virtual_buffers").create_commit_details_uri(nil, commit)
+    )
 
     local with_line = require("trunks._ui.keymaps.set").with_line
     require("trunks._ui.auto_display").create_auto_display(bufnr, "commit_details", {

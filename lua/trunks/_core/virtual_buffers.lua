@@ -32,6 +32,14 @@ function M.create_show_uri(git_root, ref)
     return string.format("trunks://%s/.git//show/%s", git_root, ref)
 end
 
+---@param git_root string | nil
+---@param ref string A git ref (commit hash, branch, tag, etc.)
+---@return string uri
+function M.create_commit_details_uri(git_root, ref)
+    git_root = git_root or require("trunks._core.parse_command")._find_git_root()
+    return string.format("trunks://%s/.git//commit-details/%s", git_root, ref)
+end
+
 ---@class trunks.Uri
 ---@field git_root? string
 ---@field commit string
