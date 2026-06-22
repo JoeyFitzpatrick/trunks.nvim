@@ -29,7 +29,7 @@ end
 ---@param filename string
 ---@return string git_root
 local function get_git_root(filename)
-    return require("trunks._core.parse_command")._find_git_root(filename) or vim.loop.cwd()
+    return require("trunks._core.parse_command")._find_git_root(filename)
 end
 
 local function set_diffoff_autocmd(bufnr, buffer_desc)

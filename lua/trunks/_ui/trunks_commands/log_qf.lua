@@ -40,10 +40,6 @@ function M.render(input_args)
 
     local current_file = vim.fn.expand("%:p")
     local git_root = require("trunks._core.parse_command")._find_git_root(current_file)
-    if not git_root then
-        vim.notify("Trunks log-qf: not in a git repository", vim.log.levels.ERROR)
-        return
-    end
 
     -- filepath relative to git root (populated only when a range/file context is given)
     local filepath = nil

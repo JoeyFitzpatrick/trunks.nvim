@@ -75,10 +75,14 @@ local function is_in_cwd(filepath)
     return vim.startswith(filepath, cwd .. "/") or filepath == cwd
 end
 
----@param path string
----@return string | nil
+---@param path string | nil
+---@return string
 function M._find_git_root(path)
-    return vim.fs.root(path, ".git")
+    path = path or vim.loop.cwd()
+    assert(path, "Trunks: unable to parse path to find git root")
+    local root = vim.fs.root(path, ".git")
+    assert(root, "Trunks: not in a git repo")
+    return root
 end
 
 ---@param path? string
@@ -110,11 +114,8 @@ function M.get_git_c_flag(path)
         return nil
     else
         local git_root = M._find_git_root(path)
-        if git_root then
-            return "-C " .. vim.fn.shellescape(git_root)
-        end
+        return "-C " .. vim.fn.shellescape(git_root)
     end
-    return nil
 end
 
 --- Expand `%` to current file.

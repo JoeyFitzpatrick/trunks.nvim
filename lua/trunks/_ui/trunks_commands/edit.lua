@@ -19,10 +19,6 @@ local function current_buffer_git_info()
         return nil, nil
     end
     local git_root = require("trunks._core.parse_command")._find_git_root(current_file)
-    if not git_root then
-        vim.notify("Trunks edit: not in a git repository", vim.log.levels.ERROR)
-        return nil, nil
-    end
     -- filepath relative to git root (strip trailing slash from root + separator)
     local filepath = current_file:sub(#git_root + 2)
     return git_root, filepath
@@ -60,12 +56,8 @@ function M.render(cmd)
         return
     end
 
-    -- Get git root from current buffer context (before switching buffers)
+    -- Get git root before switching buffers
     local git_root = require("trunks._core.parse_command")._find_git_root(vim.fn.expand("%:p"))
-    if not git_root then
-        vim.notify("Trunks edit: not in a git repository", vim.log.levels.ERROR)
-        return
-    end
 
     local colon_pos = arg:find(":")
     if colon_pos then

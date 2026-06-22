@@ -168,7 +168,7 @@ function M.render(command_builder)
     local diff_qf_tab_id = vim.api.nvim_get_current_tabpage()
 
     local virtual_buffers = require("trunks._core.virtual_buffers")
-    local git_root = require("trunks._core.parse_command")._find_git_root(vim.loop.cwd()) or vim.loop.cwd()
+    local git_root = require("trunks._core.parse_command")._find_git_root()
     local flattened_qf_locations = {}
     local found_filenames = {}
     local filenames = {}
