@@ -151,11 +151,18 @@ local function set_keymaps(bufnr)
         "n",
         keymaps.new_branch,
         with_line(bufnr, get_line, function(line_data)
-            vim.ui.input({ prompt = "Name for new branch off of " .. line_data.branch_name .. ": " }, function(input)
+            local output, code = run_cmd.run_cmd("branch --show-current")
+            local is_detached_head = code == 0 and (output[1] == nil or output[1] == "")
+            local base = is_detached_head and "detached HEAD" or line_data.branch_name
+            vim.ui.input({ prompt = "Name for new branch off of " .. base .. ": " }, function(input)
                 if not input then
                     return
                 end
-                local result = run_cmd.run_hidden_cmd("switch --create " .. input)
+                local create_cmd = "switch --create " .. input
+                if not is_detached_head then
+                    create_cmd = create_cmd .. " " .. line_data.branch_name
+                end
+                local result = run_cmd.run_hidden_cmd(create_cmd)
                 if result == "error" then
                     return
                 end
