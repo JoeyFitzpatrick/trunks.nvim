@@ -75,7 +75,7 @@ function M._run_terminal_command(cmd, bufnr, strategy, opts)
     local term_exit_code
     vim.bo[bufnr].modified = false
     vim.api.nvim_buf_call(bufnr, function()
-        channel_id = vim.fn.jobstart(cmd, {
+        local jobstart_opts = {
             term = true,
             on_exit = function(_, exit_code, _)
                 term_exit_code = exit_code
@@ -87,7 +87,11 @@ function M._run_terminal_command(cmd, bufnr, strategy, opts)
                     require("trunks._core.register").rerender_buffers()
                 end
             end,
-        })
+        }
+        -- Make any editor git spawns from this terminal (commit message, rebase
+        -- todo, etc.) open in this instance instead of a nested Nvim.
+        jobstart_opts.env = require("trunks._core.nested-buffers").editor_job_env()
+        channel_id = vim.fn.jobstart(cmd, jobstart_opts)
         for opt, value in pairs(current_ui_opts) do
             vim.o[opt] = value
         end
@@ -180,9 +184,6 @@ end
 function M.terminal(bufnr, cmd, strategy, opts)
     opts = opts or {}
     require("trunks._ui.auto_display").close_open_auto_displays()
-    -- Buffer local variable that makes any editors opened from this terminal,
-    -- such as the commit editor, use the current nvim instance instead of a nested one.
-    vim.b[bufnr].trunks_use_nested_nvim = true
 
     strategy = require("trunks._constants.command_strategies").get_strategy(cmd, strategy)
 

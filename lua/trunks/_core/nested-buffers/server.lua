@@ -1,8 +1,6 @@
 -- This code was copied, then modified, from `nvim-unception`.
 -- Copyright (c) 2022 Samuel Williams
 
-local constants = require("trunks._core.nested-buffers.constants")
-
 local M = {}
 
 local response_sock = nil
@@ -89,12 +87,5 @@ function _G.trunks_notify_when_done_editing(pipe_to_respond_on, filepath)
         { command = "lua trunks_handle_bufunload(vim.fn.expand('<afile>:p'))" }
     )
 end
-
-function _G.trunks_should_use_nested_nvim()
-    return vim.b.trunks_use_nested_nvim ~= nil
-end
-
-M.new_server_pipe_path = vim.call("serverstart")
-vim.call("setenv", constants.trunks_pipe_path_host_env_var, M.new_server_pipe_path)
 
 return M

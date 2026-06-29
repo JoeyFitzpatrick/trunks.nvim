@@ -33,14 +33,23 @@ for _, filepath in pairs(args) do
     end
 end
 
--- Send messages to host on existing pipe.
----@diagnostic disable-next-line: param-type-mismatch
-local sock = vim.fn.sockconnect("pipe", os.getenv(constants.trunks_pipe_path_host_env_var), { rpc = true })
+-- Connect to the parent Nvim through the built-in $NVIM socket. Nvim sets this
+-- for every process it spawns and their descendants.
+-- The connection can fail if $NVIM is stale or unreachable (e.g. the host Nvim
+-- exited but the env var lingered in an inherited environment). This would raise
+-- as error rather than crashing, so guard it and fall back to a normal standalone session on failure.
+local ok, sock = pcall(vim.fn.sockconnect, "pipe", os.getenv("NVIM"), { rpc = true })
+if not ok or not sock or sock == 0 then
+    -- Clear the marker so we don't keep retrying in deeper child processes.
+    vim.fn.setenv(constants.nested_marker_env_var, vim.NIL)
+    return
+end
 
--- note that using 'return' allows for getting the returned value of the fn
-local should_use_nested_nvim_call = "return trunks_should_use_nested_nvim()"
-local should_use_nested_nvim = vim.fn.rpcrequest(sock, "nvim_exec_lua", should_use_nested_nvim_call, {})
-if should_use_nested_nvim == vim.NIL or not should_use_nested_nvim then
+-- Only redirect if the parent actually has trunks's handlers loaded (it might be
+-- a different Nvim, or have nested-buffer prevention disabled).
+local parent_has_trunks =
+    vim.fn.rpcrequest(sock, "nvim_exec_lua", "return type(_G.trunks_edit_files) == 'function'", {})
+if parent_has_trunks == vim.NIL or not parent_has_trunks then
     return
 end
 
