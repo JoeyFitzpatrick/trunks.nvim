@@ -7,7 +7,6 @@
 ---@field insert? boolean | trunks.DisplayStrategyBoolParser
 ---@field trigger_redraw? boolean | trunks.DisplayStrategyBoolParser
 ---@field enter? boolean
----@field pty? boolean | trunks.DisplayStrategyBoolParser
 ---@field tail? boolean
 ---@field input_args? vim.api.keyset.create_user_command.command_args
 
@@ -91,7 +90,6 @@ M.default = {
     display_strategy = M.STRATEGIES.BELOW,
     insert = false,
     trigger_redraw = false,
-    pty = false,
 }
 
 ---@type trunks.Strategy
@@ -121,29 +119,6 @@ local branch_write_command_args = {
 
 ---@type trunks.Strategy
 M.branch = {
-    pty = function(cmd)
-        local branch_pty_options = {
-            "--color",
-            "--no-color",
-            "-i",
-            "--ignore-case",
-            "--omit-empty",
-            "--no-column",
-            "-r",
-            "--remotes",
-            "-a",
-            "--all",
-            "-l",
-            "--list",
-            "--contains",
-            "--no-contains",
-            "--merged",
-            "--no-merged",
-            "--sort",
-            "--points-at",
-        }
-        return cmd[#cmd] == "branch" or M._cmd_contains_options(cmd, branch_pty_options)
-    end,
     trigger_redraw = function(cmd)
         return M._cmd_contains_options(cmd, branch_write_command_args)
     end,
@@ -213,7 +188,6 @@ M.stash = {
     end,
 }
 
-M.status = { pty = true }
 M.switch = { trigger_redraw = true }
 M.whatchanged = { insert = true }
 

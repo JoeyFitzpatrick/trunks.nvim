@@ -51,30 +51,6 @@ M.term_controls = {
     end,
 }
 
-M._pty_on_stdout = function(channel_id)
-    M.term_controls.go_home(channel_id)
-    local is_first_line = true
-    return function(_, data, _)
-        for _, line in ipairs(data) do
-            if line ~= "" then
-                if not is_first_line then
-                    line = "\r\n" .. line
-                else
-                    is_first_line = false
-                end
-                -- Strip trailing carriage returns to ensure cursor is at end of line before clearing
-                line = line:gsub("\r+$", "")
-                line = line .. esc .. "[K" -- delete from cursor to end of line
-                local ok = pcall(vim.api.nvim_chan_send, channel_id, line)
-                if not ok then
-                    return
-                end
-            end
-        end
-        pcall(vim.api.nvim_chan_send, channel_id, esc .. "[J") -- clear from cursor
-    end
-end
-
 local function get_current_ui_opts()
     return {
         number = vim.o.number,
@@ -94,24 +70,13 @@ end
 function M._run_terminal_command(cmd, bufnr, strategy, opts)
     local current_buffer_name = vim.api.nvim_buf_get_name(bufnr)
     local current_ui_opts = get_current_ui_opts()
-    local channel_id = vim.api.nvim_open_term(bufnr, {})
-    vim.b[bufnr].trunks_channel_id = channel_id
 
-    local on_stdout = nil
-    if strategy.pty then
-        M.term_controls.go_home(channel_id)
-        on_stdout = M._pty_on_stdout(channel_id)
-    end
-
-    local new_channel_id
+    local channel_id
     local term_exit_code
     vim.bo[bufnr].modified = false
     vim.api.nvim_buf_call(bufnr, function()
-        new_channel_id = vim.fn.jobstart(cmd, {
-            pty = strategy.pty,
-            term = not strategy.pty,
-            -- No on_stderr needed, it's merged with stdout when pty = true
-            on_stdout = on_stdout,
+        channel_id = vim.fn.jobstart(cmd, {
+            term = true,
             on_exit = function(_, exit_code, _)
                 term_exit_code = exit_code
                 if opts.on_exit then
@@ -130,7 +95,8 @@ function M._run_terminal_command(cmd, bufnr, strategy, opts)
             vim.api.nvim_buf_set_name(bufnr, current_buffer_name)
         end
     end)
-    return { channel_id = channel_id or new_channel_id, exit_code = term_exit_code }
+    vim.b[bufnr].trunks_channel_id = channel_id
+    return { channel_id = channel_id, exit_code = term_exit_code }
 end
 
 ---@param cmd string

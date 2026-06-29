@@ -9,7 +9,7 @@ local cmd_ui_map = {
     end,
     branch = function(command_builder, input_args)
         local strategy = require("trunks._constants.command_strategies").get_strategy(command_builder:build())
-        if strategy.pty then
+        if strategy.display_strategy ~= "print" then
             local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
             require("trunks._ui.home_options.branch").render(bufnr, {
                 command_builder = command_builder,
