@@ -202,3 +202,42 @@ describe("difftool diff output parser", function()
         assert.are.equal("filename.txt", result[1].filename)
     end)
 end)
+
+describe("difftool --name-only", function()
+    local difftool = require("trunks._ui.interceptors.difftool")
+
+    it("detects name-only and name-status flags", function()
+        assert.is_true(difftool._is_name_only("git --no-pager difftool --name-only HEAD~1"))
+        assert.is_true(difftool._is_name_only("git --no-pager difftool --name-status HEAD~1"))
+        assert.is_false(difftool._is_name_only("git --no-pager difftool HEAD~1"))
+    end)
+
+    it("parses a plain file list into one location per file", function()
+        local result = difftool._parse_name_only_output({
+            "README.md",
+            "doc/roadmap_to_beta.md",
+            "",
+        })
+
+        assert.are.same(2, #result)
+        assert.are.same("README.md", result[1].filename)
+        assert.are.same(1, result[1].lines[1].line_num)
+        assert.are.same("doc/roadmap_to_beta.md", result[2].filename)
+    end)
+
+    it("strips the status column from --name-status output", function()
+        local result = difftool._parse_name_only_output({
+            "M\tREADME.md",
+            "R100\tdoc/old.md\tdoc/new.md",
+        })
+
+        assert.are.same("README.md", result[1].filename)
+        assert.are.same("doc/new.md", result[2].filename)
+    end)
+
+    it("ignores option flags when parsing revisions", function()
+        local left, right = difftool._parse_diff_revisions("difftool --name-only")
+        assert.are.same("HEAD", left)
+        assert.is_nil(right)
+    end)
+end)

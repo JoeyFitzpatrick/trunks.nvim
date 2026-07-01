@@ -85,11 +85,39 @@ function M._parse_diff_output(lines)
     return qf_locations
 end
 
+---@param cmd string
+---@return boolean
+function M._is_name_only(cmd)
+    -- `--name-only`/`--name-status` make git print a file list rather than hunks.
+    return cmd:match("%-%-name%-only") ~= nil or cmd:match("%-%-name%-status") ~= nil
+end
+
+---@param lines string[]
+---@return trunks.DiffQfHunk[]
+function M._parse_name_only_output(lines)
+    local qf_locations = {}
+    for _, line in ipairs(lines) do
+        if line ~= "" then
+            -- --name-status prefixes a status (and, for renames, the old path) with tabs.
+            local filename = line:match("([^\t]+)$")
+            table.insert(qf_locations, {
+                filename = filename,
+                lines = { { line_num = 1, text = "" } },
+            })
+        end
+    end
+    return qf_locations
+end
+
 ---@param command_builder trunks.Command
 local function get_qf_locations(command_builder)
-    local cmd = command_builder:build():gsub("difftool", "diff", 1)
+    local built = command_builder:build()
+    local cmd = built:gsub("difftool", "diff", 1)
     local diff_output = require("trunks._core.run_cmd").run_cmd(cmd, { no_pager = true })
 
+    if M._is_name_only(built) then
+        return M._parse_name_only_output(diff_output)
+    end
     return M._parse_diff_output(diff_output)
 end
 
@@ -107,6 +135,18 @@ function M._parse_diff_revisions(cmd)
 
     -- Trim whitespace
     args = args:match("^%s*(.-)%s*$")
+
+    -- Drop option flags (e.g. --name-only) so only revisions remain.
+    local rev_parts = {}
+    for _, part in ipairs(vim.split(args, "%s+")) do
+        if part ~= "" and not vim.startswith(part, "-") then
+            table.insert(rev_parts, part)
+        end
+    end
+    args = table.concat(rev_parts, " ")
+    if args == "" then
+        return "HEAD", nil
+    end
 
     if args:match("%.%.%.") then
         -- Three-dot range: A...B means merge-base(A,B)..B
