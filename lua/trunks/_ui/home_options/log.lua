@@ -11,13 +11,37 @@ local function get_line(bufnr, line_num)
     line_num = line_num or vim.api.nvim_win_get_cursor(0)[1]
 
     local line = vim.api.nvim_buf_get_lines(bufnr, line_num - 1, line_num, false)[1]
-    if line == "" then
+    if not line or line == "" then
         return nil
     end
-    if line:match("^%a+:") then
-        return { hash = line:match(": (%S+)") }
+
+    -- Default log formats put the hash on a `commit <hash>` line, with other stuff below.
+    local hash = line:match("^commit (%x+)")
+    if hash then
+        return { hash = hash }
     end
-    return { hash = line:match("%w+") }
+
+    -- The cursor may instead be on one of that header's child lines (`Author:`,
+    -- `Date:`, `Merge:`, or the indented commit message). Walk up to the owning
+    -- `commit <hash>` header.
+    if line:match("^%a+:") or line:match("^%s") then
+        for i = line_num - 1, 1, -1 do
+            local prev = vim.api.nvim_buf_get_lines(bufnr, i - 1, i, false)[1]
+            local prev_hash = prev and prev:match("^commit (%x+)")
+            if prev_hash then
+                return { hash = prev_hash }
+            end
+        end
+        return nil
+    end
+
+    -- Oneline / custom pretty formats keep the hash as the first
+    -- token on the line, optionally preceded by --graph decoration.
+    hash = line:match("^[*|/\\ ]*(%x+)")
+    if not hash then
+        return nil
+    end
+    return { hash = hash }
 end
 
 ---@param bufnr integer
