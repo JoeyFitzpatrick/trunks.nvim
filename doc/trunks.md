@@ -359,8 +359,8 @@ Trunks provides some commands that are not valid git commands. Instead of the `:
 
 If no commit is given, a list of commits (e.g. `git log` output) is shown, so that a commit can be chosen to fixup.
 
-### log-qf
-`:Trunks log-qf`: same concept as `Gclog` from vim-fugitive. Send git log entries to the quickfix list. By default, it shows the output of `git show` in each entry. Pass it a range (or call from visual mode), and each entry will pass line numbers to `git log` via the `-L` flag, and each entry will be the file as it existed at the given revision. Use 0 as the range, e.g. `0Trunks log-qf`, to see file revisions for every revision of a file.
+### clog
+`:Trunks clog`: same concept as `Gclog` from vim-fugitive. Send git log entries to the quickfix list. By default, it shows the output of `git show` in each entry. Pass it a range (or call from visual mode), and each entry will pass line numbers to `git log` via the `-L` flag, and each entry will be the file as it existed at the given revision. Use 0 as the range, e.g. `0Trunks clog`, to see file revisions for every revision of a file.
 
 Once you have opened a file at a revision, there are keymaps to move to the next/previous revision, as well as open diff splits.
 

@@ -23,7 +23,7 @@ end
 
 ---@param input_args vim.api.keyset.create_user_command.command_args
 function M.render(input_args)
-    local args = input_args.args:match("^log%-qf%s*(.*)")
+    local args = input_args.args:match("^clog%s*(.*)")
     args = args and vim.trim(args) or ""
     if args ~= "" then
         args = require("trunks._core.parse_command").expand_special_characters(args)
@@ -46,7 +46,7 @@ function M.render(input_args)
 
     if use_L_range or follow then
         if current_file == "" then
-            vim.notify("Trunks log-qf: no file in current buffer", vim.log.levels.ERROR)
+            vim.notify("Trunks clog: no file in current buffer", vim.log.levels.ERROR)
             return
         end
         filepath = current_file:sub(#git_root + 2)
@@ -86,7 +86,7 @@ function M.render(input_args)
     local exit_code = vim.v.shell_error
 
     if exit_code ~= 0 then
-        vim.notify("Trunks log-qf: " .. table.concat(lines, "\n"), vim.log.levels.ERROR)
+        vim.notify("Trunks clog: " .. table.concat(lines, "\n"), vim.log.levels.ERROR)
         return
     end
 
@@ -183,12 +183,12 @@ function M.render(input_args)
     flush_pending()
 
     if #qf_items == 0 then
-        vim.notify("Trunks log-qf: no commits found", vim.log.levels.WARN)
+        vim.notify("Trunks clog: no commits found", vim.log.levels.WARN)
         return
     end
 
     vim.fn.setqflist({}, "r", {
-        title = "Trunks log-qf",
+        title = "Trunks clog",
         items = qf_items,
     })
     vim.cmd("copen | cfirst")

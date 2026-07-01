@@ -6,7 +6,7 @@ M.options = {
     ["commit-drop"] = {},
     ["commit-instant-fixup"] = {},
     edit = {},
-    ["log-qf"] = {},
+    ["clog"] = {},
     ["reset-to-remote"] = {},
     hdiff = { completion_type = "branch" },
     vdiff = { completion_type = "branch" },

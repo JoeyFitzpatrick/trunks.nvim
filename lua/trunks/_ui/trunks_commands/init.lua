@@ -51,8 +51,8 @@ local cmd_map = {
         require("trunks._ui.trunks_commands.edit").render(args)
     end,
 
-    ["log-qf"] = function(_, input_args)
-        require("trunks._ui.trunks_commands.log_qf").render(input_args)
+    ["clog"] = function(_, input_args)
+        require("trunks._ui.trunks_commands.clog").render(input_args)
     end,
 
     ["reset-to-remote"] = function()
