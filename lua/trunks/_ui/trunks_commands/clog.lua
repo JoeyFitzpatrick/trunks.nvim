@@ -13,8 +13,10 @@ local function apply_rename(line, target)
         rename = "{" .. rename .. "}"
     end
 
-    local new_path = rename:gsub("{(.-) => (.-)}", "%2")
-    local old_path = rename:gsub("{(.-) => (.-)}", "%1")
+    -- A pure directory move yields an empty side, e.g. "_ui/{ => cmds}/x.lua",
+    -- so collapse the double slash left behind when substituting the empty side.
+    local new_path = rename:gsub("{(.-) => (.-)}", "%2"):gsub("//+", "/")
+    local old_path = rename:gsub("{(.-) => (.-)}", "%1"):gsub("//+", "/")
     if target == new_path then
         return old_path
     end
