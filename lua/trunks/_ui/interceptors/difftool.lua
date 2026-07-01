@@ -12,7 +12,6 @@
 ---@field right string
 
 local M = {}
---
 
 ---@param lines string[]
 ---@return trunks.DiffQfHunk[]
@@ -193,51 +192,13 @@ function M._parse_diff_revisions(cmd)
     return "HEAD", nil
 end
 
----@param command_builder trunks.Command
-function M.render(command_builder)
-    local cmd = command_builder.base or ""
-    local left_commit, right_commit = M._parse_diff_revisions(cmd)
-
-    local qf_locations = get_qf_locations(command_builder)
-    if #qf_locations == 0 then
-        vim.notify("trunks: no diffs found for difftool", vim.log.levels.ERROR)
-        return
-    end
-
-    vim.cmd.tabnew()
-    local diff_qf_tab_id = vim.api.nvim_get_current_tabpage()
-
+---Set up the tab and autocmds that open a vdiff split for each quickfix entry.
+---@param diff_qf_tab_id integer
+---@param filenames string[]
+---@param left_commit string|nil
+---@param right_commit string|nil
+local function setup_diff_splits(diff_qf_tab_id, filenames, left_commit, right_commit)
     local virtual_buffers = require("trunks._core.virtual_buffers")
-    local git_root = require("trunks._core.parse_command")._find_git_root()
-    local flattened_qf_locations = {}
-    local found_filenames = {}
-    local filenames = {}
-
-    for _, location in ipairs(qf_locations) do
-        for _, line in ipairs(location.lines) do
-            local qf_filename
-            if left_commit and right_commit then
-                qf_filename = virtual_buffers.create_uri(git_root, right_commit, location.filename)
-            else
-                qf_filename = location.filename
-            end
-
-            table.insert(flattened_qf_locations, {
-                filename = qf_filename,
-                lnum = line.line_num,
-                text = line.text,
-                user_data = {
-                    filename = location.filename,
-                    left_commit = left_commit,
-                    right_commit = right_commit,
-                },
-            })
-            if not found_filenames[qf_filename] then
-                table.insert(filenames, qf_filename)
-                found_filenames[qf_filename] = true
-            end
-        end
-    end
 
     vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
         group = vim.api.nvim_create_augroup("TrunksDiffQf", { clear = true }),
@@ -302,6 +263,60 @@ function M.render(command_builder)
             end
         end,
     })
+end
+
+---@param command_builder trunks.Command
+---@param input_args? vim.api.keyset.create_user_command.command_args
+function M.render(command_builder, input_args)
+    -- With a bang (`:G! difftool`), skip the diff splits/tab and just populate the
+    -- quickfix list, then jump to the first entry.
+    local bang = input_args ~= nil and input_args.bang or false
+    local cmd = command_builder.base or ""
+    local left_commit, right_commit = M._parse_diff_revisions(cmd)
+
+    local qf_locations = get_qf_locations(command_builder)
+    if #qf_locations == 0 then
+        vim.notify("trunks: no diffs found for difftool", vim.log.levels.ERROR)
+        return
+    end
+
+    local virtual_buffers = require("trunks._core.virtual_buffers")
+    local git_root = require("trunks._core.parse_command")._find_git_root()
+    local flattened_qf_locations = {}
+    local found_filenames = {}
+    local filenames = {}
+
+    for _, location in ipairs(qf_locations) do
+        for _, line in ipairs(location.lines) do
+            local qf_filename
+            if left_commit and right_commit then
+                qf_filename = virtual_buffers.create_uri(git_root, right_commit, location.filename)
+            else
+                qf_filename = location.filename
+            end
+
+            table.insert(flattened_qf_locations, {
+                filename = qf_filename,
+                lnum = line.line_num,
+                text = line.text,
+                user_data = {
+                    filename = location.filename,
+                    left_commit = left_commit,
+                    right_commit = right_commit,
+                },
+            })
+            if not found_filenames[qf_filename] then
+                table.insert(filenames, qf_filename)
+                found_filenames[qf_filename] = true
+            end
+        end
+    end
+
+    if not bang then
+        vim.cmd.tabnew()
+        local diff_qf_tab_id = vim.api.nvim_get_current_tabpage()
+        setup_diff_splits(diff_qf_tab_id, filenames, left_commit, right_commit)
+    end
 
     vim.fn.setqflist({}, "r", {
         title = "Trunks diff-qf",

@@ -18,8 +18,8 @@ local cmd_ui_map = {
             })
         end
     end,
-    difftool = function(command_builder)
-        require("trunks._ui.interceptors.difftool").render(command_builder)
+    difftool = function(command_builder, input_args)
+        require("trunks._ui.interceptors.difftool").render(command_builder, input_args)
     end,
     grep = function(command_builder)
         require("trunks._ui.interceptors.grep").render(command_builder)
@@ -64,6 +64,23 @@ for _, command in ipairs(standard_output_commands) do
     cmd_ui_map[command] = function(command_builder)
         require("trunks._ui.interceptors.standard_interceptor").render(command_builder, command)
     end
+end
+
+-- Subcommands whose interceptor handles the `!` bang itself, instead of the
+-- default bang behavior of running the command in a terminal.
+local bang_aware_commands = {
+    difftool = true,
+}
+
+---@param command_builder trunks.Command
+---@return boolean
+function M.handles_bang(command_builder)
+    local cmd = command_builder.base
+    if not cmd then
+        return false
+    end
+    local subcommand = cmd:match("%S+")
+    return subcommand ~= nil and bang_aware_commands[subcommand] == true
 end
 
 ---@param command_builder trunks.Command

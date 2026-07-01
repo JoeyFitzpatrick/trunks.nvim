@@ -16,6 +16,15 @@ local function run_git_command(input_args)
     local command_builder = Command.base_command(cmd)
 
     if input_args.bang then
+        local interceptors = require("trunks._ui.interceptors")
+        if interceptors.handles_bang(command_builder) then
+            local ui_function = interceptors.get_ui(command_builder)
+            if ui_function then
+                ui_function(command_builder, input_args)
+                return
+            end
+        end
+
         local bufnr = require("trunks._ui.elements").new_buffer({ hidden = true })
         require("trunks._ui.elements").terminal(
             bufnr,
