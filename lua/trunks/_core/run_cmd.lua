@@ -13,16 +13,21 @@ local M = {}
 ---@field stdout string
 ---@field stderr string
 
+---@class trunks.SystemOpts
+---@field cwd? string
+
 --- Uses `vim.system` to separate stdout and stderr.
 --- Should only be used for read/query commands (status, log, etc).
 ---@param cmd string | string[]
+---@param opts? trunks.SystemOpts
 ---@return trunks.SystemResult
-function M.system(cmd)
+function M.system(cmd, opts)
+    opts = opts or {}
     if type(cmd) == "string" then
         cmd = { "sh", "-c", cmd }
     end
 
-    local result = vim.system(cmd, { text = true }):wait()
+    local result = vim.system(cmd, { text = true, cwd = opts.cwd }):wait()
 
     if result.code == 0 then
         result.output = vim.split(result.stdout, "\n")

@@ -118,10 +118,12 @@ end
 ---@param subcmd string
 ---@return string[], integer
 local function run_git(git_root, subcmd)
-    local cmd_obj = require("trunks._core.command").base_command(subcmd, git_root)
+    -- Run git directly in `git_root` rather than routing `git_root` through
+    -- base_command's git-dir heuristic, which breaks when cwd is an ancestor (or otherwise not the repo root).
+    local cmd_obj = require("trunks._core.command").base_command(subcmd)
     cmd_obj._pager = nil
-    local result = require("trunks._core.run_cmd").system(cmd_obj:build())
-    return result.output, vim.v.shell_error
+    local result = require("trunks._core.run_cmd").system(cmd_obj:build(), { cwd = git_root })
+    return result.output, result.code
 end
 
 ---@param bufnr integer
@@ -143,7 +145,8 @@ local function set_buffer_content(bufnr, output, hash, filetype)
 
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
         local buf = vim.api.nvim_win_get_buf(win)
-        if buf ~= bufnr and vim.b[buf].trunks_ref then
+        -- Don't close diff windows: a split diff intentionally shows two virtual buffers
+        if buf ~= bufnr and vim.b[buf].trunks_ref and not vim.wo[win].diff then
             vim.api.nvim_win_close(win, true)
         end
     end

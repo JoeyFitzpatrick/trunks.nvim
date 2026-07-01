@@ -184,6 +184,19 @@ local function set_keymaps(bufnr, commit)
     set("n", keymaps.show_all_changes, function()
         vim.cmd("G show " .. commit)
     end, keymap_opts)
+
+    set(
+        "n",
+        keymaps.diff_popup,
+        with_line(bufnr, M.get_line, function(line_data)
+            -- Diff the commit against its parent, rather than against the working tree.
+            require("trunks._ui.popups.diff_popup").render(line_data.filename, {
+                left_commit = commit .. "^",
+                right_commit = commit,
+            })
+        end),
+        keymap_opts
+    )
 end
 
 ---@param bufnr integer

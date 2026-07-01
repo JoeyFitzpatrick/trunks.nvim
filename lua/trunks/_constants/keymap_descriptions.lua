@@ -39,6 +39,7 @@ M.long_descriptions = {
     },
     ---@type trunks.CommitDetailsKeymaps
     commit_details = {
+        diff_popup = "Diff this file (commit against its parent)",
         edit_file = "Edit this file in working tree",
         restore_popup = "Restore file at this commit",
         show_all_changes = "Show all changes from this commit in a single buffer",
@@ -197,6 +198,7 @@ add_description("branch", "new_branch", "New branch")
 add_description("branch", "rename", "Rename")
 add_description("branch", "switch", "Switch")
 
+add_description("commit_details", "diff_popup", "Diff")
 add_description("commit_details", "edit_file", "Edit file")
 add_description("commit_details", "restore_popup", "Restore")
 add_description("commit_details", "show_all_changes", "Show commit")

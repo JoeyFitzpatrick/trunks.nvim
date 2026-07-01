@@ -47,6 +47,7 @@ return {
     commit_details = {
         auto_display_on = false,
         keymaps = {
+            diff_popup = "d",
             edit_file = "e",
             restore_popup = "R",
             show_all_changes = "<enter>",
